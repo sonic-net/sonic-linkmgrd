@@ -1,0 +1,16 @@
+**/*.o
+**/*.d
+**/*.gcda
+**/*.gcno
+**/*.gcov
+**/*.html
+.cproject
+.project
+.settings/
+debian/debhelper-build-stamp
+debian/sonic-linkmgrd/
+debian/.debhelper/
+debian/files
+linkmgrd
+linkmgrd-test
+
