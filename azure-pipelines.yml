@@ -52,13 +52,13 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifacts: sonic-swss-common
+      artifact: sonic-swss-common
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/master'
     displayName: "Download sonic swss common deb packages"
   - script: |
-      sudo dpkg -i sonic-swss-common/libswsscommon_1.0.0_amd64.deb
-      sudo dpkg -i sonic-swss-common/libswsscommon-dev_1.0.0_amd64.deb
+      sudo dpkg -i libswsscommon_1.0.0_amd64.deb
+      sudo dpkg -i libswsscommon-dev_1.0.0_amd64.deb
     workingDirectory: $(Pipeline.Workspace)
     displayName: "Install sonic swss common"
   - checkout: self
@@ -119,13 +119,13 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifacts: sonic-swss-common
+      artifact: sonic-swss-common.arm64
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/master'
     displayName: "Download sonic swss common deb packages"
   - script: |
-      sudo dpkg -i sonic-swss-common.arm64/libswsscommon_1.0.0_arm64.deb
-      sudo dpkg -i sonic-swss-common.arm64/libswsscommon-dev_1.0.0_arm64.deb
+      sudo dpkg -i libswsscommon_1.0.0_arm64.deb
+      sudo dpkg -i libswsscommon-dev_1.0.0_arm64.deb
     workingDirectory: $(Pipeline.Workspace)
     displayName: "Install sonic swss common"
   - checkout: self
@@ -134,7 +134,7 @@ jobs:
       dpkg-buildpackage -us -uc -b -j$(nproc) && cp ../*.deb .
     displayName: "Compile sonic linkmgrd"
   - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-linkmgrd_1.0.0-1.arm64
+    artifact: sonic-linkmgrd.arm64
     displayName: "Archive linkmgrd debian packages"
 
   - task: PublishCodeCoverageResults@1
@@ -186,13 +186,13 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifacts: sonic-swss-common
+      artifact: sonic-swss-common.armhf
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/master'
     displayName: "Download sonic swss common deb packages"
   - script: |
-      sudo dpkg -i sonic-swss-common.armhf/libswsscommon_1.0.0_armhf.deb
-      sudo dpkg -i sonic-swss-common.armhf/libswsscommon-dev_1.0.0_armhf.deb
+      sudo dpkg -i libswsscommon_1.0.0_armhf.deb
+      sudo dpkg -i libswsscommon-dev_1.0.0_armhf.deb
     workingDirectory: $(Pipeline.Workspace)
     displayName: "Install sonic swss common"
   - checkout: self
@@ -201,7 +201,7 @@ jobs:
       dpkg-buildpackage -us -uc -b -j$(nproc) && cp ../*.deb .
     displayName: "Compile sonic linkmgrd"
   - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-linkmgrd_1.0.0-1.armhf
+    artifact: sonic-linkmgrd.armhf
     displayName: "Archive linkmgrd debian packages"
 
   - task: PublishCodeCoverageResults@1
