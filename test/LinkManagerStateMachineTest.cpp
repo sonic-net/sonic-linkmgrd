@@ -568,6 +568,44 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownCliSwitchover)
+{
+    setMuxStandby();
+    
+    // verify MUX enters wait state
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1); 
+
+    // mux mode config change is cached due to MuxState:Wait
+    handleMuxConfig("active", 1);
+    EXPECT_TRUE(mFakeMuxPort.getPendingMuxModeChange());
+    EXPECT_EQ(mFakeMuxPort.getTargetMuxMode(), common::MuxPortConfig::Mode::Active);
+
+    // swss notification, exiting MuxState:wait
+    handleMuxState("standby", 4);
+    EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
+    // execute pending mux mode config change, switch to MuxState:Active   
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_FALSE(mFakeMuxPort.getPendingMuxModeChange());
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    // change state to active
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("active", 4);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownReturnStandby)
 {
     setMuxStandby();
