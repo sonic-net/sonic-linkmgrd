@@ -919,6 +919,9 @@ private:
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
 
+    bool mPendingMuxModeChange = false;
+    common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
+
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;
 };
