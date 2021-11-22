@@ -505,6 +505,17 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
     if (ms(mCompositeState) != mux_state::MuxState::Wait) {
         // Verify if state db MUX state matches the driver/current MUX state
         mMuxPortPtr->getMuxState();
+
+        // Handle pending mux mode config change
+        if (mPendingMuxModeChange) {
+            MUXLOGINFO(boost::format("%s: Mux state: %s . Execute pending MUX mode config change.") % 
+                mMuxPortConfig.getPortName() %
+                mMuxStateName[ms(mCompositeState)]
+            );
+
+            handleMuxConfigNotification(mTargetMuxMode);
+            mPendingMuxModeChange = false;
+        }
     }
 
     if (ms(mCompositeState) != mux_state::MuxState::Unknown) {
@@ -706,18 +717,32 @@ void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::
 //
 void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortConfig::Mode mode)
 {
+    if (mComponentInitState.test(MuxStateComponent) &&
+        mode != common::MuxPortConfig::Mode::Auto && 
+        mode != common::MuxPortConfig::Mode::Manual &&
+        ms(mCompositeState) == mux_state::MuxState::Wait) {
+        
+        MUXLOGINFO(boost::format("%s: Mux state: %s , mux mode config change is pending. ") % 
+                mMuxPortConfig.getPortName() %
+                mMuxStateName[ms(mCompositeState)]
+            );
+
+        mPendingMuxModeChange = true;
+        mTargetMuxMode = mode;
+
+        return;
+    }
+
     if (mComponentInitState.all()) {
         if (mode == common::MuxPortConfig::Mode::Active &&
-            ms(mCompositeState) != mux_state::MuxState::Label::Active &&
-            ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+                ms(mCompositeState) != mux_state::MuxState::Label::Active) {
             CompositeState nextState = mCompositeState;
             enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
             switchMuxState(nextState, mux_state::MuxState::Label::Active);
             LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
             mCompositeState = nextState;
         } else if(mode == common::MuxPortConfig::Mode::Standby &&
-                  ms(mCompositeState) != mux_state::MuxState::Label::Standby &&
-                  ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+                    ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             mSendPeerSwitchCommandFnPtr();
         } else {
             mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
@@ -728,6 +753,7 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
     }
 
     mMuxPortConfig.setMode(mode);
+
 }
 
 //

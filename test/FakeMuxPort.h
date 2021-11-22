@@ -53,6 +53,9 @@ public:
     mux_state::MuxStateMachine& getMuxStateMachine() {return getLinkManagerStateMachine()->getMuxStateMachine();};
     link_state::LinkStateMachine& getLinkStateMachine() {return getLinkManagerStateMachine()->getLinkStateMachine();};
 
+    bool getPendingMuxModeChange() {return getLinkManagerStateMachine()->mPendingMuxModeChange;};
+    common::MuxPortConfig::Mode getTargetMuxMode() {return getLinkManagerStateMachine()->mTargetMuxMode;};
+
     std::shared_ptr<FakeLinkProber> mFakeLinkProber;
 };
 
