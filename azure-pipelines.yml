@@ -8,205 +8,214 @@ trigger:
     include:
       - "*"
 
-jobs:
-- job:
-  displayName: "amd64"
-  pool:
-    vmImage: 'ubuntu-20.04'
+stages:
+- stage: 'Amd_test'
+  jobs:
+  - job:
+    displayName: "amd64"
+    pool:
+      vmImage: 'ubuntu-20.04'
 
-  container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
+    container:
+      image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
 
-  steps:
-  - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
-          googletest \
-          libgtest-dev \
-          libgcc-8-dev \
-          libhiredis0.14 \
-          libhiredis-dev \
-          libnl-3-dev \
-          libnl-route-3-dev \
-          libnl-genl-3-200 \
-          libnl-nf-3-200
+    steps:
+    - script: |
+        wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        rm packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https
+        sudo apt-get install -y dotnet-sdk-6.0
+      displayName: install .Net
+    - script: |
+        sudo apt-get install -y \
+            libboost1.71-dev \
+            libboost-program-options1.71-dev \
+            libboost-system1.71-dev \
+            libboost-thread1.71-dev \
+            libboost-atomic1.71-dev \
+            libboost-chrono1.71-dev \
+            libboost-container1.71-dev \
+            libboost-context1.71-dev \
+            libboost-contract1.71-dev \
+            libboost-coroutine1.71-dev \
+            libboost-date-time1.71-dev \
+            libboost-fiber1.71-dev \
+            libboost-filesystem1.71-dev \
+            libboost-graph-parallel1.71-dev \
+            libboost-log1.71-dev \
+            libboost-regex1.71-dev \
+            googletest \
+            libgtest-dev \
+            libgcc-8-dev \
+            libhiredis0.14 \
+            libhiredis-dev \
+            libnl-3-dev \
+            libnl-route-3-dev \
+            libnl-genl-3-200 \
+            libnl-nf-3-200
 
-    displayName: "Install dependencies"
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: specific
-      project: build
-      pipeline: 9
-      artifact: sonic-swss-common
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
-    displayName: "Download sonic swss common deb packages"
-  - script: |
-      sudo dpkg -i libswsscommon_1.0.0_amd64.deb
-      sudo dpkg -i libswsscommon-dev_1.0.0_amd64.deb
-    workingDirectory: $(Pipeline.Workspace)
-    displayName: "Install sonic swss common"
-  - checkout: self
-    submodules: true
-  - script: |
-      dpkg-buildpackage -us -uc -b -j$(nproc) && cp ../*.deb .
-    displayName: "Compile sonic linkmgrd"
-  - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-linkmgrd_1.0.0-1.amd64
-    displayName: "Archive linkmgrd debian packages"
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      summaryFileLocation: $(System.DefaultWorkingDirectory)/**/linkmgrd-test-result.xml
-      pathToSources: $(System.DefaultWorkingDirectory)/sonic-linkmgr/
-
-
-- job:
-  displayName: "arm64"
-  timeoutInMinutes: 180
-  pool: sonicbld-arm64
-
-  container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-arm64:latest
-
-  steps:
-  - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
-          googletest \
-          libgtest-dev \
-          libgcc-8-dev \
-          libhiredis0.14 \
-          libhiredis-dev \
-          libnl-3-dev \
-          libnl-route-3-dev \
-          libnl-genl-3-200 \
-          libnl-nf-3-200
-
-    displayName: "Install dependencies"
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: specific
-      project: build
-      pipeline: 9
-      artifact: sonic-swss-common.arm64
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
-    displayName: "Download sonic swss common deb packages"
-  - script: |
-      sudo dpkg -i libswsscommon_1.0.0_arm64.deb
-      sudo dpkg -i libswsscommon-dev_1.0.0_arm64.deb
-    workingDirectory: $(Pipeline.Workspace)
-    displayName: "Install sonic swss common"
-  - checkout: self
-    submodules: true
-  - script: |
-      dpkg-buildpackage -us -uc -b -j$(nproc) && cp ../*.deb .
-    displayName: "Compile sonic linkmgrd"
-  - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-linkmgrd.arm64
-    displayName: "Archive linkmgrd debian packages"
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      summaryFileLocation: $(System.DefaultWorkingDirectory)/**/linkmgrd-test-result.xml
-      pathToSources: $(System.DefaultWorkingDirectory)/sonic-linkmgr/
+      displayName: "Install dependencies"
+    - checkout: self
+      clean: true
+      submodules: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: build
+        pipeline: 9
+        artifact: sonic-swss-common
+        runVersion: 'latestFromBranch'
+        runBranch: 'refs/heads/master'
+        path: '$(Build.SourcesDirectory)/sonic-swss-common'
+      displayName: "Download sonic swss common deb packages"
+    - script: |
+        sudo dpkg -i sonic-swss-common/libswsscommon_1.0.0_amd64.deb
+        sudo dpkg -i sonic-swss-common/libswsscommon-dev_1.0.0_amd64.deb
+      displayName: "Install sonic swss common"
+    - script: |
+        rm ../*.deb
+        dpkg-buildpackage -us -uc -b -j$(nproc)
+        cp ../*.deb $(Build.ArtifactStagingDirectory)
+      displayName: "Compile sonic linkmgrd"
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: sonic-linkmgrd_1.0.0-1.amd64
+      displayName: "Archive linkmgrd debian packages"
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        summaryFileLocation: linkmgrd-test-result.xml
+        pathToSources: $(Build.SourcesDirectory)
+        codeCoverageTool: 'Cobertura'
 
 
-- job:
-  displayName: "armhf"
-  timeoutInMinutes: 180
-  pool: sonicbld-armhf
+- stage: 'Arm'
+  jobs:
+  - job:
+    displayName: "arm64"
+    timeoutInMinutes: 180
+    pool: sonicbld-arm64
+    container:
+      image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-arm64:latest
 
-  container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-armhf:latest
+    steps:
+    - script: |
+        sudo apt-get install -y \
+            libboost1.71-dev \
+            libboost-program-options1.71-dev \
+            libboost-system1.71-dev \
+            libboost-thread1.71-dev \
+            libboost-atomic1.71-dev \
+            libboost-chrono1.71-dev \
+            libboost-container1.71-dev \
+            libboost-context1.71-dev \
+            libboost-contract1.71-dev \
+            libboost-coroutine1.71-dev \
+            libboost-date-time1.71-dev \
+            libboost-fiber1.71-dev \
+            libboost-filesystem1.71-dev \
+            libboost-graph-parallel1.71-dev \
+            libboost-log1.71-dev \
+            libboost-regex1.71-dev \
+            googletest \
+            libgtest-dev \
+            libgcc-8-dev \
+            libhiredis0.14 \
+            libhiredis-dev \
+            libnl-3-dev \
+            libnl-route-3-dev \
+            libnl-genl-3-200 \
+            libnl-nf-3-200
 
-  steps:
-  - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
-          googletest \
-          libgtest-dev \
-          libgcc-8-dev \
-          libhiredis0.14 \
-          libhiredis-dev \
-          libnl-3-dev \
-          libnl-route-3-dev \
-          libnl-genl-3-200 \
-          libnl-nf-3-200
+      displayName: "Install dependencies"
+    - checkout: self
+      clean: true
+      submodules: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: build
+        pipeline: 9
+        artifact: sonic-swss-common.arm64
+        runVersion: 'latestFromBranch'
+        runBranch: 'refs/heads/master'
+        path: '$(Build.SourcesDirectory)/sonic-swss-common.arm64'
+      displayName: "Download sonic swss common deb packages"
+    - script: |
+        sudo dpkg -i sonic-swss-common.arm64/libswsscommon_1.0.0_arm64.deb
+        sudo dpkg -i sonic-swss-common.arm64/libswsscommon-dev_1.0.0_arm64.deb
+      displayName: "Install sonic swss common"
+    - script: |
+        rm ../*.deb
+        dpkg-buildpackage -us -uc -b -j$(nproc)
+        cp ../*.deb $(Build.ArtifactStagingDirectory)
+      displayName: "Compile sonic linkmgrd"
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: sonic-linkmgrd.arm64
+      displayName: "Archive linkmgrd debian packages"
 
-    displayName: "Install dependencies"
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: specific
-      project: build
-      pipeline: 9
-      artifact: sonic-swss-common.armhf
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
-    displayName: "Download sonic swss common deb packages"
-  - script: |
-      sudo dpkg -i libswsscommon_1.0.0_armhf.deb
-      sudo dpkg -i libswsscommon-dev_1.0.0_armhf.deb
-    workingDirectory: $(Pipeline.Workspace)
-    displayName: "Install sonic swss common"
-  - checkout: self
-    submodules: true
-  - script: |
-      dpkg-buildpackage -us -uc -b -j$(nproc) && cp ../*.deb .
-    displayName: "Compile sonic linkmgrd"
-  - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-linkmgrd.armhf
-    displayName: "Archive linkmgrd debian packages"
 
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      summaryFileLocation: $(System.DefaultWorkingDirectory)/**/linkmgrd-test-result.xml
-      pathToSources: $(System.DefaultWorkingDirectory)/sonic-linkmgr/
+  - job:
+    displayName: "armhf"
+    timeoutInMinutes: 180
+    pool: sonicbld-armhf
+    container:
+      image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-armhf:latest
+
+    steps:
+    - script: |
+        sudo apt-get install -y \
+            libboost1.71-dev \
+            libboost-program-options1.71-dev \
+            libboost-system1.71-dev \
+            libboost-thread1.71-dev \
+            libboost-atomic1.71-dev \
+            libboost-chrono1.71-dev \
+            libboost-container1.71-dev \
+            libboost-context1.71-dev \
+            libboost-contract1.71-dev \
+            libboost-coroutine1.71-dev \
+            libboost-date-time1.71-dev \
+            libboost-fiber1.71-dev \
+            libboost-filesystem1.71-dev \
+            libboost-graph-parallel1.71-dev \
+            libboost-log1.71-dev \
+            libboost-regex1.71-dev \
+            googletest \
+            libgtest-dev \
+            libgcc-8-dev \
+            libhiredis0.14 \
+            libhiredis-dev \
+            libnl-3-dev \
+            libnl-route-3-dev \
+            libnl-genl-3-200 \
+            libnl-nf-3-200
+
+      displayName: "Install dependencies"
+    - checkout: self
+      clean: true
+      submodules: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: specific
+        project: build
+        pipeline: 9
+        artifact: sonic-swss-common.armhf
+        runVersion: 'latestFromBranch'
+        runBranch: 'refs/heads/master'
+        path: '$(Build.SourcesDirectory)/sonic-swss-common.armhf'
+      displayName: "Download sonic swss common deb packages"
+    - script: |
+        sudo dpkg -i sonic-swss-common.armhf/libswsscommon_1.0.0_armhf.deb
+        sudo dpkg -i sonic-swss-common.armhf/libswsscommon-dev_1.0.0_armhf.deb
+      displayName: "Install sonic swss common"
+    - script: |
+        rm ../*.deb
+        dpkg-buildpackage -us -uc -b -j$(nproc)
+        cp ../*.deb $(Build.ArtifactStagingDirectory)
+      displayName: "Compile sonic linkmgrd"
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: sonic-linkmgrd.armhf
+      displayName: "Archive linkmgrd debian packages"
 
 
