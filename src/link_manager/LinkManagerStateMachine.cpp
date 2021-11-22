@@ -764,7 +764,7 @@ void LinkManagerStateMachine::handleSwitchActiveCommandCompletion()
         ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
         CompositeState nextState = mCompositeState;
         enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
