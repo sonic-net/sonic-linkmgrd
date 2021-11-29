@@ -66,6 +66,8 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
         }
         mIoService.run_one();
     }
+
+    mIoService.reset();
 }
 
 void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
