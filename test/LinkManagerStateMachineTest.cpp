@@ -54,17 +54,17 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
 {
     if (count == 0) {
-        mIoService.run();
         if(mIoService.stopped()) {
             mIoService.reset();
         }
+        mIoService.run();
     }
 
     for (uint8_t i = 0; i < count; i++) {
-        mIoService.run_one();
         if(mIoService.stopped()) {
             mIoService.reset();            
         }
+        mIoService.run_one();
     }
 }
 
