@@ -12,6 +12,10 @@ trigger:
 jobs:
 - job:
   displayName: "amd64"
+  variables:
+    DIFF_COVER_CHECK_THRESHOLD: 50
+    DIFF_COVER_ENABLE: 'true'
+    DIFF_COVER_COVERAGE_FILES: linkmgrd-test-result.xml $(System.DefaultWorkingDirectory)/**/linkmgrd-test-result.xml
   pool:
     vmImage: 'ubuntu-20.04'
 
