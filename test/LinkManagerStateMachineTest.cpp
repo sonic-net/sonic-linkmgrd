@@ -55,19 +55,17 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
 {
     if (count == 0) {
         if(mIoService.stopped()) {
-            mIoService.reset();
+            mIoService.restart();
         }
         mIoService.run();
     }
 
     for (uint8_t i = 0; i < count; i++) {
         if(mIoService.stopped()) {
-            mIoService.reset();            
+            mIoService.restart();            
         }
         mIoService.run_one();
     }
-
-    mIoService.reset();
 }
 
 void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
