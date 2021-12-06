@@ -233,15 +233,15 @@ void MuxPort::handleMuxConfig(const std::string &config)
 // 
 // handles default route state notification
 //
-void MuxPort::handleDefaultRouteState(mux::MuxManager::RouteSate state)
+void MuxPort::handleDefaultRouteState(const std::string &routeState)
 {
-    MUXLOGDEBUG(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % state);
+    MUXLOGDEBUG(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleDefaultRouteStateNotification,
         &mLinkManagerStateMachine,
-        state
+        routeState
     )));
 }
 } /* namespace mux */

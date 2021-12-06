@@ -239,29 +239,24 @@ void MuxManager::processProbeMuxState(const std::string &portName, const std::st
 //
 // update default route state based on state db notification
 //
-void addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::string &routeState) 
+void MuxManager::addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::string &routeState) 
 {
     MUXLOGINFO(boost::format("%s: default route state: %s") % address % routeState);
 
-    mux::MuxManager::RouteState nextState = mux::MuxManager::RouteState::NA;
-    if(routeState == "ok") {
-        nextState = mux::MuxManager::RouteState::OK;
-    }
-
     if (address.is_v4()) {
-        mIpv4DefaultRouteState = nextState;
+        mIpv4DefaultRouteState = routeState;
     } else {
-        mIpv6DefaultRouteState = nextState;
+        mIpv6DefaultRouteState = routeState;
     }
 
-    mux::MuxManager::RouteState combinedState = mux::MuxManager::RouteState::NA;
-    if (mIpv4DefaultRouteState == mux::MuxManager::RouteState::OK && mIpv6DefaultRouteState == mux::MuxManager::RouteState::OK) {
-        combinedState = mux::MuxManager::RouteState::OK;
+    std::string nextState = "na";
+    if (mIpv4DefaultRouteState == "ok" && mIpv6DefaultRouteState == "ok") {
+        nextState = "ok";
     }
 
-    portMapIterator = mPortMap.begin();
+    PortMapIterator portMapIterator = mPortMap.begin();
     while(portMapIterator != mPortMap.end()) {
-        portMapIterator->second->handleDefaultRouteState(combinedState);
+        portMapIterator->second->handleDefaultRouteState(nextState);
         portMapIterator ++;
     }
 }

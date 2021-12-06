@@ -38,8 +38,6 @@
 #include "mux_state/MuxState.h"
 #include "mux_state/MuxStateMachine.h"
 
-#include "MuxManager.h"
-
 namespace test {
 class FakeMuxPort;
 class MuxManagerTest;
@@ -479,13 +477,15 @@ public:
     void handleSwitchActiveRequestEvent();
 
     /**
-     * @method handleDefaultRouteStateNotification
+     * @method handleDefaultRouteStateNotification(const std::string &routeState)
      * 
      * @brief handle default route state notification from routeorch
      * 
+     * @param routeState
+     * 
      * @return none
     */
-    void handleDefaultRouteStateNotification(mux::MuxManager::RouteState routeState);
+    void handleDefaultRouteStateNotification(const std::string &routeState);
 
 private:
     /**
@@ -902,7 +902,6 @@ private:
     static std::vector<std::string> mMuxStateName;
     static std::vector<std::string> mLinkStateName;
     static std::vector<std::string> mLinkHealthName;
-    static std::vector<std::string> mRouteStateName;
 
 private:
     CompositeState mCompositeState = {

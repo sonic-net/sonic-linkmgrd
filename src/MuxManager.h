@@ -362,17 +362,6 @@ private:
     */
     void setDbInterfacePtr(std::shared_ptr<mux::DbInterface> dbInterfacePtr) {mDbInterfacePtr = dbInterfacePtr;};
 
-public: 
-    /**
-     * @enum RouteState
-     * 
-     * @brief default route state 
-    */
-    enum RouteState {
-        NA,
-        OK
-    };
-
 private:
     common::MuxConfig mMuxConfig;
 
@@ -385,8 +374,8 @@ private:
 
     PortMap mPortMap;
 
-    RouteState mIpv4DefaultRouteState = NA;
-    RouteState mIpv6DefaultRouteState = NA;
+    std::string mIpv4DefaultRouteState = "na";
+    std::string mIpv6DefaultRouteState = "na";
 };
 
 } /* namespace mux */
