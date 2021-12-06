@@ -26,9 +26,6 @@ Fixes # (issue)
 - [ ] Test case(new/improvement)
 
 
-### Back port request
-- [ ] 201911
-
 ### Approach
 #### What is the motivation for this PR?
 
