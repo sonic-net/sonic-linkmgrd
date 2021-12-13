@@ -189,6 +189,21 @@ private:
     void sendHeartbeat();
 
     /**
+    *@method handleTlvCommandRecv
+    *
+    *@brief handle TLV command
+    *
+    *@param tlvPtr (in)     Tlv ptr points to the start of TlvCommand in mRxBuffer
+    *@param isPeer (in)     True if the reply received is from the peer ToR
+    *
+    *@return none
+    */
+    void handleTlvCommandRecv(
+        Tlv *tlvPtr,
+        bool isPeer
+    );
+
+    /**
     *@method handleRecv
     *
     *@brief handle packet reception
@@ -338,9 +353,52 @@ private:
     *
     *@brief getter for TxBuffer used for testing
     *
-    *@return CRC checksum
+    *@return tx buffer
     */
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mTxBuffer;};
+
+    /**
+    *@method findNextTlv
+    *
+    *@brief Find next TLV in rxBuffer starting at readOffset
+    *
+    *@param readOffset (in)         starting offset to read
+    *@param bytesTransferred (in)   total bytes received in rxBuffer
+    *
+    *@return the next TLV size
+    */
+    size_t findNextTlv(size_t readOffset, size_t bytesTransferred);
+
+    void resetTxBufferTlv() {mTxPacketSize = mTlvStartOffset;};
+
+    /**
+    *@method appendTlvCommand
+    *
+    *@brief append TlvCommand to txBuffer
+    *
+    *@param commandType (in)    command type
+    *
+    *@return the appended TLV size
+    */
+    size_t appendTlvCommand(Command commandType = Command::COMMAND_SWITCH_ACTIVE);
+
+    /**
+    *@method appendTlvSentinel
+    *
+    *@brief append TlvSentinel to txBuffer
+    *
+    *@return the appended TLV size
+    */
+    size_t appendTlvSentinel();
+
+    /**
+    *@method appendTlvDummy
+    *
+    *@brief append dummy TLV, test purpose only
+    *
+    *@return the appended TLV size
+    */
+    size_t appendTlvDummy(size_t paddingSize, int seqNo);
 
     friend class test::LinkProberTest;
 
@@ -359,6 +417,9 @@ private:
     uint32_t mIcmpChecksum = 0;
     uint32_t mIpChecksum = 0;
 
+    static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
+    static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
+
     boost::asio::io_service::strand mStrand;
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mSuspendTimer;
@@ -369,6 +430,7 @@ private:
 
     int mSocket = 0;
 
+    std::size_t mTxPacketSize;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 

@@ -42,13 +42,36 @@ __BEGIN_DECLS
 
 namespace link_prober
 {
+/**
+ *@enum TlvType
+ *
+ *@brief Supported TLV types
+ */
+enum TlvType: uint8_t {
+    TLV_COMMAND = 0x5,
+    TLV_DUMMY = 0xfe,
+    TLV_SENTINEL = 0xff,
+};
+
+struct TlvHead {
+    uint8_t type;
+    uint16_t length;
+} __attribute__((packed));
+
+struct Tlv {
+    TlvHead tlvhead;
+    union {
+        uint8_t command;
+        uint8_t data[1];
+    };
+} __attribute__((packed));
 
 /**
  *@enum Command
  *
  *@brief Command to be sent to peer device
  */
-enum class Command: uint32_t {
+enum class Command: uint8_t {
     COMMAND_NONE,
     COMMAND_SWITCH_ACTIVE,
 
@@ -63,11 +86,8 @@ enum class Command: uint32_t {
 struct IcmpPayload {
     uint32_t cookie;
     uint32_t version;
-    union {
-        uint64_t guid[2];
-        boost::uuids::uuid uuid;
-    } un;
-    uint32_t command;
+    uint8_t uuid[8];
+    uint64_t seq;
 
     /**
     *@method IcmpPayload
