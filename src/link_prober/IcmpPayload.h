@@ -48,12 +48,46 @@ namespace link_prober
  *
  *@brief Command to be sent to peer device
  */
-enum class Command: uint32_t {
+enum class Command: uint8_t {
     COMMAND_NONE,
     COMMAND_SWITCH_ACTIVE,
 
     Count
 };
+
+/**
+ *@enum TlvType
+ *
+ *@brief Supported TLV types
+ */
+enum class TlvType: uint8_t {
+    TLV_COMMAND
+};
+
+/**
+ *@struct TlvCommand
+ *
+ *@brief Build command TLV
+ */
+struct TlvCommand
+{
+    uint8_t type = 0;
+    uint16_t length = htons(1);
+    uint8_t command = static_cast<uint8_t> (Command::COMMAND_NONE);
+} __attribute__((packed));
+
+/**
+ *@union TlvPayload
+ *
+ *@brief Union to support multiple TLV structs
+ */
+union TlvPayload
+{
+    uint8_t type;
+    TlvCommand cmdtlv;
+
+    TlvPayload(uint8_t tlv_type = 0);
+} __attribute__((packed));
 
 /**
  *@struct IcmpPayload
@@ -63,11 +97,9 @@ enum class Command: uint32_t {
 struct IcmpPayload {
     uint32_t cookie;
     uint32_t version;
-    union {
-        uint64_t guid[2];
-        boost::uuids::uuid uuid;
-    } un;
-    uint32_t command;
+    uint8_t uuid[8];
+    uint64_t seq;
+    TlvPayload tlv;
 
     /**
     *@method IcmpPayload
@@ -75,6 +107,15 @@ struct IcmpPayload {
     *@brief class default constructor
     */
     IcmpPayload();
+
+    /**
+     *@method getPayloadSize
+     *
+     *@brief get the ICMP payload size based on the tlv contained
+     *
+     *@return the ICMP payload actual size
+     */
+    unsigned int getPayloadSize();
 
     /**
     *@method generateGuid

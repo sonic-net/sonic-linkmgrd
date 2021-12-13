@@ -63,10 +63,15 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     EXPECT_TRUE(ethHeader->ether_type == htons(ETHERTYPE_IP));
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    link_prober::IcmpPayload *icmpPayload = new (
+        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+
     EXPECT_TRUE(ipHeader->ihl == sizeof(iphdr) >> 2);
     EXPECT_TRUE(ipHeader->version == IPVERSION);
     EXPECT_TRUE(ipHeader->tos == 0xb8);
-    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload)));
+    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + icmpPayload->getPayloadSize()));
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
@@ -74,22 +79,20 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     EXPECT_TRUE(ipHeader->saddr == htonl(mFakeMuxPort.getMuxPortConfig().getLoopbackIpv4Address().to_v4().to_uint()));
     EXPECT_TRUE(ipHeader->daddr == htonl(mFakeMuxPort.getMuxPortConfig().getBladeIpv4Address().to_v4().to_uint()));
 
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
     EXPECT_TRUE(icmpHeader->type == ICMP_ECHO);
     EXPECT_TRUE(icmpHeader->code == 0);
     EXPECT_TRUE(icmpHeader->un.echo.id == htons(mFakeMuxPort.getMuxPortConfig().getServerId()));
     EXPECT_TRUE(icmpHeader->un.echo.sequence == htons(0xffff));
 
-    link_prober::IcmpPayload *icmpPayload = new (
-        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    ) link_prober::IcmpPayload();
-
     EXPECT_TRUE(icmpPayload->cookie == htonl(link_prober::IcmpPayload::getCookie()));
     EXPECT_TRUE(icmpPayload->version == htonl(link_prober::IcmpPayload::getVersion()));
+    EXPECT_TRUE(icmpPayload->tlv.type == 0);
+    EXPECT_TRUE(icmpPayload->tlv.cmdtlv.length == htons(1));
+    EXPECT_TRUE(icmpPayload->tlv.cmdtlv.command == static_cast<uint8_t> (link_prober::Command::COMMAND_NONE));
     EXPECT_TRUE(memcmp(
-        icmpPayload->un.uuid.data,
+        icmpPayload->uuid,
         link_prober::IcmpPayload::getGuidData(),
-        link_prober::IcmpPayload::getGuid().size()
+        sizeof(icmpPayload->uuid)
     ) == 0);
 }
 
@@ -99,11 +102,11 @@ TEST_F(LinkProberTest, CalculateChecksum)
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
-    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+    memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     initializeSendBuffer();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12355);
+    EXPECT_TRUE(icmpHeader->checksum == 12354);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
@@ -112,11 +115,11 @@ TEST_F(LinkProberTest, UpdateEthernetFrame)
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
-    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+    memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     handleUpdateEthernetFrame();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12355);
+    EXPECT_TRUE(icmpHeader->checksum == 12354);
 }
 
 TEST_F(LinkProberTest, UpdateSequenceNo)
@@ -125,7 +128,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
-    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+    memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
 
     handleUpdateEthernetFrame();
 
@@ -134,7 +137,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12099);
+    EXPECT_TRUE(icmpHeader->checksum == 12098);
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
@@ -150,9 +153,9 @@ TEST_F(LinkProberTest, GenerateGuid)
         txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     EXPECT_TRUE(memcmp(
-        icmpPayload->un.uuid.data,
+        icmpPayload->uuid,
         link_prober::IcmpPayload::getGuidData(),
-        link_prober::IcmpPayload::getGuid().size()
+        sizeof(icmpPayload->uuid)
     ) == 0);
 }
 
