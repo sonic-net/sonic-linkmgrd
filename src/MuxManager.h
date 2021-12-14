@@ -305,6 +305,19 @@ public:
     */
     void processProbeMuxState(const std::string &portName, const std::string &muxState);
 
+    /**
+     * @method addOrUpdateDefaultRouteState
+     * 
+     * @brief update default route state based on state db notification
+     * 
+     * @param ipAddress
+     * @param routeState
+     *  
+     * @return none
+     * 
+    */
+    void addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::string &routeState);
+
 private:
     /**
     *@method getMuxPortPtrOrThrow
@@ -348,6 +361,20 @@ private:
     *@return none
     */
     void setDbInterfacePtr(std::shared_ptr<mux::DbInterface> dbInterfacePtr) {mDbInterfacePtr = dbInterfacePtr;};
+
+public: 
+    /**
+     * @enum RouteState
+     * 
+     * @brief default route state 
+    */
+    enum RouteState {
+        NA,
+        OK
+    };
+
+    RouteState mIpv4DefaultRouteState = NA;
+    RouteState mIpv6DefaultRouteState = NA;
 
 private:
     common::MuxConfig mMuxConfig;

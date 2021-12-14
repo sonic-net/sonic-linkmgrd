@@ -228,4 +228,13 @@ void MuxPort::handleMuxConfig(const std::string &config)
     )));
 }
 
+// 
+// ---> handleDefaultRouteState(const std::string &routeState);
+// 
+// handles default route state notification
+//
+void MuxPort::handleDefaultRouteState(const std::string &config)
+{
+    
+}
 } /* namespace mux */

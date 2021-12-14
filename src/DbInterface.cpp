@@ -731,6 +731,54 @@ void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbP
 }
 
 //
+// ---> processDefaultRouteStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+// 
+// process default route state notification from orchagent
+//
+void DbInterface::processDefaultRouteStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string key = kfvKey(entry);
+        std::string op = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "state";}
+        );
+
+        if (cit != fieldValues.cend()) {
+            const std::string field = cit->first;
+            const std::string value = cit->second;
+
+            MUXLOGDEBUG(boost::format("key: %s, operation: %s, field: %s, value: %s") %
+                key %
+                op %
+                field %
+                value
+            );
+
+            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(key);
+            mMuxManagerPtr->addOrUpdateDefaultRouteState(ipAddress, value);
+        }
+    }
+}
+
+//
+// ---> handleDefaultRouteStateNotification(swss::SubscriberStateTable &statedbRouteTable);
+//
+// handle Default Route State notification from orchagent
+//
+void DbInterface::handleDefaultRouteStateNotification(swss::SubscriberStateTable &statedbRouteTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    statedbRouteTable.pops(entries);
+    processDefaultRouteStateNotification(entries);
+}
+
+//
 // ---> handleSwssNotification();
 //
 // main thread method for handling SWSS notification
@@ -752,6 +800,8 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable appDbMuxResponseTable(appDbPtr.get(), APP_MUX_CABLE_RESPONSE_TABLE_NAME);
     // for getting state db MUX state when orchagent updates it
     swss::SubscriberStateTable stateDbPortTable(stateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
+    // for getting state db default route state 
+    swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), STATE_ROUTE_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
@@ -771,6 +821,7 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&appDbPortTable);
     swssSelect.addSelectable(&appDbMuxResponseTable);
     swssSelect.addSelectable(&stateDbPortTable);
+    swssSelect.addSelectable(&stateDbRouteTable);
     swssSelect.addSelectable(&netlinkNeighbor);
 
     while (mPollSwssNotifcation) {
@@ -797,6 +848,8 @@ void DbInterface::handleSwssNotification()
             handleMuxResponseNotifiction(appDbMuxResponseTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbPortTable)) {
             handleMuxStateNotifiction(stateDbPortTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbRouteTable)) {
+            handleDefaultRouteStateNotification(stateDbRouteTable);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

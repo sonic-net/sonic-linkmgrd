@@ -235,6 +235,38 @@ void MuxManager::processProbeMuxState(const std::string &portName, const std::st
 }
 
 //
+// ---> addOrUpdateDefaultRouteState(boost::asio::ip::address& address, const std::string &routeState);
+//
+// update default route state based on state db notification
+//
+void addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::string &routeState) 
+{
+    MUXLOGINFO(boost::format("%s: default route state: %s") % address % routeState);
+
+    RouteState nextState = RouteState::NA;
+    if(routeState == "ok") {
+        nextState = RouteState::OK;
+    }
+
+    if (address.is_v4()) {
+        mIpv4DefaultRouteState = routeState;
+    } else {
+        mIpv6DefaultRouteState = routeState;
+    }
+
+    RouteState combinedState = RouteState::NA;
+    if (mIpv4DefaultRouteState == RouteState::OK && mIpv6DefaultRouteState == RouteState::OK) {
+        combinedState = RouteState::OK;
+    }
+
+    portMapIterator = mPortMap.begin();
+    while(portMapIterator != mPortMap.end) {
+        portMapIterator->second->handleDefaultRouteState(combinedState);
+        portMapIterator ++;
+    }
+}
+
+//
 // ---> getMuxPortPtrOrThrow(const std::string &portName);
 //
 // retrieve a pointer to MuxPort if it exist or create a new MuxPort object

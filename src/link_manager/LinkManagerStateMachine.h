@@ -476,6 +476,15 @@ public:
     */
     void handleSwitchActiveRequestEvent();
 
+    /**
+     * @method handleDefaultRouteStateNotification
+     * 
+     * @brief handle default route state notification from routeorch
+     * 
+     * @return none
+    */
+    void handleDefaultRouteStateNotification();
+
 private:
     /**
     *@method updateMuxLinkmgrState
