@@ -373,9 +373,6 @@ public:
         OK
     };
 
-    RouteState mIpv4DefaultRouteState = NA;
-    RouteState mIpv6DefaultRouteState = NA;
-
 private:
     common::MuxConfig mMuxConfig;
 
@@ -387,6 +384,9 @@ private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr;
 
     PortMap mPortMap;
+
+    RouteState mIpv4DefaultRouteState = NA;
+    RouteState mIpv6DefaultRouteState = NA;
 };
 
 } /* namespace mux */

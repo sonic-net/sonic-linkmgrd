@@ -33,6 +33,7 @@
 
 #include "common/MuxPortConfig.h"
 #include "DbInterface.h"
+#include "MuxManager.h"
 
 namespace test {
 class MuxManagerTest;
@@ -261,7 +262,7 @@ public:
      * 
      * @return none
     */
-    void handleDefaultRouteState(const std::string &routeState);
+    void handleDefaultRouteState(mux::MuxManager::RouteState state);
 
 protected:
     friend class test::MuxManagerTest;

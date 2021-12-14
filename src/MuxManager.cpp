@@ -243,24 +243,24 @@ void addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::s
 {
     MUXLOGINFO(boost::format("%s: default route state: %s") % address % routeState);
 
-    RouteState nextState = RouteState::NA;
+    mux::MuxManager::RouteState nextState = mux::MuxManager::RouteState::NA;
     if(routeState == "ok") {
-        nextState = RouteState::OK;
+        nextState = mux::MuxManager::RouteState::OK;
     }
 
     if (address.is_v4()) {
-        mIpv4DefaultRouteState = routeState;
+        mIpv4DefaultRouteState = nextState;
     } else {
-        mIpv6DefaultRouteState = routeState;
+        mIpv6DefaultRouteState = nextState;
     }
 
-    RouteState combinedState = RouteState::NA;
-    if (mIpv4DefaultRouteState == RouteState::OK && mIpv6DefaultRouteState == RouteState::OK) {
-        combinedState = RouteState::OK;
+    mux::MuxManager::RouteState combinedState = mux::MuxManager::RouteState::NA;
+    if (mIpv4DefaultRouteState == mux::MuxManager::RouteState::OK && mIpv6DefaultRouteState == mux::MuxManager::RouteState::OK) {
+        combinedState = mux::MuxManager::RouteState::OK;
     }
 
     portMapIterator = mPortMap.begin();
-    while(portMapIterator != mPortMap.end) {
+    while(portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleDefaultRouteState(combinedState);
         portMapIterator ++;
     }

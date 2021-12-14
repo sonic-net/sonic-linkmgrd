@@ -76,6 +76,7 @@ std::vector<std::string> LinkManagerStateMachine::mLinkProberStateName = {"Activ
 std::vector<std::string> LinkManagerStateMachine::mMuxStateName = {"Active", "Standby", "Unknown", "Error", "Wait"};
 std::vector<std::string> LinkManagerStateMachine::mLinkStateName = {"Up", "Down"};
 std::vector<std::string> LinkManagerStateMachine::mLinkHealthName = {"Uninitialized", "Unhealthy", "Healthy"};
+std::vector<std::string> LinkManagerStateMachine::mRouteStateName = {"NA", "OK"};
 
 //
 // ---> LinkManagerStateMachine(
@@ -813,6 +814,29 @@ void LinkManagerStateMachine::handleSwitchActiveRequestEvent()
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
+}
+
+// 
+// ---> handleDefaultRouteStateNotification(mux::RouteState routeState);
+// 
+// handle default route state notification from routeorch
+//
+void LinkManagerStateMachine::handleDefaultRouteStateNotification(mux::MuxManager::RouteState routeState) 
+{
+    MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % mRouteStateName[routeState]);
+
+    if(mComponentInitState.test(MuxStateComponent)) {
+        if (ms(mCompositeState) == mux_state::MuxState::Label::Active &&
+            routeState == mux::MuxManager::RouteState::NA) {
+            CompositeState nextState = mCompositeState;
+            enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+            LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+            mCompositeState = nextState;
+        } else {
+            enterMuxWaitState(mCompositeState);
+        }
+    } 
 }
 
 //
