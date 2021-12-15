@@ -801,7 +801,7 @@ void DbInterface::handleSwssNotification()
     // for getting state db MUX state when orchagent updates it
     swss::SubscriberStateTable stateDbPortTable(stateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
     // for getting state db default route state 
-    swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), "ROUTE_TABLE");
+    swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), STATE_ROUTE_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
