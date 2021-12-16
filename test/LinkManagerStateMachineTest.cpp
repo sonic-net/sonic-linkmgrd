@@ -1025,7 +1025,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
-TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateOK) 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK) 
 {
     setMuxStandby();
 
