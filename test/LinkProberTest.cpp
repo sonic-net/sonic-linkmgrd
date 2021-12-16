@@ -105,7 +105,7 @@ TEST_F(LinkProberTest, CalculateChecksum)
     initializeSendBuffer();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12339);
+    EXPECT_TRUE(icmpHeader->checksum == 12099);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
@@ -118,7 +118,7 @@ TEST_F(LinkProberTest, UpdateEthernetFrame)
     handleUpdateEthernetFrame();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12339);
+    EXPECT_TRUE(icmpHeader->checksum == 12099);
 }
 
 TEST_F(LinkProberTest, UpdateSequenceNo)
@@ -136,7 +136,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12083);
+    EXPECT_TRUE(icmpHeader->checksum == 11843);
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));

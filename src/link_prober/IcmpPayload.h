@@ -48,9 +48,8 @@ namespace link_prober
  *@brief Supported TLV types
  */
 enum TlvType: uint8_t {
-    TLV_COMMAND = 1,
-    TLV_SENTINEL = 0x0f,
-    TLV_COUNT
+    TLV_COMMAND = 0x5,
+    TLV_SENTINEL = 0xff,
 };
 
 #define TlvHead      \

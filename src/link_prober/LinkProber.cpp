@@ -232,18 +232,23 @@ void LinkProber::handleUpdateEthernetFrame()
 //
 void LinkProber::handleSendSwitchCommand()
 {
-    new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload)) TlvCommand();
-    new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvCommand)) TlvSentinel();
+    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvCommand();
+    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload) + sizeof(TlvCommand)) TlvSentinel();
 
+    size_t totalPayloadSize = sizeof(IcmpPayload) + sizeof(TlvCommand) + sizeof(TlvSentinel);
+    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    computeChecksum(icmpHeader, sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvCommand) + sizeof(TlvSentinel));
-    mTxPacketSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvCommand) + sizeof(TlvSentinel);
+    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    mTxPacketSize = mPacketHeaderSize + totalPayloadSize;
+    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
 
     sendHeartbeat();
 
-    new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload)) TlvSentinel();
-    computeChecksum(icmpHeader, sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvSentinel));
-    mTxPacketSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvSentinel);
+    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvSentinel();
+    totalPayloadSize = sizeof(IcmpPayload) + sizeof(TlvSentinel);
+    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    mTxPacketSize = mPacketHeaderSize + totalPayloadSize;
+    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
 
     // inform the composite state machine about commend send completion
     boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
@@ -280,6 +285,31 @@ void LinkProber::sendHeartbeat()
 }
 
 //
+// ---> handleTlvCommandRecv(size_t offset, bool isPeer);
+//
+// handle packet reception
+//
+void LinkProber::handleTlvCommandRecv(
+    size_t offset,
+    bool isPeer
+)
+{
+    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (mTxBuffer.data() + offset);
+    if (isPeer) {
+        if (tlvCommand->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
+            boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
+            boost::asio::io_service &ioService = strand.context();
+            ioService.post(strand.wrap(boost::bind(
+                static_cast<void (LinkProberStateMachine::*) (SwitchActiveRequestEvent&)>
+                    (&LinkProberStateMachine::processEvent),
+                &mLinkProberStateMachine,
+                LinkProberStateMachine::getSwitchActiveRequestEvent()
+            )));
+        }
+    }
+}
+
+//
 // ---> handleRecv(const boost::system::error_code& errorCode, size_t bytesTransferred);
 //
 // handle packet reception
@@ -298,7 +328,7 @@ void LinkProber::handleRecv(
         );
 
         IcmpPayload *icmpPayload = reinterpret_cast<IcmpPayload *> (
-            mRxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+            mRxBuffer.data() + mPacketHeaderSize
         );
 
         if (ntohl(icmpPayload->cookie) == IcmpPayload::getCookie() &&
@@ -308,7 +338,7 @@ void LinkProber::handleRecv(
                 mMuxPortConfig.getPortName() %
                 mMuxPortConfig.getBladeIpv4Address().to_string()
             );
-            bool isMatch = memcmp(icmpPayload->uuid, IcmpPayload::getGuidData(), sizeof(icmpPayload->uuid));
+            bool isMatch = (memcmp(icmpPayload->uuid, IcmpPayload::getGuidData(), sizeof(icmpPayload->uuid)) == 0);
             if (isMatch)
             {
                 MUXLOGTRACE(boost::format("%s: Matching Guid") % mMuxPortConfig.getPortName());
@@ -317,33 +347,33 @@ void LinkProber::handleRecv(
                 mLinkProberStateMachine.postLinkProberStateEvent(LinkProberStateMachine::getIcmpSelfEvent());
             }
 
-            uint8_t tlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
-            while (tlvStartOffset + sizeof(Tlv) < MUX_MAX_ICMP_BUFFER_SIZE)
-            {
+            uint8_t tlvStartOffset = mPacketHeaderSize + sizeof(IcmpPayload);
+            bool stopProcessTlv = false;
+            while (tlvStartOffset + sizeof(Tlv) <= bytesTransferred) {
                 Tlv *currentTlv = reinterpret_cast<Tlv *> (mTxBuffer.data() + tlvStartOffset);
-                if (currentTlv->type == TlvType::TLV_COMMAND) {
-                    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (mTxBuffer.data() + tlvStartOffset);
-                    if (!isMatch) {
-                        if (tlvCommand->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
-                            boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
-                            boost::asio::io_service &ioService = strand.context();
-                            ioService.post(strand.wrap(boost::bind(
-                                static_cast<void (LinkProberStateMachine::*) (SwitchActiveRequestEvent&)>
-                                    (&LinkProberStateMachine::processEvent),
-                                &mLinkProberStateMachine,
-                                LinkProberStateMachine::getSwitchActiveRequestEvent()
-                            )));
+                size_t currentTlvLength = ntohs(currentTlv->length);
+                switch (currentTlv->type) {
+                    case TlvType::TLV_COMMAND: {
+                        handleTlvCommandRecv(tlvStartOffset, !isMatch);
+                        break;
+                    }
+                    case TlvType::TLV_SENTINEL: {
+                        // sentinel TLV, stop processing
+                        stopProcessTlv = true;
+                        break;
+                    }
+                    default: {
+                        // unknonw TLV, try to skip
+                        if (currentTlvLength == 0) {
+                            stopProcessTlv = true;
+                            break;
                         }
                     }
-                    tlvStartOffset += sizeof(TlvCommand);
-                } else if (currentTlv->type == TlvType::TLV_SENTINEL) {
-                    // sentinel TLV, stop processing
-                    break;
-                } else {
-                    // unknown TLV type, ignore
+                    tlvStartOffset += sizeof(Tlv) + currentTlvLength;
+                }
+                if (stopProcessTlv) {
                     break;
                 }
-
             }
         } else {
             // Unknown ICMP packet, ignore.
@@ -563,9 +593,9 @@ void LinkProber::initializeSendBuffer()
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    IcmpPayload *icmpPayload = new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)) IcmpPayload();
-    TlvSentinel *tlvSentinel = new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload)) TlvSentinel();
-    mTxPacketSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvSentinel);
+    IcmpPayload *icmpPayload = new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
+    TlvSentinel *tlvSentinel = new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvSentinel();
+    mTxPacketSize = mPacketHeaderSize + sizeof(IcmpPayload) + sizeof(TlvSentinel);
 
     ipHeader->ihl = sizeof(iphdr) >> 2;
     ipHeader->version = IPVERSION;

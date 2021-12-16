@@ -189,6 +189,21 @@ private:
     void sendHeartbeat();
 
     /**
+    *@method handleTlvCommandRecv
+    *
+    *@brief handle TLV command
+    *
+    *@param offset (in)     start offset for TlvCommand struct in mRxBuffer
+    *@param isPeer (in)     True if the reply received is from the peer ToR
+    *
+    *@return none
+    */
+    void handleTlvCommandRecv(
+        size_t offset,
+        bool isPeer
+    );
+
+    /**
     *@method handleRecv
     *
     *@brief handle packet reception
@@ -358,6 +373,8 @@ private:
 
     uint32_t mIcmpChecksum = 0;
     uint32_t mIpChecksum = 0;
+
+    static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
 
     boost::asio::io_service::strand mStrand;
     boost::asio::deadline_timer mDeadlineTimer;
