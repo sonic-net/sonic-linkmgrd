@@ -369,6 +369,7 @@ private:
 
     int mSocket = 0;
 
+    std::size_t mTxPacketSize;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 

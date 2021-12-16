@@ -32,25 +32,33 @@
 namespace link_prober
 {
 //
-// ---> TlvPayload();
-//
-// struct constructor
-//
-TlvPayload::TlvPayload(uint8_t tlv_type) :
-    type(tlv_type)
-{
-    if (tlv_type == 0)
-    {
-        new (&cmdtlv) TlvCommand();
-    }
-}
-
-//
 // static members
 //
 boost::uuids::uuid IcmpPayload::mGuid;
 uint32_t IcmpPayload::mCookie = 0x47656d69;
 uint32_t IcmpPayload::mVersion = 0;
+
+//
+// ---> TlvCommand();
+//
+// struct TlvCommand constructor
+//
+TlvCommand::TlvCommand() :
+    type(tlvtype), length(htons(1)), command(static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE))
+{
+}
+
+//
+// ---> TlvSentinel();
+//
+// struct TlvSentinel constructor
+//
+TlvSentinel::TlvSentinel() :
+    type(tlvtype), length(htons(1))
+{
+}
+
+
 
 //
 // ---> IcmpPayload();
@@ -60,25 +68,9 @@ uint32_t IcmpPayload::mVersion = 0;
 IcmpPayload::IcmpPayload() :
     cookie(htonl(mCookie)),
     version(htonl(mVersion)),
-    seq(0),
-    tlv(0)
+    seq(0)
 {
     memcpy(uuid, mGuid.data, sizeof(uuid));
-}
-
-//
-// ---> getPayloadSize()
-//
-// return the actual payload size
-//
-unsigned int IcmpPayload::getPayloadSize()
-{
-    unsigned int size = sizeof(IcmpPayload);
-    if (tlv.type == static_cast<uint8_t> (TlvType::TLV_COMMAND))
-    {
-        size += sizeof(TlvCommand) - sizeof(TlvPayload);
-    }
-    return size;
 }
 
 //

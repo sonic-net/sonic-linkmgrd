@@ -23,7 +23,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
-
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
 #include "LinkProberTest.h"
@@ -64,14 +63,13 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    link_prober::IcmpPayload *icmpPayload = new (
-        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    ) link_prober::IcmpPayload();
+    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr));
+    link_prober::TlvSentinel *tlvSentinel = reinterpret_cast<link_prober::TlvSentinel *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(*icmpPayload));
 
     EXPECT_TRUE(ipHeader->ihl == sizeof(iphdr) >> 2);
     EXPECT_TRUE(ipHeader->version == IPVERSION);
     EXPECT_TRUE(ipHeader->tos == 0xb8);
-    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + icmpPayload->getPayloadSize()));
+    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload) + sizeof(link_prober::TlvSentinel)));
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
@@ -86,40 +84,41 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
 
     EXPECT_TRUE(icmpPayload->cookie == htonl(link_prober::IcmpPayload::getCookie()));
     EXPECT_TRUE(icmpPayload->version == htonl(link_prober::IcmpPayload::getVersion()));
-    EXPECT_TRUE(icmpPayload->tlv.type == 0);
-    EXPECT_TRUE(icmpPayload->tlv.cmdtlv.length == htons(1));
-    EXPECT_TRUE(icmpPayload->tlv.cmdtlv.command == static_cast<uint8_t> (link_prober::Command::COMMAND_NONE));
     EXPECT_TRUE(memcmp(
         icmpPayload->uuid,
         link_prober::IcmpPayload::getGuidData(),
         sizeof(icmpPayload->uuid)
     ) == 0);
+
+    EXPECT_TRUE(tlvSentinel->type == link_prober::TlvType::TLV_SENTINEL);
+    EXPECT_TRUE(tlvSentinel->length == htons(1));
+    EXPECT_TRUE(tlvSentinel->padding == 0);
 }
 
 TEST_F(LinkProberTest, CalculateChecksum)
 {
-    link_prober::IcmpPayload *icmpPayload = new (
+    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    ) link_prober::IcmpPayload();
+    );
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     initializeSendBuffer();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12354);
+    EXPECT_TRUE(icmpHeader->checksum == 12339);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
 {
-    link_prober::IcmpPayload *icmpPayload = new (
+    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    ) link_prober::IcmpPayload();
+    );
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     handleUpdateEthernetFrame();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12354);
+    EXPECT_TRUE(icmpHeader->checksum == 12339);
 }
 
 TEST_F(LinkProberTest, UpdateSequenceNo)
@@ -137,7 +136,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12098);
+    EXPECT_TRUE(icmpHeader->checksum == 12083);
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
