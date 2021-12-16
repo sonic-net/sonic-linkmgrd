@@ -230,6 +230,12 @@ void LinkManagerStateMachineTest::setMuxStandby()
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+void LinkManagerStateMachineTest::postDefaultRouteEvent(std::string routeState, uint32_t count)
+{
+    mFakeMuxPort.handleDefaultRouteState(routeState);
+    runIoService(count);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
 {
     setMuxActive();
@@ -1000,6 +1006,40 @@ TEST_F(LinkManagerStateMachineTest, MuxStandby2Unknown2Error)
 
     handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Down);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA) 
+{
+    setMuxActive();
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    postDefaultRouteEvent("na", 3);
+
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Standby, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK)
+{
+    SetMuxStandby();
+
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    postDefaultRouteEvent("ok", 2);
+
+    VALIDATE_STATE(Standby, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Standby, Standby, Up);
 }
 
 } /* namespace test */
