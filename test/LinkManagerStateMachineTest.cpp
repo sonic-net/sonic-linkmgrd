@@ -1025,9 +1025,9 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
-TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK)
+TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateOK) 
 {
-    SetMuxStandby();
+    setMuxStandby();
 
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     postDefaultRouteEvent("ok", 2);
