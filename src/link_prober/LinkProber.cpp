@@ -232,22 +232,22 @@ void LinkProber::handleUpdateEthernetFrame()
 //
 void LinkProber::handleSendSwitchCommand()
 {
-    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvCommand();
-    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload) + sizeof(TlvCommand)) TlvSentinel();
+    resetTxBufferTlv();
+    appendTlvCommand(Command::COMMAND_SWITCH_ACTIVE);
+    appendTlvSentinel();
 
-    size_t totalPayloadSize = sizeof(IcmpPayload) + sizeof(TlvCommand) + sizeof(TlvSentinel);
+    size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
     computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
-    mTxPacketSize = mPacketHeaderSize + totalPayloadSize;
     ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
 
     sendHeartbeat();
 
-    new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvSentinel();
-    totalPayloadSize = sizeof(IcmpPayload) + sizeof(TlvSentinel);
+    resetTxBufferTlv();
+    appendTlvSentinel();
+    totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
     computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
-    mTxPacketSize = mPacketHeaderSize + totalPayloadSize;
     ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
 
     // inform the composite state machine about commend send completion
@@ -285,16 +285,16 @@ void LinkProber::sendHeartbeat()
 }
 
 //
-// ---> handleTlvCommandRecv(size_t offset, bool isPeer);
+// ---> handleTlvCommandRecv(Tlv *tlvPtr,, bool isPeer);
 //
 // handle packet reception
 //
 void LinkProber::handleTlvCommandRecv(
-    size_t offset,
+    Tlv *tlvPtr,
     bool isPeer
 )
 {
-    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (mTxBuffer.data() + offset);
+    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (tlvPtr);
     if (isPeer) {
         if (tlvCommand->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
             boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
@@ -327,6 +327,12 @@ void LinkProber::handleRecv(
             mRxBuffer.data() + sizeof(ether_header) + sizeof(iphdr)
         );
 
+        MUXLOGTRACE(boost::format("%s: Got data from: %s, size: %d") %
+            mMuxPortConfig.getPortName() %
+            boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string() %
+            (bytesTransferred - sizeof(iphdr) - sizeof(ether_header))
+        );
+
         IcmpPayload *icmpPayload = reinterpret_cast<IcmpPayload *> (
             mRxBuffer.data() + mPacketHeaderSize
         );
@@ -347,14 +353,14 @@ void LinkProber::handleRecv(
                 mLinkProberStateMachine.postLinkProberStateEvent(LinkProberStateMachine::getIcmpSelfEvent());
             }
 
-            uint8_t tlvStartOffset = mPacketHeaderSize + sizeof(IcmpPayload);
+            size_t nextTlvOffset = mTlvStartOffset;
+            size_t nextTlvSize = 0;
             bool stopProcessTlv = false;
-            while (tlvStartOffset + sizeof(Tlv) <= bytesTransferred) {
-                Tlv *currentTlv = reinterpret_cast<Tlv *> (mTxBuffer.data() + tlvStartOffset);
-                size_t currentTlvLength = ntohs(currentTlv->length);
-                switch (currentTlv->type) {
+            while ((nextTlvSize = findNextTlv(nextTlvOffset, bytesTransferred)) > 0 && !stopProcessTlv) {
+                Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + nextTlvOffset);
+                switch (nextTlvPtr->type) {
                     case TlvType::TLV_COMMAND: {
-                        handleTlvCommandRecv(tlvStartOffset, !isMatch);
+                        handleTlvCommandRecv(nextTlvPtr, !isMatch);
                         break;
                     }
                     case TlvType::TLV_SENTINEL: {
@@ -363,27 +369,24 @@ void LinkProber::handleRecv(
                         break;
                     }
                     default: {
-                        // unknonw TLV, try to skip
-                        if (currentTlvLength == 0) {
-                            stopProcessTlv = true;
-                            break;
-                        }
+                        // try to skip unknown TLV with valid length(>0)
+                        stopProcessTlv = (nextTlvSize == sizeof(Tlv));
+                        break;
                     }
-                    tlvStartOffset += sizeof(Tlv) + currentTlvLength;
                 }
-                if (stopProcessTlv) {
-                    break;
-                }
+                nextTlvOffset += nextTlvSize;
+            }
+
+            if (nextTlvOffset < bytesTransferred) {
+                size_t BytesNotProcessed = bytesTransferred - nextTlvOffset;
+                MUXLOGTRACE(boost::format("%s: %d bytes in RxBuffer not processed") %
+                    mMuxPortConfig.getPortName() %
+                    BytesNotProcessed
+                );
             }
         } else {
             // Unknown ICMP packet, ignore.
         }
-
-        MUXLOGTRACE(boost::format("%s: Got data from: %s, size: %d") %
-            mMuxPortConfig.getPortName() %
-            boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string() %
-            (bytesTransferred - sizeof(iphdr) - sizeof(ether_header))
-        );
         // start another receive to consume as much as possible of backlog packets if any
         startRecv();
     }
@@ -530,11 +533,15 @@ void LinkProber::startTimer()
 uint32_t LinkProber::calculateChecksum(uint16_t *data, size_t size)
 {
     uint32_t sum = 0;
-    size_t offset = 0;
 
-    do {
-        sum += ntohs(data[offset++]);
-    } while (offset < size);
+    while (size > 1) {
+        sum += ntohs(*data++);
+        size -= sizeof(uint16_t);
+    }
+
+    if (size) {
+        sum += ntohs(static_cast<uint16_t> ((*reinterpret_cast<uint8_t *> (data))));
+    }
 
     return sum;
 }
@@ -560,7 +567,7 @@ void LinkProber::computeChecksum(icmphdr *icmpHeader, size_t size)
 {
     icmpHeader->checksum = 0;
     mIcmpChecksum = calculateChecksum(
-        reinterpret_cast<uint16_t *> (icmpHeader), size / 2
+        reinterpret_cast<uint16_t *> (icmpHeader), size
     );
     addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
 }
@@ -574,7 +581,7 @@ void LinkProber::computeChecksum(iphdr *ipHeader, size_t size)
 {
     ipHeader->check = 0;
     mIpChecksum = calculateChecksum(
-        reinterpret_cast<uint16_t *> (ipHeader), size / 2
+        reinterpret_cast<uint16_t *> (ipHeader), size
     );
     addChecksumCarryover(&ipHeader->check, mIpChecksum);
 }
@@ -593,14 +600,16 @@ void LinkProber::initializeSendBuffer()
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    IcmpPayload *icmpPayload = new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
-    TlvSentinel *tlvSentinel = new (mTxBuffer.data() + mPacketHeaderSize + sizeof(IcmpPayload)) TlvSentinel();
-    mTxPacketSize = mPacketHeaderSize + sizeof(IcmpPayload) + sizeof(TlvSentinel);
+
+    new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
+    resetTxBufferTlv();
+    appendTlvSentinel();
+    size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
 
     ipHeader->ihl = sizeof(iphdr) >> 2;
     ipHeader->version = IPVERSION;
     ipHeader->tos = 0xb8;
-    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) + sizeof(TlvSentinel));
+    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
     ipHeader->id = static_cast<uint16_t> (rand());
     ipHeader->frag_off = 0;
     ipHeader->ttl = 64;
@@ -615,7 +624,7 @@ void LinkProber::initializeSendBuffer()
     icmpHeader->un.echo.id = htons(mMuxPortConfig.getServerId());
     icmpHeader->un.echo.sequence = htons(mTxSeqNo);
 
-    computeChecksum(icmpHeader, sizeof(icmphdr) + sizeof(*icmpPayload) + sizeof(*tlvSentinel));
+    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
 }
 
 //
@@ -633,6 +642,52 @@ void LinkProber::updateIcmpSequenceNo()
     icmpHeader->un.echo.sequence = htons(++mTxSeqNo);
     mIcmpChecksum += mTxSeqNo ? 1 : 0;
     addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
+}
+
+//
+// ---> findNextTlv
+//
+// Find next TLV to process in rxBuffer
+//
+size_t LinkProber::findNextTlv(size_t readOffset, size_t bytesTransferred)
+{
+    size_t tlvSize = 0;
+    if (readOffset + sizeof(Tlv) <= bytesTransferred) {
+        Tlv *tlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + readOffset);
+        tlvSize = (sizeof(Tlv) + ntohs(tlvPtr->length));
+    }
+    return tlvSize;
+}
+
+//
+// ---> appendTlvCommand
+//
+// Append TlvCommand to the end of txBuffer
+//
+size_t LinkProber::appendTlvCommand(Command commandType)
+{
+    assert(mTxPacketSize + sizeof(TlvCommand) <= MUX_MAX_ICMP_BUFFER_SIZE);
+    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (mTxBuffer.data() + mTxPacketSize);
+    tlvCommand->type = TlvCommand::tlvtype;
+    tlvCommand->length = htons(1);
+    tlvCommand->command = static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE);
+    mTxPacketSize += sizeof(TlvCommand);
+    return sizeof(TlvCommand);
+}
+
+//
+// ---> appendTlvSentinel
+//
+// Append TlvSentinel to the end of txBuffer
+//
+size_t LinkProber::appendTlvSentinel()
+{
+    assert(mTxPacketSize + sizeof(TlvSentinel) <= MUX_MAX_ICMP_BUFFER_SIZE);
+    TlvSentinel *tlvSentinel = reinterpret_cast<TlvSentinel *> (mTxBuffer.data() + mTxPacketSize);
+    tlvSentinel->type = TlvSentinel::tlvtype;
+    tlvSentinel->length = 0;
+    mTxPacketSize += sizeof(TlvSentinel);
+    return sizeof(TlvSentinel);
 }
 
 } /* namespace link_prober */

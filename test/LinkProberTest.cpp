@@ -23,6 +23,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
+
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
 #include "LinkProberTest.h"
@@ -46,6 +47,18 @@ LinkProberTest::LinkProberTest() :
     )
 {
     mMuxConfig.setTimeoutIpv4_msec(1);
+}
+
+size_t LinkProberTest::appendTlvCommand(link_prober::Command commandType) {
+    return mLinkProber.appendTlvCommand(commandType);
+}
+
+size_t LinkProberTest::appendTlvSentinel() {
+    return mLinkProber.appendTlvSentinel();
+}
+
+size_t LinkProberTest::findNextTlv(size_t readOffset, size_t bytesTransferred) {
+    return mLinkProber.findNextTlv(readOffset, bytesTransferred);
 }
 
 TEST_F(LinkProberTest, InitializeSendBuffer)
@@ -73,7 +86,7 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
-    EXPECT_TRUE(ipHeader->check == 62663);
+    EXPECT_TRUE(ipHeader->check == 62919);
     EXPECT_TRUE(ipHeader->saddr == htonl(mFakeMuxPort.getMuxPortConfig().getLoopbackIpv4Address().to_v4().to_uint()));
     EXPECT_TRUE(ipHeader->daddr == htonl(mFakeMuxPort.getMuxPortConfig().getBladeIpv4Address().to_v4().to_uint()));
 
@@ -91,34 +104,33 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     ) == 0);
 
     EXPECT_TRUE(tlvSentinel->type == link_prober::TlvType::TLV_SENTINEL);
-    EXPECT_TRUE(tlvSentinel->length == htons(1));
-    EXPECT_TRUE(tlvSentinel->padding == 0);
+    EXPECT_TRUE(tlvSentinel->length == 0);
 }
 
 TEST_F(LinkProberTest, CalculateChecksum)
 {
-    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (
+    link_prober::IcmpPayload *icmpPayload = new (
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    );
+    ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     initializeSendBuffer();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12099);
+    EXPECT_TRUE(icmpHeader->checksum == 12100);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
 {
-    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (
+    link_prober::IcmpPayload *icmpPayload = new (
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
-    );
+    ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
     handleUpdateEthernetFrame();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12099);
+    EXPECT_TRUE(icmpHeader->checksum == 12100);
 }
 
 TEST_F(LinkProberTest, UpdateSequenceNo)
@@ -136,7 +148,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 11843);
+    EXPECT_TRUE(icmpHeader->checksum == 11844);
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
@@ -183,6 +195,44 @@ TEST_F(LinkProberTest, UpdateToRMac)
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
 
     EXPECT_TRUE(ipHeader->daddr == htonl(ipAddress.to_v4().to_uint()));
+}
+
+TEST_F(LinkProberTest, ReadWriteTlv)
+{
+    initializeSendBuffer();
+    size_t tlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload);
+    // check initial tx buffer packet size
+    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvSentinel));
+
+    // build txBuffer
+    resetTxBufferTlv();
+    EXPECT_TRUE(appendTlvCommand(link_prober::Command::COMMAND_SWITCH_ACTIVE) == sizeof(link_prober::TlvCommand));
+    EXPECT_TRUE(appendTlvSentinel() == sizeof(link_prober::TlvSentinel));
+    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvCommand) + sizeof(link_prober::TlvSentinel));
+
+    // build rxBuffer
+    size_t bytesTransferred = getTxPacketSize();
+    memcpy(getRxBufferData(), getTxBufferData(), bytesTransferred);
+
+    // start read TLV from rxBuffer
+    size_t rxReadOffset = tlvStartOffset;
+    size_t tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
+    link_prober::TlvCommand *tlvCommand = reinterpret_cast<link_prober::TlvCommand *> (getRxBufferData() + rxReadOffset);
+    EXPECT_TRUE(tlvSize == sizeof(link_prober::TlvCommand));
+    EXPECT_TRUE(tlvCommand->type == link_prober::TlvCommand::tlvtype);
+    EXPECT_TRUE(tlvCommand->length == htons(1));
+    EXPECT_TRUE(tlvCommand->command == static_cast<uint8_t> (link_prober::Command::COMMAND_SWITCH_ACTIVE));
+    rxReadOffset += tlvSize;
+
+    tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
+    link_prober::TlvSentinel *tlvSentinel = reinterpret_cast<link_prober::TlvSentinel *> (getRxBufferData() + rxReadOffset);
+    EXPECT_TRUE(tlvSize == sizeof(link_prober::TlvSentinel));
+    EXPECT_TRUE(tlvSentinel->type == link_prober::TlvSentinel::tlvtype);
+    EXPECT_TRUE(tlvSentinel->length == 0);
+    rxReadOffset += tlvSize;
+
+    tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
+    EXPECT_TRUE(tlvSize == 0);
 }
 
 TEST_F(LinkProberTest, InitializeException)

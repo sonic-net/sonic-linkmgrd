@@ -83,13 +83,6 @@ struct TlvCommand
     TlvHead;
     uint8_t command;
     static const uint8_t tlvtype = TlvType::TLV_COMMAND;
-
-    /**
-    *@method TlvCommand
-    *
-    *@brief struct TlvCommand default constructor
-    */
-    TlvCommand();
 } __attribute__((packed));
 
 /**
@@ -100,15 +93,7 @@ struct TlvCommand
 struct TlvSentinel
 {
     TlvHead;
-    uint8_t padding = 0;
     static const uint8_t tlvtype = TlvType::TLV_SENTINEL;
-
-    /**
-    *@method TlvSentinel
-    *
-    *@brief struct TlvSentinel default constructor
-    */
-    TlvSentinel();
 } __attribute__((packed));
 
 /**
@@ -182,10 +167,6 @@ private:
 
 static_assert(sizeof(IcmpPayload) % 2 == 0,
               "ICMP Payload size should be even sized, please add zero padding");
-
-static_assert(sizeof(TlvCommand) % 2 == 0, "TLV size should be even sized, please add zero padding");
-
-static_assert(sizeof(TlvSentinel) % 2 == 0, "TLV size should be even sized, please add zero padding");
 
 static_assert(sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload) < MUX_MAX_ICMP_BUFFER_SIZE,
               "Buffer Size doesn't fit Link Prober ICMP packet with its payload");

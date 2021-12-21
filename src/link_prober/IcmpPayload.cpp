@@ -39,28 +39,6 @@ uint32_t IcmpPayload::mCookie = 0x47656d69;
 uint32_t IcmpPayload::mVersion = 0;
 
 //
-// ---> TlvCommand();
-//
-// struct TlvCommand constructor
-//
-TlvCommand::TlvCommand() :
-    type(tlvtype), length(htons(1)), command(static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE))
-{
-}
-
-//
-// ---> TlvSentinel();
-//
-// struct TlvSentinel constructor
-//
-TlvSentinel::TlvSentinel() :
-    type(tlvtype), length(htons(1))
-{
-}
-
-
-
-//
 // ---> IcmpPayload();
 //
 // class constructor
