@@ -23,8 +23,9 @@ Fixes # (issue)
 -->
 
 - [ ] Bug fix
-- [ ] Test case(new/improvement)
-
+- [ ] New feature
+- [ ] Doc/Design
+- [ ] Unit test
 
 ### Approach
 #### What is the motivation for this PR?
@@ -34,8 +35,6 @@ Fixes # (issue)
 #### How did you verify/test it?
 
 #### Any platform specific information?
-
-#### Supported testbed topology if it's a new test case?
 
 ### Documentation 
 <!--
