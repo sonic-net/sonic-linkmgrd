@@ -375,7 +375,8 @@ private:
     bool mSuspendTx = false;
 
     uint32_t mContinuousIcmpUnknownEventCount = 0;
-    uint32_t mIcmpUnknownEventCount = 0;
+    uint64_t mIcmpUnknownEventCount = 0;
+    uint64_t mIcmpPacketCount = 0;
 };
 
 } /* namespace link_prober */

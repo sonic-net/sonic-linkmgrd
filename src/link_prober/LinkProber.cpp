@@ -399,10 +399,10 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
         mContinuousIcmpUnknownEventCount++; 
         mIcmpUnknownEventCount++;
 
-        MUXLOGINFO(boost::format("%s: continusous ICMP Unknown event count: %d, total Unknown event count since initialization: %d") %
+        MUXLOGINFO(boost::format("%s: continusous ICMP Unknown event count: %d, pck loss rate since initialization: %.2f %%") %
             mMuxPortConfig.getPortName() %
             mContinuousIcmpUnknownEventCount %
-            mIcmpUnknownEventCount
+            (static_cast<double_t>(mIcmpUnknownEventCount) / mIcmpPacketCount * 100) 
         );
     }
 
@@ -442,6 +442,8 @@ void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 void LinkProber::startRecv()
 {
     MUXLOGTRACE(mMuxPortConfig.getPortName());
+
+    mIcmpPacketCount++;
 
     mStream.async_read_some(
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
