@@ -250,7 +250,8 @@ void MuxManager::addOrUpdateDefaultRouteState(boost::asio::ip::address address, 
     }
 
     std::string nextState = "na";
-    if (mIpv4DefaultRouteState == "ok" && mIpv6DefaultRouteState == "ok") {
+    // For now we only need IPv4 default route state, this logic can be updated in the future.  
+    if (mIpv4DefaultRouteState == "ok") {
         nextState = "ok";
     }
 
