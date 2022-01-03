@@ -373,6 +373,9 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+
+    uint32_t mContinuousIcmpUnknownEventCount = 0;
+    uint32_t mIcmpUnknownEventCount = 0;
 };
 
 } /* namespace link_prober */
