@@ -1,33 +1,68 @@
 # Project
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
 
-As the maintainer of this project, please make a few updates:
+This repo tracks the source code of linkmgrd for dual-ToR topology.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+# Coding style guide
 
-## Contributing
+Please follow the simple rules laid out below (will update as needed):
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+## Spacing
+- Please configure your editor to enable expand white spaces. Do not use tab for spacing in source code.
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+- Please configure your editor to set tab stop at 4 spaces. And use 4 white spaces for each indentation level.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+- Please leave one white space after following keywords:
 
-## Trademarks
+```
+    if (...)
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+    while (...)
+
+    for (...)
+```
+
+## Curly braces
+- Function definition: start a new line
+```
+void function(...)
+{
+    // code block
+}
+```
+
+- if/for/while condition when condition is one liner: same line
+```
+if (...) {
+    // code block
+}
+```
+
+- if/for/while condition expands multiple lines: start a new line with ending ')' and '{'
+```
+if (...
+    ...
+) {
+    // code block
+}
+```
+
+## Indentations
+- Please use 4 white spaces for each indentation level.
+
+- Multiple line condition indentation for (if/while/for) and/or function calls: indent one level and the ')' indent at the same level of the keyword or function name
+```
+if (condition line 1 ..
+    condition line 2 (indent to '(' above)
+    condition line 3
+) {
+    // code block
+}
+
+foo(
+    parameter1,
+    parameter2,
+    parameter3
+);
+
+```
