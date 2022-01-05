@@ -824,9 +824,8 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 {
     MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
 
-    if(mComponentInitState.test(MuxStateComponent)) {
-        if (ms(mCompositeState) == mux_state::MuxState::Label::Active &&
-            routeState == "na") {
+    if (mComponentInitState.test(MuxStateComponent)) {
+        if (ms(mCompositeState) == mux_state::MuxState::Label::Active && routeState == "na") {
             CompositeState nextState = mCompositeState;
             enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
             switchMuxState(nextState, mux_state::MuxState::Label::Standby);

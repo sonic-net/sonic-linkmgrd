@@ -250,13 +250,13 @@ void MuxManager::addOrUpdateDefaultRouteState(boost::asio::ip::address address, 
     }
 
     std::string nextState = "na";
-    // For now we only need IPv4 default route state, this logic can be updated in the future.  
+    // For now we only need IPv4 default route state to be "ok". If we switch to IPv6 in the furture, this will cause an issue. 
     if (mIpv4DefaultRouteState == "ok") {
         nextState = "ok";
     }
 
     PortMapIterator portMapIterator = mPortMap.begin();
-    while(portMapIterator != mPortMap.end()) {
+    while (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleDefaultRouteState(nextState);
         portMapIterator ++;
     }
