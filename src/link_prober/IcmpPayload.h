@@ -52,14 +52,18 @@ enum TlvType: uint8_t {
     TLV_SENTINEL = 0xff,
 };
 
-#define TlvHead      \
-    uint8_t type;    \
-    uint16_t length
+struct TlvHead {
+    uint8_t type;
+    uint16_t length;
+} __attribute__((packed));
 
-struct Tlv
-{
-    TlvHead;
-};
+struct Tlv {
+    TlvHead tlvhead;
+    union {
+        uint8_t command;
+        uint8_t data[1];
+    };
+} __attribute__((packed));
 
 /**
  *@enum Command
@@ -72,29 +76,6 @@ enum class Command: uint8_t {
 
     Count
 };
-
-/**
- *@struct TlvCommand
- *
- *@brief Build command TLV
- */
-struct TlvCommand
-{
-    TlvHead;
-    uint8_t command;
-    static const uint8_t tlvtype = TlvType::TLV_COMMAND;
-} __attribute__((packed));
-
-/**
- *@struct TlvCommand
- *
- *@brief Build command TLV
- */
-struct TlvSentinel
-{
-    TlvHead;
-    static const uint8_t tlvtype = TlvType::TLV_SENTINEL;
-} __attribute__((packed));
 
 /**
  *@struct IcmpPayload

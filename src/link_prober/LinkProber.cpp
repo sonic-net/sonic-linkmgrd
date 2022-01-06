@@ -294,9 +294,8 @@ void LinkProber::handleTlvCommandRecv(
     bool isPeer
 )
 {
-    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (tlvPtr);
     if (isPeer) {
-        if (tlvCommand->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
+        if (tlvPtr->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
             boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
             boost::asio::io_service &ioService = strand.context();
             ioService.post(strand.wrap(boost::bind(
@@ -358,7 +357,7 @@ void LinkProber::handleRecv(
             bool stopProcessTlv = false;
             while ((nextTlvSize = findNextTlv(nextTlvOffset, bytesTransferred)) > 0 && !stopProcessTlv) {
                 Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + nextTlvOffset);
-                switch (nextTlvPtr->type) {
+                switch (nextTlvPtr->tlvhead.type) {
                     case TlvType::TLV_COMMAND: {
                         handleTlvCommandRecv(nextTlvPtr, !isMatch);
                         break;
@@ -652,9 +651,9 @@ void LinkProber::updateIcmpSequenceNo()
 size_t LinkProber::findNextTlv(size_t readOffset, size_t bytesTransferred)
 {
     size_t tlvSize = 0;
-    if (readOffset + sizeof(Tlv) <= bytesTransferred) {
+    if (readOffset + sizeof(TlvHead) <= bytesTransferred) {
         Tlv *tlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + readOffset);
-        tlvSize = (sizeof(Tlv) + ntohs(tlvPtr->length));
+        tlvSize = (sizeof(TlvHead) + ntohs(tlvPtr->tlvhead.length));
     }
     return tlvSize;
 }
@@ -666,13 +665,14 @@ size_t LinkProber::findNextTlv(size_t readOffset, size_t bytesTransferred)
 //
 size_t LinkProber::appendTlvCommand(Command commandType)
 {
-    assert(mTxPacketSize + sizeof(TlvCommand) <= MUX_MAX_ICMP_BUFFER_SIZE);
-    TlvCommand *tlvCommand = reinterpret_cast<TlvCommand *> (mTxBuffer.data() + mTxPacketSize);
-    tlvCommand->type = TlvCommand::tlvtype;
-    tlvCommand->length = htons(1);
-    tlvCommand->command = static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE);
-    mTxPacketSize += sizeof(TlvCommand);
-    return sizeof(TlvCommand);
+    size_t tlvSize = sizeof(TlvHead) + sizeof(Command);
+    assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
+    Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
+    tlvPtr->tlvhead.type = TlvType::TLV_COMMAND;
+    tlvPtr->tlvhead.length = htons(sizeof(Command));
+    tlvPtr->command = static_cast<uint8_t> (commandType);
+    mTxPacketSize += tlvSize;
+    return tlvSize;
 }
 
 //
@@ -682,12 +682,13 @@ size_t LinkProber::appendTlvCommand(Command commandType)
 //
 size_t LinkProber::appendTlvSentinel()
 {
-    assert(mTxPacketSize + sizeof(TlvSentinel) <= MUX_MAX_ICMP_BUFFER_SIZE);
-    TlvSentinel *tlvSentinel = reinterpret_cast<TlvSentinel *> (mTxBuffer.data() + mTxPacketSize);
-    tlvSentinel->type = TlvSentinel::tlvtype;
-    tlvSentinel->length = 0;
-    mTxPacketSize += sizeof(TlvSentinel);
-    return sizeof(TlvSentinel);
+    size_t tlvSize = sizeof(TlvHead);
+    assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
+    Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
+    tlvPtr->tlvhead.type = TlvType::TLV_SENTINEL;
+    tlvPtr->tlvhead.length = 0;
+    mTxPacketSize += tlvSize;
+    return tlvSize;
 }
 
 } /* namespace link_prober */
