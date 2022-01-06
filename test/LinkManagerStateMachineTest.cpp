@@ -763,6 +763,8 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
     VALIDATE_STATE(Standby, Wait, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Unknown, Wait, Up);
+
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
@@ -782,7 +784,10 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("unknown", 4);
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Wait, Unknown, Up);
+
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Active, 2);
@@ -807,7 +812,10 @@ TEST_F(LinkManagerStateMachineTest, ProberUnknownMuxUnknownLinkDown)
     handleMuxState("unknown", 4);
     VALIDATE_STATE(Active, Unknown, Down);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Unknown, Unknown, Down);
+
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Down);
 
     handleProbeMuxState("unknown", 4);
@@ -845,7 +853,10 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("unknown", 4);
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Wait, Unknown, Up);
+
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleLinkState("down", 3);
