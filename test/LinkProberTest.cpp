@@ -77,12 +77,12 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
     link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr));
-    link_prober::TlvSentinel *tlvSentinel = reinterpret_cast<link_prober::TlvSentinel *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(*icmpPayload));
+    link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(*icmpPayload));
 
     EXPECT_TRUE(ipHeader->ihl == sizeof(iphdr) >> 2);
     EXPECT_TRUE(ipHeader->version == IPVERSION);
     EXPECT_TRUE(ipHeader->tos == 0xb8);
-    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload) + sizeof(link_prober::TlvSentinel)));
+    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload) + sizeof(link_prober::TlvHead)));
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
@@ -103,8 +103,8 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
         sizeof(icmpPayload->uuid)
     ) == 0);
 
-    EXPECT_TRUE(tlvSentinel->type == link_prober::TlvType::TLV_SENTINEL);
-    EXPECT_TRUE(tlvSentinel->length == 0);
+    EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_SENTINEL);
+    EXPECT_TRUE(tlvPtr->tlvhead.length == 0);
 }
 
 TEST_F(LinkProberTest, CalculateChecksum)
@@ -202,13 +202,15 @@ TEST_F(LinkProberTest, ReadWriteTlv)
     initializeSendBuffer();
     size_t tlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload);
     // check initial tx buffer packet size
-    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvSentinel));
+    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvHead));
 
     // build txBuffer
     resetTxBufferTlv();
-    EXPECT_TRUE(appendTlvCommand(link_prober::Command::COMMAND_SWITCH_ACTIVE) == sizeof(link_prober::TlvCommand));
-    EXPECT_TRUE(appendTlvSentinel() == sizeof(link_prober::TlvSentinel));
-    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvCommand) + sizeof(link_prober::TlvSentinel));
+    size_t tlvCommandSize = appendTlvCommand(link_prober::Command::COMMAND_SWITCH_ACTIVE);
+    EXPECT_TRUE(tlvCommandSize == (sizeof(link_prober::TlvHead) + sizeof(link_prober::Command)));
+    size_t tlvSentinelSize = appendTlvSentinel();
+    EXPECT_TRUE(tlvSentinelSize == sizeof(link_prober::TlvHead));
+    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + tlvCommandSize + tlvSentinelSize);
 
     // build rxBuffer
     size_t bytesTransferred = getTxPacketSize();
@@ -217,18 +219,19 @@ TEST_F(LinkProberTest, ReadWriteTlv)
     // start read TLV from rxBuffer
     size_t rxReadOffset = tlvStartOffset;
     size_t tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
-    link_prober::TlvCommand *tlvCommand = reinterpret_cast<link_prober::TlvCommand *> (getRxBufferData() + rxReadOffset);
-    EXPECT_TRUE(tlvSize == sizeof(link_prober::TlvCommand));
-    EXPECT_TRUE(tlvCommand->type == link_prober::TlvCommand::tlvtype);
-    EXPECT_TRUE(tlvCommand->length == htons(1));
-    EXPECT_TRUE(tlvCommand->command == static_cast<uint8_t> (link_prober::Command::COMMAND_SWITCH_ACTIVE));
+    link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *> (getRxBufferData() + rxReadOffset);
+    EXPECT_TRUE(tlvSize == tlvCommandSize);
+    std::cout << tlvSize << '\t' << tlvCommandSize << std::endl;
+    EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_COMMAND);
+    EXPECT_TRUE(tlvPtr->tlvhead.length == htons(1));
+    EXPECT_TRUE(tlvPtr->command == static_cast<uint8_t> (link_prober::Command::COMMAND_SWITCH_ACTIVE));
     rxReadOffset += tlvSize;
 
     tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
-    link_prober::TlvSentinel *tlvSentinel = reinterpret_cast<link_prober::TlvSentinel *> (getRxBufferData() + rxReadOffset);
-    EXPECT_TRUE(tlvSize == sizeof(link_prober::TlvSentinel));
-    EXPECT_TRUE(tlvSentinel->type == link_prober::TlvSentinel::tlvtype);
-    EXPECT_TRUE(tlvSentinel->length == 0);
+    tlvPtr = reinterpret_cast<link_prober::Tlv *> (getRxBufferData() + rxReadOffset);
+    EXPECT_TRUE(tlvSize == tlvSentinelSize);
+    EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_SENTINEL);
+    EXPECT_TRUE(tlvPtr->tlvhead.length == 0);
     rxReadOffset += tlvSize;
 
     tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
