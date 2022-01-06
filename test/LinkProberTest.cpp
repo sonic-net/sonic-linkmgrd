@@ -221,7 +221,6 @@ TEST_F(LinkProberTest, ReadWriteTlv)
     size_t tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
     link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *> (getRxBufferData() + rxReadOffset);
     EXPECT_TRUE(tlvSize == tlvCommandSize);
-    std::cout << tlvSize << '\t' << tlvCommandSize << std::endl;
     EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_COMMAND);
     EXPECT_TRUE(tlvPtr->tlvhead.length == htons(1));
     EXPECT_TRUE(tlvPtr->command == static_cast<uint8_t> (link_prober::Command::COMMAND_SWITCH_ACTIVE));
