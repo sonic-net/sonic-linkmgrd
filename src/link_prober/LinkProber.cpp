@@ -696,4 +696,22 @@ size_t LinkProber::appendTlvSentinel()
     return tlvSize;
 }
 
+//
+// ---> appendTlvDummy
+//
+// Append a dummy TLV, test purpose only
+//
+size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
+{
+    size_t tlvSize = sizeof(TlvHead) + paddingSize + sizeof(uint32_t);
+    assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
+    Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
+    tlvPtr->tlvhead.type = TlvType::TLV_DUMMY;
+    tlvPtr->tlvhead.length = htons(paddingSize + sizeof(uint32_t));
+    memset(tlvPtr->data, 0, paddingSize);
+    *(reinterpret_cast<uint32_t *> (tlvPtr->data + paddingSize)) = htonl(seqNo);
+    mTxPacketSize += tlvSize;
+    return tlvSize;
+}
+
 } /* namespace link_prober */

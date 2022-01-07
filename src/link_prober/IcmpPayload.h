@@ -49,6 +49,7 @@ namespace link_prober
  */
 enum TlvType: uint8_t {
     TLV_COMMAND = 0x5,
+    TLV_DUMMY = 0xfe,
     TLV_SENTINEL = 0xff,
 };
 

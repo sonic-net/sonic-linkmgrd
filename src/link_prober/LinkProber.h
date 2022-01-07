@@ -391,6 +391,15 @@ private:
     */
     size_t appendTlvSentinel();
 
+    /**
+    *@method appendTlvDummy
+    *
+    *@brief append dummy TLV, test purpose only
+    *
+    *@return the appended TLV size
+    */
+    size_t appendTlvDummy(size_t paddingSize, int seqNo);
+
     friend class test::LinkProberTest;
 
 private:

@@ -49,15 +49,23 @@ LinkProberTest::LinkProberTest() :
     mMuxConfig.setTimeoutIpv4_msec(1);
 }
 
-size_t LinkProberTest::appendTlvCommand(link_prober::Command commandType) {
+size_t LinkProberTest::appendTlvCommand(link_prober::Command commandType)
+{
     return mLinkProber.appendTlvCommand(commandType);
 }
 
-size_t LinkProberTest::appendTlvSentinel() {
+size_t LinkProberTest::appendTlvSentinel()
+{
     return mLinkProber.appendTlvSentinel();
 }
 
-size_t LinkProberTest::findNextTlv(size_t readOffset, size_t bytesTransferred) {
+size_t LinkProberTest::appendTlvDummy(size_t paddingSize, int seqNo)
+{
+    return mLinkProber.appendTlvDummy(paddingSize, seqNo);
+}
+
+size_t LinkProberTest::findNextTlv(size_t readOffset, size_t bytesTransferred)
+{
     return mLinkProber.findNextTlv(readOffset, bytesTransferred);
 }
 
@@ -235,6 +243,40 @@ TEST_F(LinkProberTest, ReadWriteTlv)
 
     tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
     EXPECT_TRUE(tlvSize == 0);
+}
+
+TEST_F(LinkProberTest, ReadWriteVariableSizedTlv)
+{
+    initializeSendBuffer();
+    size_t tlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload);
+    // check initial tx buffer packet size
+    EXPECT_TRUE(getTxPacketSize() == tlvStartOffset + sizeof(link_prober::TlvHead));
+
+    // build txBuffer
+    resetTxBufferTlv();
+    std::vector<size_t> paddingSizes{0, 1, 2, 3};
+    for (const size_t &paddingSize : paddingSizes) {
+        size_t tlvSize = appendTlvDummy(paddingSize, paddingSize);
+        EXPECT_TRUE(tlvSize == (sizeof(link_prober::TlvHead) + sizeof(uint32_t) + paddingSize));
+    }
+
+    // build rxBuffer
+    size_t bytesTransferred = getTxPacketSize();
+    memcpy(getRxBufferData(), getTxBufferData(), bytesTransferred);
+
+    // start read TLV from rxBuffer
+    size_t rxReadOffset = tlvStartOffset;
+    for (const size_t &paddingSize : paddingSizes) {
+        size_t tlvSize = findNextTlv(rxReadOffset, bytesTransferred);
+        link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *> (getRxBufferData() + rxReadOffset);
+        EXPECT_TRUE(tlvSize == (sizeof(link_prober::TlvHead) + sizeof(uint32_t) + paddingSize));
+
+        uint32_t *seqNoPtr = reinterpret_cast<uint32_t *> (tlvPtr->data + paddingSize);
+        EXPECT_TRUE(ntohl(*seqNoPtr) == paddingSize);
+        rxReadOffset += tlvSize;
+    }
+
+    EXPECT_TRUE(findNextTlv(rxReadOffset, bytesTransferred) == 0);
 }
 
 TEST_F(LinkProberTest, InitializeException)
