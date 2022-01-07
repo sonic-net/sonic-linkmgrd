@@ -656,7 +656,7 @@ size_t LinkProber::findNextTlv(size_t readOffset, size_t bytesTransferred)
     if (readOffset + sizeof(TlvHead) <= bytesTransferred) {
         Tlv *tlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + readOffset);
         tlvSize = (sizeof(TlvHead) + ntohs(tlvPtr->tlvhead.length));
-        if (readOffset + tlvSize >= bytesTransferred) {
+        if (readOffset + tlvSize > bytesTransferred) {
             tlvSize = 0;
         }
     }
