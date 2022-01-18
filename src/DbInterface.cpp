@@ -40,6 +40,8 @@
 #include "common/MuxException.h"
 #include "NetMsgInterface.h"
 
+boost::asio::ip::address ipAddress = boost::asio::ip::make_address("0.0.0.0");
+
 namespace mux
 {
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;

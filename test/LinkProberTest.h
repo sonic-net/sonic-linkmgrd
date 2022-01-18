@@ -42,15 +42,7 @@ public:
     void initializeSendBuffer() {mLinkProber.initializeSendBuffer();};
     void handleUpdateEthernetFrame() {mLinkProber.handleUpdateEthernetFrame();};
     void handleUpdateSequenceNumber() {mLinkProber.updateIcmpSequenceNo();};
-    void resetTxBufferTlv() {mLinkProber.resetTxBufferTlv();};
-    size_t getTxPacketSize() {return mLinkProber.mTxPacketSize;};
-    size_t appendTlvCommand(link_prober::Command commandType);
-    size_t appendTlvSentinel();
-    size_t appendTlvDummy(size_t paddingSize, int seqNo);
-    size_t findNextTlv(size_t readOffset, size_t bytesTransferred);
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mLinkProber.getTxBuffer();};
-    uint8_t *getTxBufferData() {return mLinkProber.mTxBuffer.data();};
-    uint8_t *getRxBufferData() {return mLinkProber.mRxBuffer.data();};
 
     uint16_t getRxSelfSeqNo() {return mLinkProber.mRxSelfSeqNo;};
     uint16_t getRxPeerSeqNo() {return mLinkProber.mRxPeerSeqNo;};
