@@ -40,8 +40,6 @@
 #include "common/MuxException.h"
 #include "NetMsgInterface.h"
 
-boost::asio::ip::address ipAddress = boost::asio::ip::make_address("0.0.0.0");
-
 namespace mux
 {
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
@@ -760,9 +758,13 @@ void DbInterface::processDefaultRouteStateNotification(std::deque<swss::KeyOpFie
                 field %
                 value
             );
-
-            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(key);
-            mMuxManagerPtr->addOrUpdateDefaultRouteState(ipAddress, value);
+            boost::system::error_code errorCode;
+            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(key, errorCode);
+            if (!errorCode) {
+                mMuxManagerPtr->addOrUpdateDefaultRouteState(ipAddress, value);
+            } else {
+                MUXLOGFATAL(boost::format("Received Invalid IP: %s, error code: %d") % key % errorCode);
+            }
         }
     }
 }
