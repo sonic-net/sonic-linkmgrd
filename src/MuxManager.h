@@ -305,6 +305,19 @@ public:
     */
     void processProbeMuxState(const std::string &portName, const std::string &muxState);
 
+    /**
+     * @method addOrUpdateDefaultRouteState
+     * 
+     * @brief update default route state based on state db notification
+     * 
+     * @param ipAddress
+     * @param routeState
+     *  
+     * @return none
+     * 
+    */
+    void addOrUpdateDefaultRouteState(bool is_v4, const std::string &routeState);
+
 private:
     /**
     *@method getMuxPortPtrOrThrow
@@ -360,6 +373,9 @@ private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr;
 
     PortMap mPortMap;
+
+    std::string mIpv4DefaultRouteState = "na";
+    std::string mIpv6DefaultRouteState = "na";
 };
 
 } /* namespace mux */

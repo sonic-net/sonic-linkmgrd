@@ -476,6 +476,17 @@ public:
     */
     void handleSwitchActiveRequestEvent();
 
+    /**
+     * @method handleDefaultRouteStateNotification(const std::string &routeState)
+     * 
+     * @brief handle default route state notification from routeorch
+     * 
+     * @param routeState
+     * 
+     * @return none
+    */
+    void handleDefaultRouteStateNotification(const std::string &routeState);
+
 private:
     /**
     *@method updateMuxLinkmgrState
