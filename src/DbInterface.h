@@ -484,6 +484,28 @@ private:
     */
     void handleSwssNotification();
 
+    /**
+     * @method processDefaultRouteStateNotification
+     * 
+     * @brief process default route state notification from orchagent
+     * 
+     * @param entries reference to state db default route state entries
+     * 
+     * @return none
+    */
+    void processDefaultRouteStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+     * @method handleDefaultRouteStateNotification
+     * 
+     * @brief handle Default Route State notification from orchagent
+     * 
+     * @param statedbRouteTable reference to state db route table 
+     * 
+     * @return none
+    */
+    void handleDefaultRouteStateNotification(swss::SubscriberStateTable &statedbRouteTable);
+
 private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;

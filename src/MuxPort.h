@@ -263,6 +263,17 @@ public:
     */
     void handleMuxConfig(const std::string &config);
 
+    /**
+     * @method handleDefaultRouteState(const std::string &routeState)
+     * 
+     * @brief handles default route state notification
+     * 
+     * @param routeState 
+     * 
+     * @return none
+    */
+    void handleDefaultRouteState(const std::string &routeState);
+
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

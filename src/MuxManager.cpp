@@ -248,6 +248,34 @@ void MuxManager::processProbeMuxState(const std::string &portName, const std::st
 }
 
 //
+// ---> addOrUpdateDefaultRouteState(boost::asio::ip::address& address, const std::string &routeState);
+//
+// update default route state based on state db notification
+//
+void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &routeState) 
+{
+    if (is_v4) {
+        mIpv4DefaultRouteState = routeState;
+    } else {
+        mIpv6DefaultRouteState = routeState;
+    }
+
+    std::string nextState = "na";
+    // For now we only need IPv4 default route state to be "ok". If we switch to IPv6 in the furture, this will cause an issue. 
+    if (mIpv4DefaultRouteState == "ok") {
+        nextState = "ok";
+    }
+
+    MUXLOGINFO(boost::format("Default route state: %s") % nextState);
+
+    PortMapIterator portMapIterator = mPortMap.begin();
+    while (portMapIterator != mPortMap.end()) {
+        portMapIterator->second->handleDefaultRouteState(nextState);
+        portMapIterator ++;
+    }
+}
+
+//
 // ---> getMuxPortPtrOrThrow(const std::string &portName);
 //
 // retrieve a pointer to MuxPort if it exist or create a new MuxPort object
