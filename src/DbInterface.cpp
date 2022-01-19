@@ -758,12 +758,13 @@ void DbInterface::processDefaultRouteStateNotification(std::deque<swss::KeyOpFie
                 field %
                 value
             );
-            boost::system::error_code errorCode;
-            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(key, errorCode);
-            if (!errorCode) {
-                mMuxManagerPtr->addOrUpdateDefaultRouteState(ipAddress, value);
+
+            if (key == "0.0.0.0/0") {
+                mMuxManagerPtr->addOrUpdateDefaultRouteState(true, value);
+            } else if (key == "::/0") {
+                mMuxManagerPtr->addOrUpdateDefaultRouteState(false, value);
             } else {
-                MUXLOGFATAL(boost::format("Received Invalid IP: %s, error code: %d") % key % errorCode);
+                MUXLOGFATAL(boost::format("Received Invalid IP: %s") % key );
             }
         }
     }

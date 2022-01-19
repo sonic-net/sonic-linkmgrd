@@ -316,7 +316,7 @@ public:
      * @return none
      * 
     */
-    void addOrUpdateDefaultRouteState(boost::asio::ip::address address, const std::string &routeState);
+    void addOrUpdateDefaultRouteState(bool is_v4, const std::string &routeState);
 
 private:
     /**
