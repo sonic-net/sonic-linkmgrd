@@ -52,6 +52,7 @@ public:
     void setMuxActive();
     void setMuxStandby();
     void postDefaultRouteEvent(std::string routeState, uint32_t count = 0);
+    void postPeerLinkStateEvent(std::string linkState, uint32_t count = 0);
 
 public:
     boost::asio::io_service mIoService;
