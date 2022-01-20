@@ -198,6 +198,17 @@ public:
     void handleLinkState(const std::string &linkState);
 
     /**
+     * @method handlePeerLinkState
+     * 
+     * @brief handles peer's link state updates 
+     * 
+     * @param linkState (in) peer's link state
+     * 
+     * @return none 
+    */
+    void handlePeerLinkState(const std::string &linkState);
+
+    /**
     *@method handleGetServerMacAddress
     *
     *@brief handles get Server MAC address
