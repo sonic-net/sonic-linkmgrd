@@ -714,7 +714,7 @@ void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::
 // 
 // handle peer link state change notification 
 //
-void handlePeerLinkStateNotification(const link_state::LinkState::Label label)
+void LinkManagerStateMachine::handlePeerLinkStateNotification(const link_state::LinkState::Label label)
 {
     MUXLOGINFO(boost::format("%s: state db peer link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
 

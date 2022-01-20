@@ -643,7 +643,7 @@ void DbInterface::handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPo
 //
 // process peer's link state notification 
 // 
-void processPeerLinkStateNotification(std::deque<swss:KeyOpFieldsValuesTuple> &entries)
+void DbInterface::processPeerLinkStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
 {
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
@@ -677,7 +677,7 @@ void processPeerLinkStateNotification(std::deque<swss:KeyOpFieldsValuesTuple> &e
 //
 void DbInterface::handlePeerLinkStateNotification(swss::SubscriberStateTable &stateDbMuxInfoTable)
 {
-    std::deque<swss:KeyOpFieldsValuesTuple> entries;
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
     stateDbMuxInfoTable.pops(entries);
     processPeerLinkStateNotification(entries);

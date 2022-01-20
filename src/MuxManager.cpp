@@ -178,7 +178,7 @@ void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const 
 // 
 // update mux port's peer link state. If port is not found, create new MuxPort object.
 //
-void addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState)
+void MuxManager::addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState)
 {
     MUXLOGWARNING(boost::format("%s: peer link state %s") % portName % linkState);
 
