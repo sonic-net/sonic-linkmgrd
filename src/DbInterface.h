@@ -418,7 +418,7 @@ private:
      * 
      * @return none
     */
-    inline void processPeerLinkStateNotification(std::deque<swss:KeyOpFieldsValuesTuple> &entries);
+    inline void processPeerLinkStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
      * @method handlePeerLinkStateNotification
