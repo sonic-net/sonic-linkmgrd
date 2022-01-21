@@ -853,7 +853,7 @@ void DbInterface::handleSwssNotification()
     // for getting state db default route state 
     swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), STATE_ROUTE_TABLE_NAME);
     // for getting peer's link status
-    swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), "MUX_CABLE_INFO");
+    swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);

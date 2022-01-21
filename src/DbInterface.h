@@ -44,6 +44,8 @@ class MuxManagerTest;
 
 namespace mux
 {
+#define MUX_CABLE_INFO_TABLE  "MUX_CABLE_INFO"
+
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
 
