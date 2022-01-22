@@ -121,6 +121,13 @@ public:
         Count
     };
 
+    enum class LinkProberMetrics {
+        PckLossStart, 
+        PckLossEnd,
+
+        Count
+    };
+
 private:
     /**
      *@enum anonymous

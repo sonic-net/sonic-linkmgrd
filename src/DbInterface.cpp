@@ -46,6 +46,7 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
+std::vector<std::string> DbInterface::mLinkProbeMetrics = {"pck_loss_start", "pck_loss_end"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -161,6 +162,33 @@ void DbInterface::postMetricsEvent(
     )));
 }
 
+// 
+// ---> postLinkProberMetricsEvent(
+//        const std::string &portName, 
+//        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+//    );
+//
+// post link probe pck loss event to state db 
+void DbInterface::postLinkProberMetricsEvent(
+        const std::string &portName, 
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting link prober pck loss event %s") %
+        portName %
+        mLinkProbeMetrics[static_cast<int> (metrics)]
+    );
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handlePostLinkProberMetrics,
+        this,
+        portName,
+        metrics,
+        boost::posix_time::microsec_clock::universal_time()
+    )));
+}
+
 //
 // ---> initialize();
 //
@@ -183,6 +211,9 @@ void DbInterface::initialize()
         );
         mStateDbMuxMetricsTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_METRICS_TABLE_NAME
+        );
+        mStateDbLinkProbeStatsTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(), LINK_PROBE_STATS_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
@@ -317,6 +348,33 @@ void DbInterface::handlePostMuxMetrics(
         "linkmgrd_switch_" + mMuxState[label] + "_" + mMuxMetrics[static_cast<int> (metrics)],
         boost::posix_time::to_simple_string(time)
     );
+}
+
+// 
+// ---> handlePostLinkProberMetrics(
+//        const std::string portName,
+//        link_manager::LinkManagerStateMachine::LinkProberMetrics,
+//        boost::posix_time::ptime time
+//    );
+//
+// post link prober pck loss event to state db 
+void DbInterface::handlePostLinkProberMetrics(
+    const std::string portName,
+    link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
+    boost::posix_time::ptime time
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting link prober pck loss event %s") %
+        portName %
+        mLinkProbeMetrics[static_cast<int> (metrics)]
+    );
+
+    if (metrics == link_manager::LinkManagerStateMachine::LinkProberMetrics::PckLossStart) {
+        mStateDbLinkProbeStatsTablePtr.hdel(portName, mLinkProbeMetrics[0]);
+        mStateDbLinkProbeStatsTablePtr.hdel(portName, mLinkProbeMetrics[1]);
+    }
+
+    mStateDbLinkProbeStatsTablePtr.hset(portName, mLinkProbeMetrics[static_cast<int> (metrics)], boost::posix_time::to_simple_string(time));
 }
 
 //

@@ -165,6 +165,19 @@ public:
     };
 
     /**
+     * @method postLinkProberMetricsEvent
+     * 
+     * @brief post link prober pck loss event
+     * 
+     * @param metrics (in) metrics to post
+     * 
+     * @return none
+    */
+    inline void postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics metrics) {
+        mDbInterfacePtr->postLinkProberMetricsEvent(mMuxPortConfig.getPortName(), metrics);
+    };
+
+    /**
     *@method setServerIpv4Address
     *
     *@brief setter for server/blade IPv4 address
