@@ -48,8 +48,18 @@ public:
         link_manager::LinkManagerStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     ) override;
+    virtual void postLinkProberMetricsEvent(
+        const std::string &portName, 
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+    ) override;
+    virtual void postPckLossRatio(
+        const std::string &portName,
+        const double_t ratio
+    ) override;
+
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
+
 
 public:
     mux_state::MuxState::Label mNextMuxState;
@@ -61,6 +71,8 @@ public:
     uint32_t mProbeMuxStateInvokeCount = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
     uint32_t mPostMetricsInvokeCount = 0;
+    uint32_t mPostLinkProberMetricsInvokeCount = 0;
+    uint32_t mPostPckLossRatioInvokeCount = 0;
 };
 
 } /* namespace test */

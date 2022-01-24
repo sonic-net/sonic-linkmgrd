@@ -67,4 +67,20 @@ void FakeDbInterface::postMetricsEvent(
     mPostMetricsInvokeCount++;
 }
 
+void FakeDbInterface::postLinkProberMetricsEvent(
+        const std::string &portName, 
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+)
+{
+    mPostLinkProberMetricsInvokeCount++;
+}
+
+void FakeDbInterface::postPckLossRatio(
+        const std::string &portName,
+        const double_t ratio
+)
+{
+    mPostPckLossRatioInvokeCount;
+} 
+
 } /* namespace test */
