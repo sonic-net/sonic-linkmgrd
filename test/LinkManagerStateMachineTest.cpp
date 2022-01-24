@@ -1058,10 +1058,17 @@ TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent)
     setMuxStandby();
     
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 0);
+<<<<<<< HEAD
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
 
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+=======
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+>>>>>>> bd885ee... add unit test
     
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 2);
 }
