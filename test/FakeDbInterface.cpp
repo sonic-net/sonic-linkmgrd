@@ -80,7 +80,7 @@ void FakeDbInterface::postPckLossRatio(
         const double_t ratio
 )
 {
-    mPostPckLossRatioInvokeCount;
+    mPostPckLossRatioInvokeCount++;
 } 
 
 } /* namespace test */
