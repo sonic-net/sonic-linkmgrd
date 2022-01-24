@@ -352,18 +352,6 @@ void LinkProber::handleRecv(
             } else {
                 mRxPeerSeqNo = mTxSeqNo;
                 mLinkProberStateMachine.postLinkProberStateEvent(LinkProberStateMachine::getIcmpPeerEvent());
-<<<<<<< HEAD
-                mContinuousIcmpUnknownEventCount = 0;
-                if (ntohl(icmpPayload->command) == static_cast<uint32_t> (Command::COMMAND_SWITCH_ACTIVE)) {
-                    boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
-                    boost::asio::io_service &ioService = strand.context();
-                    ioService.post(strand.wrap(boost::bind(
-                        static_cast<void (LinkProberStateMachine::*) (SwitchActiveRequestEvent&)>
-                            (&LinkProberStateMachine::processEvent),
-                        &mLinkProberStateMachine,
-                        LinkProberStateMachine::getSwitchActiveRequestEvent()
-                    )));
-=======
             }
 
             size_t nextTlvOffset = mTlvStartOffset;
@@ -386,7 +374,6 @@ void LinkProber::handleRecv(
                         stopProcessTlv = (nextTlvSize == sizeof(Tlv));
                         break;
                     }
->>>>>>> 12b9951... Add TLV support to ICMP payload (#11)
                 }
                 nextTlvOffset += nextTlvSize;
             }
