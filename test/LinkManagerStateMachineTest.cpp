@@ -1053,4 +1053,17 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent) 
+{
+    setMuxStandby();
+    
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 0);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+    
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 2);
+}
+
 } /* namespace test */
