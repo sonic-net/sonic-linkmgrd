@@ -469,9 +469,11 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         );
 
         // update state db link prober metrics to collect pck loss data
-        if (ps(mCompositeState) == link_prober::LinkProberState::Unknown && state != link_prober::LinkProberState::Unknown) {
+        if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
+            mContinuousLinkProberUnknownEvent = false;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
         } else if (state == link_prober::LinkProberState::Label::Unknown) {
+            mContinuousLinkProberUnknownEvent = true;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart);
         }
 

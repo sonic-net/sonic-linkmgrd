@@ -951,6 +951,8 @@ private:
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
+    bool mContinuousLinkProberUnknownEvent = false;
+
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;
 };
