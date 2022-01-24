@@ -72,7 +72,7 @@ public:
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
     uint32_t mPostMetricsInvokeCount = 0;
     uint32_t mPostLinkProberMetricsInvokeCount = 0;
-    uint32_t mPostPckLossRatioInvokeCount = 0;
+    double_t mPckLossRatio = 0;
 };
 
 } /* namespace test */

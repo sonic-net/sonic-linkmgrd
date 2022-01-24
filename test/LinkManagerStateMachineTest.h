@@ -52,6 +52,7 @@ public:
     void setMuxActive();
     void setMuxStandby();
     void postDefaultRouteEvent(std::string routeState, uint32_t count = 0);
+    void postPckLossRatioUpdateEvent(double_t ratio);
 
 public:
     boost::asio::io_service mIoService;

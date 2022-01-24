@@ -236,6 +236,12 @@ void LinkManagerStateMachineTest::postDefaultRouteEvent(std::string routeState, 
     runIoService(count);
 }
 
+void LinkManagerStateMachineTest::postPckLossRatioUpdateEvent(double_t ratio)
+{
+    mFakeMuxPort.postPckLossRatio(ratio);
+    runIoService();
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
 {
     setMuxActive();
@@ -1058,19 +1064,19 @@ TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent)
     setMuxStandby();
     
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 0);
-<<<<<<< HEAD
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
 
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
-=======
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
-
-    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Active);
->>>>>>> bd885ee... add unit test
     
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 2);
+}
+
+TEST_F(LinkManagerStateMachineTest, PostPckLossUpdateEvent)
+{
+    double_t ratio = 1.0;
+    postPckLossRatioUpdateEvent(ratio);
+    EXPECT_EQ(mDbInterfacePtr->mPckLossRatio, ratio);
 }
 
 } /* namespace test */
