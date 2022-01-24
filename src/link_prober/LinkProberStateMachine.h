@@ -319,6 +319,17 @@ public:
     */
     static SwitchActiveRequestEvent& getSwitchActiveRequestEvent() {return mSwitchActiveRequestEvent;};
 
+    /**
+     * @method handlePckLossRatioUpdate
+     * 
+     * @brief post pck loss ratio update to link manager
+     * 
+     * @param ratio (in) pck loss ratio
+     * 
+     * @return none
+    */
+    void handlePckLossRatioUpdate(const double_t ratio);
+
 private:
     /**
     *@method postLinkManagerEvent

@@ -458,7 +458,7 @@ void LinkManagerStateMachine::activateStateMachine()
 //
 // ---> handleStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state);
 //
-// handles LinkProverEvent
+// handles LinkProberEvent
 //
 void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state)
 {
@@ -467,6 +467,13 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
             mMuxPortConfig.getPortName() %
             mLinkProberStateName[state]
         );
+
+        // update state db link prober metrics to collect pck loss data
+        if (ps(mCompositeState) == link_prober::LinkProberState::Unknown && state != link_prober::LinkProberState::Unknown) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
+        } else if (state == link_prober::LinkProberState::Label::Unknown) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart);
+        }
 
         CompositeState nextState = mCompositeState;
         ps(nextState) = state;
@@ -835,6 +842,21 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
             enterMuxWaitState(mCompositeState);
         }
     } 
+}
+
+//
+// ---> handlePostPckLossRatioNotification(const double_t ratio);
+// 
+// handle post pck loss ratio 
+//
+void LinkManagerStateMachine::handlePostPckLossRatioNotification(const double_t ratio)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+        mMuxPortConfig.getPortName() %
+        ratio
+    );
+    
+    mMuxPortPtr->postPckLossRatio(ratio);
 }
 
 //

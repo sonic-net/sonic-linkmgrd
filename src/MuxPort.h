@@ -178,6 +178,19 @@ public:
     };
 
     /**
+     * @method postPckLossRatio
+     * 
+     * @brief post pck loss ratio update to state db 
+     * 
+     * @param ratio (in) pck loss ratio 
+     * 
+     * @return none
+    */
+    inline void postPckLossRatio(const double_t ratio) {
+        mDbInterfacePtr->postPckLossRatio(mMuxPortConfig.getPortName(), ratio);
+    };
+
+    /**
     *@method setServerIpv4Address
     *
     *@brief setter for server/blade IPv4 address

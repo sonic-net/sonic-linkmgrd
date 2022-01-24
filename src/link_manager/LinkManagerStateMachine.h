@@ -122,8 +122,8 @@ public:
     };
 
     enum class LinkProberMetrics {
-        PckLossStart, 
-        PckLossEnd,
+        LinkProberUnknownStart, 
+        LinkProberUnknownEnd,
 
         Count
     };
@@ -493,6 +493,17 @@ public:
      * @return none
     */
     void handleDefaultRouteStateNotification(const std::string &routeState);
+
+    /**
+     * @method handlePostPckLossRatioNotification
+     * 
+     * @brief handle get post pck loss ratio 
+     * 
+     * @param ratio (in) pck loss ratio 
+     * 
+     * @return none
+    */
+    void handlePostPckLossRatioNotification(const double_t ratio);
 
 private:
     /**

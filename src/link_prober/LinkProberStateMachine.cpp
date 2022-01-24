@@ -255,4 +255,20 @@ void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, E
     )));
 }
 
+// 
+// ---> handlePckLossRatioUpdate(const double_t ratio);
+//
+// post pck loss ratio update to link manager
+//
+void LinkProberStateMachine::handlePckLossRatioUpdate(const double_t ratio) 
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handlePostPckLossRatioNotification,
+        &mLinkManagerStateMachine,
+        ratio
+    )));
+}
+
 } /* namespace link_prober */

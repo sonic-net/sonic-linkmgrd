@@ -188,6 +188,20 @@ public:
         link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
     );
 
+    /**
+     * @method postPckLossRatio
+     * 
+     * @brief post pck loss ratio update to state db
+     * 
+     * @param portName (in) port name 
+     * @param ratio (in) pck loss ratio
+     * 
+     * @return none
+    */
+    virtual void postPckLossRatio(
+        const std::string &portName,
+        const double_t ratio
+    );
 
     /**
     *@method initialize
@@ -311,6 +325,21 @@ private:
         const std::string portName,
         link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
         boost::posix_time::ptime time
+    );
+
+    /**
+     * @method handlePostPckLossRatio
+     * 
+     * @brief handle post pck loss ratio update 
+     * 
+     * @param portName (in) port name 
+     * @param ratio (in) pck loss ratio
+     * 
+     * @return none
+    */
+    void handlePostPckLossRatio(
+        const std::string portName,
+        const double_t ratio
     );
 
     /**

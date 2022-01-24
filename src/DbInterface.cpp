@@ -46,7 +46,7 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
-std::vector<std::string> DbInterface::mLinkProbeMetrics = {"pck_loss_start", "pck_loss_end"};
+std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -187,6 +187,31 @@ void DbInterface::postLinkProberMetricsEvent(
         metrics,
         boost::posix_time::microsec_clock::universal_time()
     )));
+}
+
+//
+// ---> postPckLossRatio(
+//        const std::string &portName,
+//        const double_t ratio
+//    );
+//  post pck loss ratio update to state db 
+void DbInterface::postPckLossRatio(
+        const std::string &portName,
+        const double_t ratio
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+        portName %
+        ratio
+    );
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handlePostPckLossRatio,
+        this,
+        portName,
+        ratio
+    ))); 
 }
 
 //
@@ -369,12 +394,32 @@ void DbInterface::handlePostLinkProberMetrics(
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
 
-    if (metrics == link_manager::LinkManagerStateMachine::LinkProberMetrics::PckLossStart) {
-        mStateDbLinkProbeStatsTablePtr.hdel(portName, mLinkProbeMetrics[0]);
-        mStateDbLinkProbeStatsTablePtr.hdel(portName, mLinkProbeMetrics[1]);
+    if (metrics == link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart) {
+        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[0]);
+        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[1]);
     }
 
-    mStateDbLinkProbeStatsTablePtr.hset(portName, mLinkProbeMetrics[static_cast<int> (metrics)], boost::posix_time::to_simple_string(time));
+    mStateDbLinkProbeStatsTablePtr->hset(portName, mLinkProbeMetrics[static_cast<int> (metrics)], boost::posix_time::to_simple_string(time));
+}
+
+// 
+// ---> handlePostPckLossRatio(
+//        const std::string portName,
+//        const double_t ratio
+//    );
+//
+// handle post pck loss ratio 
+void DbInterface::handlePostPckLossRatio(
+        const std::string portName,
+        const double_t ratio
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+        portName %
+        ratio
+    );
+
+    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_loss_ratio", std::to_string(ratio));
 }
 
 //
