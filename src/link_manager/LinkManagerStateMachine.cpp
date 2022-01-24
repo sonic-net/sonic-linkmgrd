@@ -851,7 +851,7 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 //
 void LinkManagerStateMachine::handlePostPckLossRatioNotification(const double_t ratio)
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
         mMuxPortConfig.getPortName() %
         ratio
     );

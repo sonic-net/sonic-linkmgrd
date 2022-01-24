@@ -200,7 +200,7 @@ void DbInterface::postPckLossRatio(
         const double_t ratio
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
         portName %
         ratio
     );
@@ -414,7 +414,7 @@ void DbInterface::handlePostPckLossRatio(
         const double_t ratio
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f %%") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
         portName %
         ratio
     );

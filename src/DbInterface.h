@@ -44,7 +44,7 @@ class MuxManagerTest;
 
 namespace mux
 {
-#define LINK_PROBE_STATS_TABLE_NAME "LINK_RPOBE_STATS" 
+#define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS" 
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
