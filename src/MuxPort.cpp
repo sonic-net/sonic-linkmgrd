@@ -118,9 +118,9 @@ void MuxPort::handlePeerLinkState(const std::string &linkState)
 {
     MUXLOGDEBUG(boost::format("port: %s, state db peer link state: %s") % mMuxPortConfig.getPortName() % linkState);
 
-    link_state::LinkState::Label label = link_state::LinkState::Label::Down;
-    if (linkState == "up") {
-        label = link_state::LinkState::Label::Up;
+    link_state::LinkState::Label label = link_state::LinkState::Label::Up;
+    if (linkState == "down") {
+        label = link_state::LinkState::Label::Down;
     }
 
     boost::asio::io_service &ioService = mStrand.context();
