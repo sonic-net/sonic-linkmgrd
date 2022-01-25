@@ -174,7 +174,7 @@ void DbInterface::postLinkProberMetricsEvent(
         link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting link prober pck loss event %s") %
+    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
         portName %
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
@@ -393,7 +393,7 @@ void DbInterface::handlePostLinkProberMetrics(
     boost::posix_time::ptime time
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting link prober pck loss event %s") %
+    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
         portName %
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
