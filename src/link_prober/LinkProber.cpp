@@ -449,7 +449,8 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
         ioService.post(strand.wrap(boost::bind(
             &LinkProberStateMachine::handlePckLossRatioUpdate,
             &mLinkProberStateMachine,
-            (static_cast<double_t>(mIcmpUnknownEventCount) / mIcmpPacketCount)
+            mIcmpUnknownEventCount,
+            mIcmpPacketCount
         )));
     }
 

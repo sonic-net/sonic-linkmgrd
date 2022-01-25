@@ -194,13 +194,15 @@ public:
      * @brief post pck loss ratio update to state db
      * 
      * @param portName (in) port name 
-     * @param ratio (in) pck loss ratio
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets 
      * 
      * @return none
     */
     virtual void postPckLossRatio(
         const std::string &portName,
-        const double_t ratio
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
     );
 
     /**
@@ -333,13 +335,15 @@ private:
      * @brief handle post pck loss ratio update 
      * 
      * @param portName (in) port name 
-     * @param ratio (in) pck loss ratio
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets 
      * 
      * @return none
     */
     void handlePostPckLossRatio(
         const std::string portName,
-        const double_t ratio
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
     );
 
     /**

@@ -847,18 +847,19 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 }
 
 //
-// ---> handlePostPckLossRatioNotification(const double_t ratio);
+// ---> handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 // 
 // handle post pck loss ratio 
 //
-void LinkManagerStateMachine::handlePostPckLossRatioNotification(const double_t ratio)
+void LinkManagerStateMachine::handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
         mMuxPortConfig.getPortName() %
-        ratio
+        unknownEventCount % 
+        expectedPacketCount
     );
     
-    mMuxPortPtr->postPckLossRatio(ratio);
+    mMuxPortPtr->postPckLossRatio(unknownEventCount, expectedPacketCount);
 }
 
 //

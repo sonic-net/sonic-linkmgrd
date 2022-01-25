@@ -192,17 +192,20 @@ void DbInterface::postLinkProberMetricsEvent(
 //
 // ---> postPckLossRatio(
 //        const std::string &portName,
-//        const double_t ratio
+//        const uint64_t unknownEventCount, 
+//        const uint64_t expectedPacketCount
 //    );
 //  post pck loss ratio update to state db 
 void DbInterface::postPckLossRatio(
         const std::string &portName,
-        const double_t ratio
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
         portName %
-        ratio
+        unknownEventCount % 
+        expectedPacketCount
     );
 
     boost::asio::io_service &ioService = mStrand.context();
@@ -210,7 +213,8 @@ void DbInterface::postPckLossRatio(
         &DbInterface::handlePostPckLossRatio,
         this,
         portName,
-        ratio
+        unknownEventCount,
+        expectedPacketCount
     ))); 
 }
 
@@ -405,21 +409,25 @@ void DbInterface::handlePostLinkProberMetrics(
 // 
 // ---> handlePostPckLossRatio(
 //        const std::string portName,
-//        const double_t ratio
+//        const uint64_t unknownEventCount, 
+//        const uint64_t expectedPacketCount
 //    );
 //
 // handle post pck loss ratio 
 void DbInterface::handlePostPckLossRatio(
         const std::string portName,
-        const double_t ratio
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
 )
 {
-    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio: %.2f ") %
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
         portName %
-        ratio
+        unknownEventCount % 
+        expectedPacketCount
     );
 
-    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_loss_ratio", std::to_string(ratio));
+    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_loss_count", std::to_string(unknownEventCount));
+    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_expected_count", std::to_string(expectedPacketCount));
 }
 
 //

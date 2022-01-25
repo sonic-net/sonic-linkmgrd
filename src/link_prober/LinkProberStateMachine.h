@@ -324,11 +324,12 @@ public:
      * 
      * @brief post pck loss ratio update to link manager
      * 
-     * @param ratio (in) pck loss ratio
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
      * 
      * @return none
     */
-    void handlePckLossRatioUpdate(const double_t ratio);
+    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
 private:
     /**
