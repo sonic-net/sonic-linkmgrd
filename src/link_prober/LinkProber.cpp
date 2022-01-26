@@ -728,4 +728,24 @@ size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
     return tlvSize;
 }
 
+// 
+// ---> resetIcmpPacketCounts
+//
+// reset Icmp packet counts, post a pck loss ratio update immediately 
+//
+void LinkProber::resetIcmpPacketCounts()
+{
+    mIcmpUnknownEventCount = 0;
+    mIcmpPacketCount = 0;
+
+    boost::asio::io_service::strand &strand = mLinkProberStateMachine.getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &LinkProberStateMachine::handlePckLossRatioUpdate,
+        &mLinkProberStateMachine,
+        mIcmpUnknownEventCount,
+        mIcmpPacketCount
+    )));
+}
+
 } /* namespace link_prober */

@@ -77,10 +77,12 @@ void FakeDbInterface::postLinkProberMetricsEvent(
 
 void FakeDbInterface::postPckLossRatio(
         const std::string &portName,
-        const double_t ratio
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
 )
 {
-    mPckLossRatio = ratio;
+    mUnknownEventCount = unknownEventCount;
+    mExpectedPacketCount = expectedPacketCount;
 } 
 
 } /* namespace test */

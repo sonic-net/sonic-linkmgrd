@@ -160,6 +160,15 @@ public:
     */
     void sendPeerSwitchCommand();
 
+    /**
+     * @method resetIcmpPacketCounts()
+     * 
+     * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
+     * 
+     * @return none
+    */
+    void resetIcmpPacketCounts();
+
 private:
     /**
     *@method handleUpdateEthernetFrame

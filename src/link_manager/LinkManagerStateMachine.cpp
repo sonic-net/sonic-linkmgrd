@@ -403,6 +403,9 @@ void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::
             mSendPeerSwitchCommandFnPtr = boost::bind(
                 &link_prober::LinkProber::sendPeerSwitchCommand, mLinkProberPtr.get()
             );
+            mResetIcmpPacketCountsFnPtr = boost::bind(
+                &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
+            );
             mComponentInitState.set(LinkProberComponent);
 
             activateStateMachine();
@@ -860,6 +863,17 @@ void LinkManagerStateMachine::handlePostPckLossRatioNotification(const uint64_t 
     );
     
     mMuxPortPtr->postPckLossRatio(unknownEventCount, expectedPacketCount);
+}
+
+// ---> handleResetLinkProberPckLossCount();
+// 
+// reset link prober heartbeat packet loss count 
+// 
+void LinkManagerStateMachine::handleResetLinkProberPckLossCount()
+{
+    MUXLOGDEBUG(boost::format("%s: reset link prober packet loss counts ") % mMuxPortConfig.getPortName());
+
+    mResetIcmpPacketCountsFnPtr();
 }
 
 //

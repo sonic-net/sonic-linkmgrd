@@ -290,6 +290,15 @@ public:
     */
     void handleDefaultRouteState(const std::string &routeState);
 
+    /**
+     * @method resetPckLossCount
+     * 
+     * @brief reset ICMP packet loss count 
+     * 
+     * @return none
+    */
+    void resetPckLossCount();
+
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

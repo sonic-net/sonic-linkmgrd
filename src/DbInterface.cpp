@@ -611,7 +611,27 @@ void DbInterface::processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsVa
                 f %
                 v
             );
+            
             mMuxManagerPtr->updateMuxPortConfig(port, v);
+        }
+
+        std::vector<swss::FieldValueTuple>::const_iterator c_it = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "pck_loss_data_reset";}
+        );
+        if (c_it != fieldValues.cend()) {
+            const std::string f = c_it->first;
+            const std::string v = c_it->second;
+
+            MUXLOGDEBUG(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
+                port %
+                operation %
+                f %
+                v
+            );
+            
+            mMuxManagerPtr->resetPckLossCount(port);
         }
     }
 }

@@ -236,9 +236,9 @@ void LinkManagerStateMachineTest::postDefaultRouteEvent(std::string routeState, 
     runIoService(count);
 }
 
-void LinkManagerStateMachineTest::postPckLossRatioUpdateEvent(double_t ratio)
+void LinkManagerStateMachineTest::postPckLossRatioUpdateEvent(uint64_t unknownCount, uint64_t totalCount)
 {
-    mFakeMuxPort.postPckLossRatio(ratio);
+    mFakeMuxPort.postPckLossRatio(unknownCount, totalCount);
     runIoService();
 }
 
@@ -1074,9 +1074,9 @@ TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent)
 
 TEST_F(LinkManagerStateMachineTest, PostPckLossUpdateEvent)
 {
-    double_t ratio = 1.0;
-    postPckLossRatioUpdateEvent(ratio);
-    EXPECT_EQ(mDbInterfacePtr->mPckLossRatio, ratio);
+    postPckLossRatioUpdateEvent(3,4);
+    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 4);
 }
 
 } /* namespace test */

@@ -506,6 +506,15 @@ public:
     */
     void handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
+    /**
+     * @method handleResetLinkProberPckLossCount
+     * 
+     * @brief reset link prober heartbeat packet loss count 
+     * 
+     * @return none
+    */
+    void handleResetLinkProberPckLossCount();
+
 private:
     /**
     *@method updateMuxLinkmgrState
@@ -945,6 +954,7 @@ private:
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
+    boost::function<void ()> mResetIcmpPacketCountsFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
