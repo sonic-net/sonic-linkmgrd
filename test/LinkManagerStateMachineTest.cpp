@@ -239,7 +239,17 @@ void LinkManagerStateMachineTest::postDefaultRouteEvent(std::string routeState, 
 void LinkManagerStateMachineTest::postPckLossRatioUpdateEvent(uint64_t unknownCount, uint64_t totalCount)
 {
     mFakeMuxPort.postPckLossRatio(unknownCount, totalCount);
+    mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount = unknownCount;
+    mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount = totalCount;
+
     runIoService();
+}
+
+void LinkManagerStateMachineTest::postPckLossCountsResetEvent()
+{
+    mFakeMuxPort.mFakeLinkProber->resetIcmpPacketCounts();
+
+    runIoService(2);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
@@ -1072,11 +1082,22 @@ TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent)
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 2);
 }
 
-TEST_F(LinkManagerStateMachineTest, PostPckLossUpdateEvent)
+TEST_F(LinkManagerStateMachineTest, PostPckLossUpdateAndResetEvent)
 {
-    postPckLossRatioUpdateEvent(3,4);
-    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, 3);
-    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 4);
+    uint64_t unknownCount = 999;
+    uint64_t totalCount = 10000;
+
+    postPckLossRatioUpdateEvent(unknownCount,totalCount);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, unknownCount);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, totalCount);
+    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, unknownCount);
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, totalCount);
+
+    postPckLossCountsResetEvent();
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 0);    
 }
 
 } /* namespace test */
