@@ -1,0 +1,37 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+      - "libboost1.71-dev"
+      - "libboost-program-options1.71-dev"
+      - "libboost-system1.71-dev"
+      - "libboost-thread1.71-dev"
+      - "libboost-atomic1.71-dev"
+      - "libboost-chrono1.71-dev"
+      - "libboost-container1.71-dev"
+      - "libboost-context1.71-dev"
+      - "libboost-contract1.71-dev"
+      - "libboost-coroutine1.71-dev"
+      - "libboost-date-time1.71-dev"
+      - "libboost-fiber1.71-dev"
+      - "libboost-filesystem1.71-dev"
+      - "libboost-graph-parallel1.71-dev"
+      - "libboost-log1.71-dev"
+      - "libboost-regex1.71-dev"
+      - "googletest"
+      - "libgtest-dev"
+      - "libgcc-8-dev"
+      - "libhiredis0.14"
+      - "libhiredis-dev"
+      - "libnl-3-dev"
+      - "libnl-route-3-dev"
+      - "libnl-genl-3-200"
+    after_prepare:
+    - "ls -l"
+    - "git clone https://github.com/Azure/sonic-swss-common; pushd sonic-swss-common;\
+      \ ./autogen.sh; fakeroot dpkg-buildpackage -us -uc -b; popd"
+    - "dpkg-deb -x libswsscommon_1.0.0_amd64.deb $LGTM_WORKSPACE"
+    - "dpkg-deb -x libswsscommon-dev_1.0.0_amd64.deb $LGTM_WORKSPACE"
+    index:
+      build_command:
+      - "pushd sonic-linkmgrd; make all; popd"
