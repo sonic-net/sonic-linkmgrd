@@ -165,6 +165,33 @@ public:
     };
 
     /**
+     * @method postLinkProberMetricsEvent
+     * 
+     * @brief post link prober pck loss event
+     * 
+     * @param metrics (in) metrics to post
+     * 
+     * @return none
+    */
+    inline void postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics metrics) {
+        mDbInterfacePtr->postLinkProberMetricsEvent(mMuxPortConfig.getPortName(), metrics);
+    };
+
+    /**
+     * @method postPckLossRatio
+     * 
+     * @brief post pck loss ratio update to state db 
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets 
+     * 
+     * @return none
+    */
+    inline void postPckLossRatio(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) {
+        mDbInterfacePtr->postPckLossRatio(mMuxPortConfig.getPortName(), unknownEventCount, expectedPacketCount);
+    };
+
+    /**
     *@method setServerIpv4Address
     *
     *@brief setter for server/blade IPv4 address
@@ -262,6 +289,15 @@ public:
      * @return none
     */
     void handleDefaultRouteState(const std::string &routeState);
+
+    /**
+     * @method resetPckLossCount
+     * 
+     * @brief reset ICMP packet loss count 
+     * 
+     * @return none
+    */
+    void resetPckLossCount();
 
 protected:
     friend class test::MuxManagerTest;

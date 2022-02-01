@@ -46,6 +46,7 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
+std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -161,6 +162,62 @@ void DbInterface::postMetricsEvent(
     )));
 }
 
+// 
+// ---> postLinkProberMetricsEvent(
+//        const std::string &portName, 
+//        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+//    );
+//
+// post link probe pck loss event to state db 
+void DbInterface::postLinkProberMetricsEvent(
+        const std::string &portName, 
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+)
+{
+    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
+        portName %
+        mLinkProbeMetrics[static_cast<int> (metrics)]
+    );
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handlePostLinkProberMetrics,
+        this,
+        portName,
+        metrics,
+        boost::posix_time::microsec_clock::universal_time()
+    )));
+}
+
+//
+// ---> postPckLossRatio(
+//        const std::string &portName,
+//        const uint64_t unknownEventCount, 
+//        const uint64_t expectedPacketCount
+//    );
+//  post pck loss ratio update to state db 
+void DbInterface::postPckLossRatio(
+        const std::string &portName,
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
+        portName %
+        unknownEventCount % 
+        expectedPacketCount
+    );
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handlePostPckLossRatio,
+        this,
+        portName,
+        unknownEventCount,
+        expectedPacketCount
+    ))); 
+}
+
 //
 // ---> initialize();
 //
@@ -183,6 +240,9 @@ void DbInterface::initialize()
         );
         mStateDbMuxMetricsTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_METRICS_TABLE_NAME
+        );
+        mStateDbLinkProbeStatsTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(), LINK_PROBE_STATS_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
@@ -317,6 +377,57 @@ void DbInterface::handlePostMuxMetrics(
         "linkmgrd_switch_" + mMuxState[label] + "_" + mMuxMetrics[static_cast<int> (metrics)],
         boost::posix_time::to_simple_string(time)
     );
+}
+
+// 
+// ---> handlePostLinkProberMetrics(
+//        const std::string portName,
+//        link_manager::LinkManagerStateMachine::LinkProberMetrics,
+//        boost::posix_time::ptime time
+//    );
+//
+// post link prober pck loss event to state db 
+void DbInterface::handlePostLinkProberMetrics(
+    const std::string portName,
+    link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
+    boost::posix_time::ptime time
+)
+{
+    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
+        portName %
+        mLinkProbeMetrics[static_cast<int> (metrics)]
+    );
+
+    if (metrics == link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart) {
+        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[0]);
+        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[1]);
+    }
+
+    mStateDbLinkProbeStatsTablePtr->hset(portName, mLinkProbeMetrics[static_cast<int> (metrics)], boost::posix_time::to_simple_string(time));
+}
+
+// 
+// ---> handlePostPckLossRatio(
+//        const std::string portName,
+//        const uint64_t unknownEventCount, 
+//        const uint64_t expectedPacketCount
+//    );
+//
+// handle post pck loss ratio 
+void DbInterface::handlePostPckLossRatio(
+        const std::string portName,
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
+        portName %
+        unknownEventCount % 
+        expectedPacketCount
+    );
+
+    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_loss_count", std::to_string(unknownEventCount));
+    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_expected_count", std::to_string(expectedPacketCount));
 }
 
 //
@@ -500,7 +611,27 @@ void DbInterface::processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsVa
                 f %
                 v
             );
+            
             mMuxManagerPtr->updateMuxPortConfig(port, v);
+        }
+
+        std::vector<swss::FieldValueTuple>::const_iterator c_it = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "pck_loss_data_reset";}
+        );
+        if (c_it != fieldValues.cend()) {
+            const std::string f = c_it->first;
+            const std::string v = c_it->second;
+
+            MUXLOGDEBUG(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
+                port %
+                operation %
+                f %
+                v
+            );
+            
+            mMuxManagerPtr->resetPckLossCount(port);
         }
     }
 }

@@ -121,4 +121,20 @@ void FakeLinkProber::sendPeerSwitchCommand()
     mSendPeerSwitchCommand++;
 }
 
+void FakeLinkProber::resetIcmpPacketCounts()
+{
+    MUXLOGINFO("");
+
+    mIcmpUnknownEventCount = 0;
+    mIcmpPacketCount = 0;
+
+    boost::asio::io_service::strand &strand = mLinkProberStateMachine->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_prober::LinkProberStateMachine::handlePckLossRatioUpdate,
+        mLinkProberStateMachine,
+        mIcmpUnknownEventCount,
+        mIcmpPacketCount
+    )));
+}
 } /* namespace test */
