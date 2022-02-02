@@ -246,6 +246,17 @@ public:
     void updateMuxPortConfig(const std::string &portName, const std::string &linkState);
 
     /**
+     * @method resetPckLossCount
+     * 
+     * @brief reset ICMP packet loss count. 
+     * 
+     * @param portName (in) Mux port name 
+     * 
+     * @return none
+    */
+    void resetPckLossCount(const std::string &portName);
+
+    /**
     *@method addOrUpdateMuxPortLinkState
     *
     *@brief update MUX port link state. If port is not found, create new MuxPort object

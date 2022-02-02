@@ -121,6 +121,13 @@ public:
         Count
     };
 
+    enum class LinkProberMetrics {
+        LinkProberUnknownStart, 
+        LinkProberUnknownEnd,
+
+        Count
+    };
+
 private:
     /**
      *@enum anonymous
@@ -497,6 +504,27 @@ public:
      * @return none
     */
     void handleDefaultRouteStateNotification(const std::string &routeState);
+
+    /**
+     * @method handlePostPckLossRatioNotification
+     * 
+     * @brief handle get post pck loss ratio 
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
+    */
+    void handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+
+    /**
+     * @method handleResetLinkProberPckLossCount
+     * 
+     * @brief reset link prober heartbeat packet loss count 
+     * 
+     * @return none
+    */
+    void handleResetLinkProberPckLossCount();
 
 private:
     /**
@@ -939,12 +967,15 @@ private:
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
+    boost::function<void ()> mResetIcmpPacketCountsFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
 
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
+
+    bool mContinuousLinkProberUnknownEvent = false;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;

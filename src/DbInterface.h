@@ -45,6 +45,7 @@ class MuxManagerTest;
 namespace mux
 {
 #define MUX_CABLE_INFO_TABLE  "MUX_CABLE_INFO"
+#define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS" 
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
@@ -173,6 +174,39 @@ public:
     );
 
     /**
+     * @method postLinkProberMetricsEvent
+     * 
+     * @brief post link prober pck loss event
+     * 
+     * @param portName (in) port name 
+     * @param metrics (in) pck loss event name 
+     * 
+     * @return none
+     * 
+    */
+    virtual void postLinkProberMetricsEvent(
+        const std::string &portName, 
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+    );
+
+    /**
+     * @method postPckLossRatio
+     * 
+     * @brief post pck loss ratio update to state db
+     * 
+     * @param portName (in) port name 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets 
+     * 
+     * @return none
+    */
+    virtual void postPckLossRatio(
+        const std::string &portName,
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
+    );
+
+    /**
     *@method initialize
     *
     *@brief initialize DB and start SWSS listening thread
@@ -277,6 +311,40 @@ private:
         link_manager::LinkManagerStateMachine::Metrics metrics,
         mux_state::MuxState::Label label,
         boost::posix_time::ptime time
+    );
+
+    /**
+     * @method handlePostLinkProberMetrics
+     * 
+     * @brief post link prober pck loss event to state db 
+     * 
+     * @param portName (in) port name
+     * @param metrics (in) metrics data
+     * @param time (in) event time stamp
+     * 
+     * @return none 
+    */
+    void handlePostLinkProberMetrics(
+        const std::string portName,
+        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
+        boost::posix_time::ptime time
+    );
+
+    /**
+     * @method handlePostPckLossRatio
+     * 
+     * @brief handle post pck loss ratio update 
+     * 
+     * @param portName (in) port name 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets 
+     * 
+     * @return none
+    */
+    void handlePostPckLossRatio(
+        const std::string portName,
+        const uint64_t unknownEventCount, 
+        const uint64_t expectedPacketCount
     );
 
     /**
@@ -512,6 +580,7 @@ private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;
     static std::vector<std::string> mMuxMetrics;
+    static std::vector<std::string> mLinkProbeMetrics;
 
 private:
     mux::MuxManager *mMuxManagerPtr;
@@ -529,6 +598,8 @@ private:
     std::shared_ptr<swss::Table> mStateDbMuxLinkmgrTablePtr;
     // for writing mux metrics
     std::shared_ptr<swss::Table> mStateDbMuxMetricsTablePtr;
+    // for writing link probe statistics data
+    std::shared_ptr<swss::Table> mStateDbLinkProbeStatsTablePtr;
 
     std::shared_ptr<boost::thread> mSwssThreadPtr;
 

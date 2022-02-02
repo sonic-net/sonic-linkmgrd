@@ -160,6 +160,21 @@ void MuxManager::updateMuxPortConfig(const std::string &portName, const std::str
     }
 }
 
+// 
+// ---> resetPckLossCount(const std::string &portName);
+//
+// reset ICMP packet loss count 
+// 
+void MuxManager::resetPckLossCount(const std::string &portName)
+{
+    MUXLOGWARNING(boost::format("%s: reset ICMP packet loss count ") % portName);
+
+    PortMapIterator portMapIterator = mPortMap.find(portName);
+    if(portMapIterator != mPortMap.end()) {
+        portMapIterator->second->resetPckLossCount();
+    }
+}
+
 //
 // ---> addOrUpdateMuxPortLinkState(const std::string &portName, const std::string &linkState);
 //

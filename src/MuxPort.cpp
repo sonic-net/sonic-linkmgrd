@@ -266,4 +266,21 @@ void MuxPort::handleDefaultRouteState(const std::string &routeState)
         routeState
     )));
 }
+
+// 
+// ---> resetPckLossCount();
+// 
+// reset ICMP packet loss count 
+//
+void MuxPort::resetPckLossCount()
+{
+    MUXLOGDEBUG(boost::format("port: %s, reset ICMP packet loss counts ") % mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleResetLinkProberPckLossCount,
+        &mLinkManagerStateMachine
+    )));
+}
+
 } /* namespace mux */

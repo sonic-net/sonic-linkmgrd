@@ -160,6 +160,15 @@ public:
     */
     void sendPeerSwitchCommand();
 
+    /**
+     * @method resetIcmpPacketCounts()
+     * 
+     * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
+     * 
+     * @return none
+    */
+    void resetIcmpPacketCounts();
+
 private:
     /**
     *@method handleUpdateEthernetFrame
@@ -435,6 +444,9 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+
+    uint64_t mIcmpUnknownEventCount = 0;
+    uint64_t mIcmpPacketCount = 0;
 };
 
 } /* namespace link_prober */
