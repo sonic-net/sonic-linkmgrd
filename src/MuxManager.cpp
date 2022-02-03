@@ -178,7 +178,7 @@ void MuxManager::resetPckLossCount(const std::string &portName)
 //
 // ---> addOrUpdateMuxPortLinkState(const std::string &portName, const std::string &linkState);
 //
-// update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
+// update MUX port link state. If port is not found, create new MuxPort object
 //
 void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const std::string &linkState)
 {
@@ -186,6 +186,19 @@ void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const 
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     muxPortPtr->handleLinkState(linkState);
+}
+
+// 
+// ---> addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState);
+// 
+// update mux port's peer link state. If port is not found, create new MuxPort object.
+//
+void MuxManager::addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState)
+{
+    MUXLOGWARNING(boost::format("%s: peer link state %s") % portName % linkState);
+
+    std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    muxPortPtr->handlePeerLinkState(linkState);
 }
 
 //

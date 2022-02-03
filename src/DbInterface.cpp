@@ -769,6 +769,51 @@ void DbInterface::handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPo
     processLinkStateNotifiction(entries);
 }
 
+// 
+// ---> processPeerLinkStateNotification(std::deque<swss:KeyOpFieldsValuesTuple> &entries);
+//
+// process peer's link state notification 
+// 
+void DbInterface::processPeerLinkStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string port = kfvKey(entry);
+        std::string operation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "link_status_peer";}
+        );
+        if (cit != fieldValues.cend()) {
+            const std::string f = cit->first;
+            const std::string v = cit->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+                port %
+                operation %
+                f %
+                v
+            );
+            mMuxManagerPtr->addOrUpdatePeerLinkState(port, v);
+        }
+    }
+}
+
+//
+// ---> handlePeerLinkStateNotification(swss::SubscriberStateTable &stateDbMuxInfoTable);
+//
+// handle peer's link status change notification 
+//
+void DbInterface::handlePeerLinkStateNotification(swss::SubscriberStateTable &stateDbMuxInfoTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    stateDbMuxInfoTable.pops(entries);
+    processPeerLinkStateNotification(entries);
+}
+
 //
 // ---> processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
@@ -938,6 +983,8 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbPortTable(stateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
     // for getting state db default route state 
     swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), STATE_ROUTE_TABLE_NAME);
+    // for getting peer's link status
+    swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
@@ -958,6 +1005,7 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&appDbMuxResponseTable);
     swssSelect.addSelectable(&stateDbPortTable);
     swssSelect.addSelectable(&stateDbRouteTable);
+    swssSelect.addSelectable(&stateDbMuxInfoTable);
     swssSelect.addSelectable(&netlinkNeighbor);
 
     while (mPollSwssNotifcation) {
@@ -986,6 +1034,8 @@ void DbInterface::handleSwssNotification()
             handleMuxStateNotifiction(stateDbPortTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbRouteTable)) {
             handleDefaultRouteStateNotification(stateDbRouteTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbMuxInfoTable)) {
+            handlePeerLinkStateNotification(stateDbMuxInfoTable);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

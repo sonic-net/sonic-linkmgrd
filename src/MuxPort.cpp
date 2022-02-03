@@ -110,6 +110,28 @@ void MuxPort::handleLinkState(const std::string &linkState)
 }
 
 //
+// ---> handlePeerLinkState(const std::string &linkState); 
+//
+// handle peer's link state updates
+//
+void MuxPort::handlePeerLinkState(const std::string &linkState)
+{
+    MUXLOGDEBUG(boost::format("port: %s, state db peer link state: %s") % mMuxPortConfig.getPortName() % linkState);
+
+    link_state::LinkState::Label label = link_state::LinkState::Label::Up;
+    if (linkState == "down") {
+        label = link_state::LinkState::Label::Down;
+    }
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handlePeerLinkStateNotification,
+        &mLinkManagerStateMachine,
+        label
+    )));
+}
+
+//
 // ---> handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address)
 //
 // handles get Server MAC address

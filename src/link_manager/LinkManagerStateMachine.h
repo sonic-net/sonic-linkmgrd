@@ -444,6 +444,17 @@ public:
     *@return none
     */
     void handleSwssLinkStateNotification(const link_state::LinkState::Label label);
+    
+    /**
+     * @method handlePeerLinkStateNotification
+     * 
+     * @brief handle peer link state notification
+     * 
+     * @param label (in) new peer link state label
+     * 
+     * @return none
+    */
+    void handlePeerLinkStateNotification(const link_state::LinkState::Label label);
 
     /**
     *@method handleMuxConfigNotification
@@ -943,6 +954,8 @@ private:
     std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
     mux_state::MuxStateMachine mMuxStateMachine;
     link_state::LinkStateMachine mLinkStateMachine;
+
+    link_state::LinkState::Label mPeerLinkState = link_state::LinkState::Label::Down;
 
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;

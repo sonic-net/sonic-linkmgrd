@@ -722,6 +722,24 @@ void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::
     }
 }
 
+// ---> handlePeerLinkStateNotification(const link_state::LinkState::Label label);
+// 
+// handle peer link state change notification 
+//
+void LinkManagerStateMachine::handlePeerLinkStateNotification(const link_state::LinkState::Label label)
+{
+    MUXLOGINFO(boost::format("%s: state db peer link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
+
+    mPeerLinkState = label;
+    if(label == link_state::LinkState::Label::Down && ms(mCompositeState) == mux_state::MuxState::Standby) {
+        CompositeState nextState = mCompositeState;
+        enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+        LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        mCompositeState = nextState;
+    }
+}
+
 //
 // ---> handleMuxConfigNotification(const common::MuxPortConfig::Mode mode);
 //

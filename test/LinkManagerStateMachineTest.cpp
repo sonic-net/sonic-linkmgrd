@@ -236,6 +236,12 @@ void LinkManagerStateMachineTest::postDefaultRouteEvent(std::string routeState, 
     runIoService(count);
 }
 
+void LinkManagerStateMachineTest::postPeerLinkStateEvent(std::string linkState, uint32_t count)
+{
+    mFakeMuxPort.handlePeerLinkState(linkState);
+    runIoService(count);
+}
+
 void LinkManagerStateMachineTest::postPckLossRatioUpdateEvent(uint64_t unknownCount, uint64_t totalCount)
 {
     mFakeMuxPort.postPckLossRatio(unknownCount, totalCount);
@@ -1069,6 +1075,32 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
+{
+    setMuxStandby();
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    postPeerLinkStateEvent("down", 3);
+
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActivePeerLinkStateUp)
+{
+    setMuxActive();
+
+    postPeerLinkStateEvent("up", 3);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Active, Active, Up);
+}
 TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent) 
 {
     setMuxStandby();

@@ -259,7 +259,7 @@ public:
     /**
     *@method addOrUpdateMuxPortLinkState
     *
-    *@brief update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
+    *@brief update MUX port link state. If port is not found, create new MuxPort object
     *
     *@param portName (in)   Mux port name
     *@param linkState (in)  Mux port link state
@@ -267,6 +267,18 @@ public:
     *@return none
     */
     void addOrUpdateMuxPortLinkState(const std::string &portName, const std::string &linkState);
+
+    /**
+     * @method addOrUpdatePeerLinkState
+     * 
+     * @brief update mux port's peer link state. If port is not found, create new MuxPort object.
+     * 
+     * @param portName (in) Mux port name
+     * @param linkState (in) Peer's link state
+     * 
+     * @return none
+    */
+    void addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState);
 
     /**
     *@method addOrUpdateMuxPortMuxState

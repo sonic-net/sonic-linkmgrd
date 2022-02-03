@@ -44,6 +44,7 @@ class MuxManagerTest;
 
 namespace mux
 {
+#define MUX_CABLE_INFO_TABLE  "MUX_CABLE_INFO"
 #define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS" 
 
 class MuxManager;
@@ -477,6 +478,28 @@ private:
     *@return none
     */
     void handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable);
+
+    /**
+     * @method processPeerLinkStateNotification
+     * 
+     * @brief process peer link status change notification
+     * 
+     * @param entries reference to state db mux cable info table 
+     * 
+     * @return none
+    */
+    inline void processPeerLinkStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+     * @method handlePeerLinkStateNotification
+     * 
+     * @brief handle peer's link status change notification 
+     * 
+     * @param stateDbMuxInfoTable reference to state db mux info table 
+     * 
+     * @return none
+    */
+    void handlePeerLinkStateNotification(swss::SubscriberStateTable &stateDbMuxInfoTable);
 
     /**
     *@method processMuxResponseNotifiction
