@@ -577,7 +577,7 @@ void DbInterface::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTupl
 void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
     MUXLOGINFO("Reading MUX Server IPs");
-    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_LINKMGR_CABLE_TABLE_NAME);
     std::vector<swss::KeyOpFieldsValuesTuple> entries;
 
     configDbMuxCableTable.getContent(entries);
@@ -971,9 +971,9 @@ void DbInterface::handleSwssNotification()
     std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
 
     // For reading Link Prober configurations from the MUX linkmgr table name
-    swss::SubscriberStateTable configDbMuxLinkmgrTable(configDbPtr.get(), CFG_MUX_LINKMGR_TABLE_NAME);
+    swss::SubscriberStateTable configDbMuxLinkmgrTable(configDbPtr.get(), CFG_LINKMGR_TABLE_NAME);
 
-    swss::SubscriberStateTable configDbMuxTable(configDbPtr.get(), CFG_MUX_CABLE_TABLE_NAME);
+    swss::SubscriberStateTable configDbMuxTable(configDbPtr.get(), CFG_LINKMGR_CABLE_TABLE_NAME);
 
     // for link up/down, should be in state db down the road
     swss::SubscriberStateTable appDbPortTable(appDbPtr.get(), APP_PORT_TABLE_NAME);
