@@ -73,7 +73,7 @@ FakeMuxPort::FakeMuxPort(
         boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
     );
     getLinkManagerStateMachine()->setSendPeerSwitchCommandFnPtr(
-        boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
+        boost::bind(&FakeLinkProber::sendPeerSwitchCommand, mFakeLinkProber.get())
     );
 }
 
