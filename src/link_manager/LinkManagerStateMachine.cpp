@@ -859,6 +859,7 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
     if (mComponentInitState.test(MuxStateComponent)) {
         if (ms(mCompositeState) != mux_state::MuxState::Label::Standby && routeState == "na") {
             mSendPeerSwitchCommandFnPtr();
+            // In case Mux is in wait state, switchMuxSate(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established.
             mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby);
         } else {
             enterMuxWaitState(mCompositeState);
