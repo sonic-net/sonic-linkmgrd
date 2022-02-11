@@ -1046,8 +1046,11 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
     setMuxActive();
 
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     postDefaultRouteEvent("na", 3);
+    
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK) 
