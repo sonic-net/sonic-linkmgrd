@@ -61,7 +61,7 @@
 namespace link_manager
 {
 
-constexpr auto MAX_BACKOFF_FACTOR = 8;
+constexpr auto MAX_BACKOFF_FACTOR = 32;
 
 LinkManagerStateMachine::TransitionFunction
     LinkManagerStateMachine::mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
