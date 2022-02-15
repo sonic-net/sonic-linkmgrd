@@ -20,9 +20,7 @@ JOBS := $(subst -j,,$(JOB_FLAG))
 release-targets: CPP_FLAGS := -O3 -Wall -c -fmessage-length=0 -fPIC -flto
 test-targets: CPP_FLAGS = -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
 
-INCLUDES := \
-    -I"$(TOPDIR)/src" \
-    -I"/usr/include/libnl3/"
+override INCLUDES += -I"$(TOPDIR)/src" -I"/usr/include/libnl3/"
 
 # All of the sources participating in the build are defined here
 -include sources.mk
