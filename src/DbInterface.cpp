@@ -114,11 +114,11 @@ void DbInterface::probeMuxState(const std::string &portName)
 }
 
 //
-// ---> setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label);
+// ---> setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label);
 //
 // set MUX LinkMgr state in State DB for cli processing
 //
-void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label)
+void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label)
 {
     MUXLOGDEBUG(boost::format("%s: setting mux linkmgr to %s") % portName % mMuxLinkmgrState[static_cast<int> (label)]);
 
@@ -134,14 +134,14 @@ void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::
 //
 // ---> postMetricsEvent(
 //          const std::string &portName,
-//          link_manager::LinkManagerStateMachine::Metrics metrics
+//          link_manager::ActiveStandbyStateMachine::Metrics metrics
 //          mux_state::MuxState::Label label);
 //
 // post MUX metrics event
 //
 void DbInterface::postMetricsEvent(
     const std::string &portName,
-    link_manager::LinkManagerStateMachine::Metrics metrics,
+    link_manager::ActiveStandbyStateMachine::Metrics metrics,
     mux_state::MuxState::Label label
 )
 {
@@ -165,13 +165,13 @@ void DbInterface::postMetricsEvent(
 // 
 // ---> postLinkProberMetricsEvent(
 //        const std::string &portName, 
-//        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+//        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
 //    );
 //
 // post link probe pck loss event to state db 
 void DbInterface::postLinkProberMetricsEvent(
         const std::string &portName, 
-        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
 )
 {
     MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
@@ -330,18 +330,18 @@ void DbInterface::handleProbeMuxState(const std::string portName)
 }
 
 //
-// ---> handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
+// ---> handleSetMuxLinkmgrState(const std::string portName, link_manager::ActiveStandbyStateMachine::Label label);
 //
 // set MUX LinkMgr state in State DB for cli processing
 //
 void DbInterface::handleSetMuxLinkmgrState(
     const std::string portName,
-    link_manager::LinkManagerStateMachine::Label label
+    link_manager::ActiveStandbyStateMachine::Label label
 )
 {
     MUXLOGDEBUG(boost::format("%s: setting mux linkmgr state to %s") % portName % mMuxLinkmgrState[static_cast<int> (label)]);
 
-    if (label < link_manager::LinkManagerStateMachine::Label::Count) {
+    if (label < link_manager::ActiveStandbyStateMachine::Label::Count) {
         mStateDbMuxLinkmgrTablePtr->hset(portName, "state", mMuxLinkmgrState[static_cast<int> (label)]);
     }
 }
@@ -349,7 +349,7 @@ void DbInterface::handleSetMuxLinkmgrState(
 //
 // ---> handlePostMuxMetrics(
 //          const std::string portName,
-//          link_manager::LinkManagerStateMachine::Metrics metrics,
+//          link_manager::ActiveStandbyStateMachine::Metrics metrics,
 //          mux_state::MuxState::Label label,
 //          boost::posix_time::ptime time);
 //
@@ -357,7 +357,7 @@ void DbInterface::handleSetMuxLinkmgrState(
 //
 void DbInterface::handlePostMuxMetrics(
     const std::string portName,
-    link_manager::LinkManagerStateMachine::Metrics metrics,
+    link_manager::ActiveStandbyStateMachine::Metrics metrics,
     mux_state::MuxState::Label label,
     boost::posix_time::ptime time
 )
@@ -368,7 +368,7 @@ void DbInterface::handlePostMuxMetrics(
         mMuxMetrics[static_cast<int> (metrics)]
     );
 
-    if (metrics == link_manager::LinkManagerStateMachine::Metrics::SwitchingStart) {
+    if (metrics == link_manager::ActiveStandbyStateMachine::Metrics::SwitchingStart) {
         mStateDbMuxMetricsTablePtr->del(portName);
     }
 
@@ -382,14 +382,14 @@ void DbInterface::handlePostMuxMetrics(
 // 
 // ---> handlePostLinkProberMetrics(
 //        const std::string portName,
-//        link_manager::LinkManagerStateMachine::LinkProberMetrics,
+//        link_manager::ActiveStandbyStateMachine::LinkProberMetrics,
 //        boost::posix_time::ptime time
 //    );
 //
 // post link prober pck loss event to state db 
 void DbInterface::handlePostLinkProberMetrics(
     const std::string portName,
-    link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
+    link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics,
     boost::posix_time::ptime time
 )
 {
@@ -398,7 +398,7 @@ void DbInterface::handlePostLinkProberMetrics(
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
 
-    if (metrics == link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart) {
+    if (metrics == link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownStart) {
         mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[0]);
         mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[1]);
     }

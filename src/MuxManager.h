@@ -46,7 +46,7 @@ using PortMapIterator = PortMap::iterator;
 /**
  *@class MuxManager
  *
- *@brief host collection MuxPort object, each has MuxPort configuration, LinkManagerStateMachine.
+ *@brief host collection MuxPort object, each has MuxPort configuration, ActiveStandbyStateMachine.
  */
 class MuxManager
 {

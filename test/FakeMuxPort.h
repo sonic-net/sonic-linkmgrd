@@ -48,7 +48,7 @@ public:
 
     void activateStateMachine();
 
-    const link_manager::LinkManagerStateMachine::CompositeState& getCompositeState() {return getLinkManagerStateMachine()->getCompositeState();};
+    const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() {return getLinkManagerStateMachine()->getCompositeState();};
     link_prober::LinkProberStateMachine& getLinkProberStateMachine() {return getLinkManagerStateMachine()->getLinkProberStateMachine();};
     mux_state::MuxStateMachine& getMuxStateMachine() {return getLinkManagerStateMachine()->getMuxStateMachine();};
     link_state::LinkStateMachine& getLinkStateMachine() {return getLinkManagerStateMachine()->getLinkStateMachine();};

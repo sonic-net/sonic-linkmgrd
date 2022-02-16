@@ -108,7 +108,7 @@ int main(int argc, const char* argv[])
 
         // initialize static data
         link_prober::IcmpPayload::generateGuid();
-        link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
+        link_manager::ActiveStandbyStateMachine::initializeTransitionFunctionTable();
 
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
         muxManagerPtr->initialize();

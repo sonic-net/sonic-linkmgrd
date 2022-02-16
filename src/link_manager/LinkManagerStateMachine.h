@@ -15,7 +15,7 @@
  */
 
 /*
- * LinkManagerStateMachine.h
+ * ActiveStandbyStateMachine.h
  *
  *  Created on: Oct 18, 2020
  *      Author: tamer
@@ -88,12 +88,12 @@ public:
 };
 
 /**
- *@class LinkManagerStateMachine
+ *@class ActiveStandbyStateMachine
  *
  *@brief Composite state machine of LinkProberState, MuxState, and LinkState
  */
-class LinkManagerStateMachine: public common::StateMachine,
-                               public std::enable_shared_from_this<LinkManagerStateMachine>
+class ActiveStandbyStateMachine: public common::StateMachine,
+                               public std::enable_shared_from_this<ActiveStandbyStateMachine>
 {
 public:
     /**
@@ -148,27 +148,27 @@ public:
         mux_state::MuxState::Label,
         link_state::LinkState::Label
     >;
-    using TransitionFunction = std::function<void (LinkManagerStateMachine*, CompositeState&)>;
+    using TransitionFunction = std::function<void (ActiveStandbyStateMachine*, CompositeState&)>;
 
 public:
     /**
-    *@method LinkManagerStateMachine
+    *@method ActiveStandbyStateMachine
     *
     *@brief class default constructor
     */
-    LinkManagerStateMachine() = delete;
+    ActiveStandbyStateMachine() = delete;
 
     /**
-    *@method LinkManagerStateMachine
+    *@method ActiveStandbyStateMachine
     *
     *@brief class copy constructor
     *
-    *@param LinkManagerStateMachine (in)  reference to LinkManagerStateMachine object to be copied
+    *@param ActiveStandbyStateMachine (in)  reference to ActiveStandbyStateMachine object to be copied
     */
-    LinkManagerStateMachine(const LinkManagerStateMachine &) = delete;
+    ActiveStandbyStateMachine(const ActiveStandbyStateMachine &) = delete;
 
     /**
-    *@method LinkManagerStateMachine
+    *@method ActiveStandbyStateMachine
     *
     *@brief class constructor
     *
@@ -176,18 +176,18 @@ public:
     *@param strand (in)         boost serialization object
     *@param muxPortConfig (in)  reference to MuxPortConfig object
     */
-    LinkManagerStateMachine(
+    ActiveStandbyStateMachine(
         mux::MuxPort *muxPortPtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig
     );
 
     /**
-    *@method ~LinkManagerStateMachine
+    *@method ~ActiveStandbyStateMachine
     *
     *@brief class destructor
     */
-    virtual ~LinkManagerStateMachine() = default;
+    virtual ~ActiveStandbyStateMachine() = default;
 
     /**
     *@method initializeTransitionFunctionTable

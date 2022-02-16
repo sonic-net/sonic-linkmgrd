@@ -154,7 +154,7 @@ public:
     *
     *@return none
     */
-    virtual void setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label);
+    virtual void setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label);
 
     /**
     *@method postMetricsEvent
@@ -169,7 +169,7 @@ public:
     */
     virtual void postMetricsEvent(
         const std::string &portName,
-        link_manager::LinkManagerStateMachine::Metrics metrics,
+        link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     );
 
@@ -186,7 +186,7 @@ public:
     */
     virtual void postLinkProberMetricsEvent(
         const std::string &portName, 
-        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
     );
 
     /**
@@ -292,7 +292,7 @@ private:
     *
     *@return none
     */
-    void handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
+    void handleSetMuxLinkmgrState(const std::string portName, link_manager::ActiveStandbyStateMachine::Label label);
 
     /**
     *@method handlePostMuxMetrics
@@ -308,7 +308,7 @@ private:
     */
     void handlePostMuxMetrics(
         const std::string portName,
-        link_manager::LinkManagerStateMachine::Metrics metrics,
+        link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label,
         boost::posix_time::ptime time
     );
@@ -326,7 +326,7 @@ private:
     */
     void handlePostLinkProberMetrics(
         const std::string portName,
-        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics,
+        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics,
         boost::posix_time::ptime time
     );
 

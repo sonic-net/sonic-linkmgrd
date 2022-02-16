@@ -38,7 +38,7 @@ MuxManagerTest::MuxManagerTest() :
     mMuxManagerPtr->setDbInterfacePtr(mDbInterfacePtr);
 
     link_prober::IcmpPayload::generateGuid();
-    link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
+    link_manager::ActiveStandbyStateMachine::initializeTransitionFunctionTable();
 }
 
 void MuxManagerTest::runIoService(uint32_t count)
@@ -123,7 +123,7 @@ void MuxManagerTest::processMuxPortConfigNotifiction(std::deque<swss::KeyOpField
     mDbInterfacePtr->processMuxPortConfigNotifiction(entries);
 }
 
-link_manager::LinkManagerStateMachine::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
+link_manager::ActiveStandbyStateMachine::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
@@ -186,14 +186,14 @@ void MuxManagerTest::createPort(std::string port)
 
     mDbInterfacePtr->processLinkStateNotifiction(entries);
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap["Ethernet0"];
-    link_manager::LinkManagerStateMachine* linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachine();
+    link_manager::ActiveStandbyStateMachine* linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachine();
 
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachine::LinkStateComponent) == 0);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 0);
 
     runIoService();
 
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachine::LinkStateComponent) == 1);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 1);
 
     // Initialize a FakeLinkProber
     mFakeLinkProber = std::make_shared<FakeLinkProber> (&linkManagerStateMachine->getLinkProberStateMachine());
@@ -230,11 +230,11 @@ void MuxManagerTest::createPort(std::string port)
 
     mDbInterfacePtr->processMuxStateNotifiction(entries);
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachine::MuxStateComponent) == 0);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::MuxStateComponent) == 0);
 
     runIoService();
 
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachine::MuxStateComponent) == 1);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::MuxStateComponent) == 1);
 }
 
 TEST_F(MuxManagerTest, AddPort)

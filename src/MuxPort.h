@@ -143,7 +143,7 @@ public:
     *
     *@return none
     */
-    inline void setMuxLinkmgrState(link_manager::LinkManagerStateMachine::Label label) {
+    inline void setMuxLinkmgrState(link_manager::ActiveStandbyStateMachine::Label label) {
         mDbInterfacePtr->setMuxLinkmgrState(mMuxPortConfig.getPortName(), label);
     };
 
@@ -158,7 +158,7 @@ public:
     *@return none
     */
     inline void postMetricsEvent(
-        link_manager::LinkManagerStateMachine::Metrics metrics,
+        link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     ) {
         mDbInterfacePtr->postMetricsEvent(mMuxPortConfig.getPortName(), metrics, label);
@@ -173,7 +173,7 @@ public:
      * 
      * @return none
     */
-    inline void postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics metrics) {
+    inline void postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics) {
         mDbInterfacePtr->postLinkProberMetricsEvent(mMuxPortConfig.getPortName(), metrics);
     };
 
@@ -316,11 +316,11 @@ protected:
     /**
     *@method getLinkManagerStateMachine
     *
-    *@brief getter for LinkManagerStateMachine object (used during unit test)
+    *@brief getter for ActiveStandbyStateMachine object (used during unit test)
     *
-    *@return pointer to LinkManagerStateMachine object
+    *@return pointer to ActiveStandbyStateMachine object
     */
-    link_manager::LinkManagerStateMachine* getLinkManagerStateMachine() {return &mLinkManagerStateMachine;};
+    link_manager::ActiveStandbyStateMachine* getLinkManagerStateMachine() {return &mLinkManagerStateMachine;};
 
     /**
     *@method setComponentInitState
@@ -336,7 +336,7 @@ private:
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 
-    link_manager::LinkManagerStateMachine mLinkManagerStateMachine;
+    link_manager::ActiveStandbyStateMachine mLinkManagerStateMachine;
 };
 
 } /* namespace mux */
