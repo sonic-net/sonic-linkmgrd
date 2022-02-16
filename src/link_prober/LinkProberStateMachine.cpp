@@ -43,7 +43,7 @@ SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
 
 //
 // ---> LinkProberStateMachine(
-//          link_manager::LinkManagerStateMachine &linkManagerStateMachine,
+//          link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
 //          LinkProberState::Label label
@@ -52,7 +52,7 @@ SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
 // class constructor
 //
 LinkProberStateMachine::LinkProberStateMachine(
-    link_manager::LinkManagerStateMachine &linkManagerStateMachine,
+    link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     LinkProberState::Label label
@@ -104,10 +104,10 @@ void LinkProberStateMachine::postLinkManagerEvent(LinkProberState* linkProberSta
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::LinkManagerStateMachine::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
-            (&link_manager::LinkManagerStateMachine::handleStateChange),
+        static_cast<void (link_manager::ActiveStandbyStateMachine::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
+            (&link_manager::ActiveStandbyStateMachine::handleStateChange),
         &mLinkManagerStateMachine,
-        link_manager::LinkManagerStateMachine::getLinkProberEvent(),
+        link_manager::ActiveStandbyStateMachine::getLinkProberEvent(),
         linkProberState->getStateLabel()
     )));
 }
@@ -204,7 +204,7 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleSuspendTimerExpiry,
+        &link_manager::ActiveStandbyStateMachine::handleSuspendTimerExpiry,
         &mLinkManagerStateMachine
     )));
 }
@@ -219,7 +219,7 @@ void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &swit
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleSwitchActiveCommandCompletion,
+        &link_manager::ActiveStandbyStateMachine::handleSwitchActiveCommandCompletion,
         &mLinkManagerStateMachine
     )));
 }
@@ -234,7 +234,7 @@ void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActive
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleSwitchActiveRequestEvent,
+        &link_manager::ActiveStandbyStateMachine::handleSwitchActiveRequestEvent,
         &mLinkManagerStateMachine
     )));
 }
@@ -249,7 +249,7 @@ void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, E
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleGetServerMacAddressNotification,
+        &link_manager::ActiveStandbyStateMachine::handleGetServerMacAddressNotification,
         &mLinkManagerStateMachine,
         address
     )));
@@ -265,7 +265,7 @@ void LinkProberStateMachine::handlePckLossRatioUpdate(const uint64_t unknownEven
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handlePostPckLossRatioNotification,
+        &link_manager::ActiveStandbyStateMachine::handlePostPckLossRatioNotification,
         &mLinkManagerStateMachine,
         unknownEventCount,
         expectedPacketCount

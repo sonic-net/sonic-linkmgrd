@@ -53,14 +53,14 @@ void FakeDbInterface::probeMuxState(const std::string &portName)
     mProbeMuxStateInvokeCount++;
 }
 
-void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label)
+void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label)
 {
     mSetMuxLinkmgrStateInvokeCount++;
 }
 
 void FakeDbInterface::postMetricsEvent(
     const std::string &portName,
-    link_manager::LinkManagerStateMachine::Metrics metrics,
+    link_manager::ActiveStandbyStateMachine::Metrics metrics,
     mux_state::MuxState::Label label
 )
 {
@@ -69,7 +69,7 @@ void FakeDbInterface::postMetricsEvent(
 
 void FakeDbInterface::postLinkProberMetricsEvent(
         const std::string &portName, 
-        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
 )
 {
     mPostLinkProberMetricsInvokeCount++;

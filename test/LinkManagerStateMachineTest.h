@@ -65,7 +65,7 @@ public:
     uint16_t mServerId = 01;
 
     FakeMuxPort mFakeMuxPort;
-    link_manager::LinkManagerStateMachine::CompositeState mTestCompositeState;
+    link_manager::ActiveStandbyStateMachine::CompositeState mTestCompositeState;
 
     uint8_t mPositiveUpdateCount = 2;
 };

@@ -41,16 +41,16 @@ public:
     virtual void probeMuxState(const std::string &portName) override;
     virtual void setMuxLinkmgrState(
         const std::string &portName,
-        link_manager::LinkManagerStateMachine::Label label
+        link_manager::ActiveStandbyStateMachine::Label label
     ) override;
     virtual void postMetricsEvent(
         const std::string &portName,
-        link_manager::LinkManagerStateMachine::Metrics metrics,
+        link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     ) override;
     virtual void postLinkProberMetricsEvent(
         const std::string &portName, 
-        link_manager::LinkManagerStateMachine::LinkProberMetrics metrics
+        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
     ) override;
     virtual void postPckLossRatio(
         const std::string &portName,
