@@ -38,7 +38,6 @@ MuxManagerTest::MuxManagerTest() :
     mMuxManagerPtr->setDbInterfacePtr(mDbInterfacePtr);
 
     link_prober::IcmpPayload::generateGuid();
-    link_manager::ActiveStandbyStateMachine::initializeTransitionFunctionTable();
 }
 
 void MuxManagerTest::runIoService(uint32_t count)

@@ -63,20 +63,6 @@ namespace link_manager
 
 constexpr auto MAX_BACKOFF_FACTOR = 8;
 
-ActiveStandbyStateMachine::TransitionFunction
-    ActiveStandbyStateMachine::mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
-                                                    [mux_state::MuxState::Label::Count]
-                                                    [link_state::LinkState::Label::Count];
-
-LinkProberEvent ActiveStandbyStateMachine::mLinkProberEvent;
-MuxStateEvent ActiveStandbyStateMachine::mMuxStateEvent;
-LinkStateEvent ActiveStandbyStateMachine::mLinkStateEvent;
-
-std::vector<std::string> ActiveStandbyStateMachine::mLinkProberStateName = {"Active", "Standby", "Unknown", "Wait"};
-std::vector<std::string> ActiveStandbyStateMachine::mMuxStateName = {"Active", "Standby", "Unknown", "Error", "Wait"};
-std::vector<std::string> ActiveStandbyStateMachine::mLinkStateName = {"Up", "Down"};
-std::vector<std::string> ActiveStandbyStateMachine::mLinkHealthName = {"Uninitialized", "Unhealthy", "Healthy"};
-
 //
 // ---> ActiveStandbyStateMachine(
 //          mux::MuxPort *muxPortPtr,
@@ -91,7 +77,10 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig
 ) :
-    StateMachine(strand, muxPortConfig),
+    LinkManagerStateMachineBase(
+        strand, muxPortConfig,
+        {link_prober::LinkProberState::Label::Unknown, mux_state::MuxState::Label::Wait, link_state::LinkState::Label::Down}
+    ),
     mMuxPortPtr(muxPortPtr),
     mLinkProberStateMachine(*this, strand, muxPortConfig, ps(mCompositeState)),
     mMuxStateMachine(*this, strand, muxPortConfig, ms(mCompositeState)),
@@ -102,6 +91,7 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
     assert(muxPortPtr != nullptr);
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
     mMuxPortPtr->setMuxLinkmgrState(mLabel);
+    initializeTransitionFunctionTable();
 }
 
 //
@@ -112,165 +102,151 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
 void ActiveStandbyStateMachine::initializeTransitionFunctionTable()
 {
     MUXLOGWARNING("Initializing State Transition Table...");
-    for (uint8_t linkProberState = link_prober::LinkProberState::Label::Active;
-            linkProberState < link_prober::LinkProberState::Label::Count; linkProberState++) {
-        for (uint8_t muxState = mux_state::MuxState::Label::Active;
-                muxState < mux_state::MuxState::Label::Count; muxState++) {
-            for (uint8_t linkState = link_state::LinkState::Label::Up;
-                    linkState < link_state::LinkState::Label::Count; linkState++) {
-                mStateTransitionHandler[linkProberState][muxState][linkState] =
-                    boost::bind(
-                        &ActiveStandbyStateMachine::noopTransitionFunction,
-                        boost::placeholders::_1,
-                        boost::placeholders::_2
-                    );
-            }
-        }
-    }
+    LinkManagerStateMachineBase::initializeTransitionFunctionTable();
 
     mStateTransitionHandler[link_prober::LinkProberState::Label::Standby]
                            [mux_state::MuxState::Label::Active]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberStandbyMuxActiveLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Active]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Active]
                            [mux_state::MuxState::Label::Standby]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Standby]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Active]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Standby]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Active]
                            [mux_state::MuxState::Label::Error]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberActiveMuxErrorLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Standby]
                            [mux_state::MuxState::Label::Error]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberStandbyMuxErrorLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Active]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Standby]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxStandbyLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Up] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxUnknownLinkUpTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Active]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxActiveLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Standby]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxStandbyLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Active]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxActiveLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Standby]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxStandbyLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
     mStateTransitionHandler[link_prober::LinkProberState::Label::Wait]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Down] =
         boost::bind(
             &ActiveStandbyStateMachine::LinkProberWaitMuxUnknownLinkDownTransitionFunction,
-            boost::placeholders::_1,
-            boost::placeholders::_2
+            this,
+            boost::placeholders::_1
         );
 }
 
@@ -482,7 +458,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
         CompositeState nextState = mCompositeState;
         ps(nextState) = state;
-        mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
+        mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
@@ -509,7 +485,7 @@ void ActiveStandbyStateMachine::handleStateChange(MuxStateEvent &event, mux_stat
 
         CompositeState nextState = mCompositeState;
         ms(nextState) = state;
-        mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
+        mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
@@ -565,7 +541,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
             // switch MUX to standby since we are entering LinkDown state
             switchMuxState(nextState, mux_state::MuxState::Label::Standby);
         } else {
-            mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
+            mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;

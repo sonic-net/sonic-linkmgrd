@@ -31,6 +31,7 @@
 #include <vector>
 #include <boost/function.hpp>
 
+#include "link_manager/LinkManagerStateMachineBase.h"
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberState.h"
 #include "link_state/LinkState.h"
@@ -55,60 +56,14 @@ namespace link_manager
 {
 
 /**
- *@class LinkProberEvent
- *
- *@brief signals a LinkeProber event to the composite state machine
- */
-class LinkProberEvent {
-public:
-    LinkProberEvent() = default;
-    ~LinkProberEvent() = default;
-};
-
-/**
- *@class MuxStateEvent
- *
- *@brief signals a MuxState event to the composite state machine
- */
-class MuxStateEvent {
-public:
-    MuxStateEvent() = default;
-    ~MuxStateEvent() = default;
-};
-
-/**
- *@class LinkStateEvent
- *
- *@brief signals a LinkState event to the composite state machine
- */
-class LinkStateEvent {
-public:
-    LinkStateEvent() = default;
-    ~LinkStateEvent() = default;
-};
-
-/**
  *@class ActiveStandbyStateMachine
  *
  *@brief Composite state machine of LinkProberState, MuxState, and LinkState
  */
-class ActiveStandbyStateMachine: public common::StateMachine,
+class ActiveStandbyStateMachine: public LinkManagerStateMachineBase,
                                public std::enable_shared_from_this<ActiveStandbyStateMachine>
 {
 public:
-    /**
-     *@enum Label
-     *
-     *@brief Label corresponding to each LINKMGR Health State
-     */
-    enum class Label {
-        Uninitialized,
-        Unhealthy,
-        Healthy,
-
-        Count
-    };
-
     /**
      *@enum Metrics
      *
@@ -141,14 +96,6 @@ private:
 
         ComponentCount
     };
-
-public:
-    using CompositeState = std::tuple<
-        link_prober::LinkProberState::Label,
-        mux_state::MuxState::Label,
-        link_state::LinkState::Label
-    >;
-    using TransitionFunction = std::function<void (ActiveStandbyStateMachine*, CompositeState&)>;
 
 public:
     /**
@@ -196,43 +143,7 @@ public:
     *
     *@return none
     */
-    static void initializeTransitionFunctionTable();
-
-    /**
-    *@method getLinkProberEvent
-    *
-    *@brief getter for LinkProberEvent object
-    *
-    *@return reference to LinkProberEvent object
-    */
-    static LinkProberEvent& getLinkProberEvent() {return mLinkProberEvent;};
-
-    /**
-    *@method getMuxStateEvent
-    *
-    *@brief getter for MuxStateEvent object
-    *
-    *@return reference to MuxStateEvent object
-    */
-    static MuxStateEvent& getMuxStateEvent() {return mMuxStateEvent;};
-
-    /**
-    *@method getLinkStateEvent
-    *
-    *@brief getter for LinkStateEvent object
-    *
-    *@return reference to LinkStateEvent object
-    */
-    static LinkStateEvent& getLinkStateEvent() {return mLinkStateEvent;};
-
-    /**
-    *@method getCompositeState
-    *
-    *@brief getter for CompositeState object
-    *
-    *@return reference to CompositeState object
-    */
-    const CompositeState& getCompositeState() {return mCompositeState;};
+    void initializeTransitionFunctionTable();
 
     /**
     *@method getLinkProberStateMachine
@@ -928,27 +839,6 @@ private:
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
 private:
-    static TransitionFunction mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
-                                                     [mux_state::MuxState::Label::Count]
-                                                     [link_state::LinkState::Label::Count];
-
-    static LinkProberEvent mLinkProberEvent;
-    static MuxStateEvent mMuxStateEvent;
-    static LinkStateEvent mLinkStateEvent;
-
-    // To print human readable state name
-    static std::vector<std::string> mLinkProberStateName;
-    static std::vector<std::string> mMuxStateName;
-    static std::vector<std::string> mLinkStateName;
-    static std::vector<std::string> mLinkHealthName;
-
-private:
-    CompositeState mCompositeState = {
-        link_prober::LinkProberState::Label::Unknown,
-        mux_state::MuxState::Label::Wait,
-        link_state::LinkState::Label::Down
-    };
-
     mux::MuxPort *mMuxPortPtr;
     link_prober::LinkProberStateMachine mLinkProberStateMachine;
     std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
@@ -978,7 +868,6 @@ private:
     bool mContinuousLinkProberUnknownEvent = false;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
-    Label mLabel = Label::Uninitialized;
 };
 
 } /* namespace link_manager */

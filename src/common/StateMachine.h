@@ -31,6 +31,7 @@
 #include "common/MuxPortConfig.h"
 
 namespace link_manager {
+class LinkManagerStateMachineBase;
 class ActiveStandbyStateMachine;
 }
 
@@ -105,6 +106,7 @@ public:
     boost::asio::io_service::strand& getStrand() {return mStrand;};
 
 private:
+    friend class link_manager::LinkManagerStateMachineBase;
     friend class link_manager::ActiveStandbyStateMachine;
     friend class link_prober::LinkProberStateMachine;
     friend class mux_state::MuxStateMachine;

@@ -1,13 +1,16 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-    ./src/link_manager/LinkManagerStateMachine.cpp 
+	./src/link_manager/LinkManagerStateMachineBase.cpp \
+    ./src/link_manager/LinkManagerStateMachine.cpp \
 
 OBJS += \
-    ./src/link_manager/LinkManagerStateMachine.o 
+	./src/link_manager/LinkManagerStateMachineBase.o \
+    ./src/link_manager/LinkManagerStateMachine.o \
+ 
 
 CPP_DEPS += \
-    ./src/link_manager/LinkManagerStateMachine.d 
-
+	./src/link_manager/LinkManagerStateMachineBase.d \
+    ./src/link_manager/LinkManagerStateMachine.d \
 
 # Each subdirectory must supply rules for building sources it contributes
 src/link_manager/%.o: src/link_manager/%.cpp

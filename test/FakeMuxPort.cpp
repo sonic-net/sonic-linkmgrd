@@ -52,7 +52,6 @@ FakeMuxPort::FakeMuxPort(
     std::string log_filename = "/tmp/" + prog_name + ".log";
     common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug);
     common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
-    link_manager::ActiveStandbyStateMachine::initializeTransitionFunctionTable();
     mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
     getLinkManagerStateMachine()->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
