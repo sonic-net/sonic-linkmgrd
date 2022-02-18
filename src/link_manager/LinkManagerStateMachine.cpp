@@ -61,7 +61,7 @@
 namespace link_manager
 {
 
-constexpr auto MAX_BACKOFF_FACTOR = 8;
+constexpr auto MAX_BACKOFF_FACTOR = 32;
 
 LinkManagerStateMachine::TransitionFunction
     LinkManagerStateMachine::mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
@@ -528,6 +528,8 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
             handleMuxConfigNotification(mTargetMuxMode);
             mPendingMuxModeChange = false;
         }
+
+        mMuxWaitTimeoutCount = 0;
     }
 
     if (ms(mCompositeState) != mux_state::MuxState::Unknown) {
@@ -856,11 +858,9 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 
     if (mComponentInitState.test(MuxStateComponent)) {
         if (ms(mCompositeState) != mux_state::MuxState::Label::Standby && routeState == "na") {
-            CompositeState nextState = mCompositeState;
-            enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
-            LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
-            mCompositeState = nextState;
+            mSendPeerSwitchCommandFnPtr();
+            // In case Mux is in wait state, switchMuxSate(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established.
+            mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby);
         } else {
             enterMuxWaitState(mCompositeState);
         }
@@ -974,10 +974,17 @@ void LinkManagerStateMachine::startMuxWaitTimer(uint32_t factor)
 void LinkManagerStateMachine::handleMuxWaitTimeout(boost::system::error_code errorCode)
 {
     if (errorCode == boost::system::errc::success) {
+        mMuxWaitTimeoutCount++;
         if (mMuxStateMachine.getWaitStateCause() == mux_state::WaitState::WaitStateCause::SwssUpdate) {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "orchagent timed out responding to linkmgrd", mCompositeState);
         } else if (mMuxStateMachine.getWaitStateCause() == mux_state::WaitState::WaitStateCause::DriverUpdate) {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "xcvrd timed out responding to linkmgrd", mCompositeState);
+            // on the 3rd timeout, send switch active command to peer
+            if (mMuxWaitTimeoutCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) { 
+                mSendPeerSwitchCommandFnPtr();
+                // Mux is in wait state, switchMuxSate(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established. 
+                mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby); 
+            }
         } else {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "Unknown timeout reason!!!", mCompositeState);
         }
