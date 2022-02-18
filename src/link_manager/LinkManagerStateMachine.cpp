@@ -502,7 +502,7 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
 void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state::MuxState::Label state)
 {
     if ((dynamic_cast<mux_state::MuxState *> (mMuxStateMachine.getCurrentState()))->getStateLabel() == state) {
-        MUXLOGINFO(boost::format("%s: Received mux state event, new state: %s") %
+        MUXLOGWARNING(boost::format("%s: Received mux state event, new state: %s") %
             mMuxPortConfig.getPortName() %
             mMuxStateName[state]
         );
@@ -634,7 +634,7 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
 //
 void LinkManagerStateMachine::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    MUXLOGWARNING(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mWaitTimer.cancel();
 
