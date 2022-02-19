@@ -942,11 +942,11 @@ void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code er
     if (errorCode == boost::system::errc::success &&
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Wait ||
          ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
-         ls(mCompositeState) == link_state::LinkState::Label::Down) ||
+         ls(mCompositeState) == link_state::LinkState::Label::Down ||
          (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
          ms(mCompositeState) == mux_state::MuxState::Label::Active) ||
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
-         ms(mCompositeState) == mux_state::MuxState::Label::Standby)) {
+         ms(mCompositeState) == mux_state::MuxState::Label::Standby))) {
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
