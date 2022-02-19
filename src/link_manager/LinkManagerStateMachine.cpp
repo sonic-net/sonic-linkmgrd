@@ -1075,7 +1075,6 @@ void LinkManagerStateMachine::LinkProberStandbyMuxActiveLinkUpTransitionFunction
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
         enterMuxWaitState(nextState);
     } else {
-        //
         startMuxProbeTimer();
     }
 }
