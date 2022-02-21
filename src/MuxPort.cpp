@@ -81,7 +81,7 @@ void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate,
+        &link_manager::ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate,
         &mLinkManagerStateMachine,
         address
     )));
@@ -103,7 +103,7 @@ void MuxPort::handleLinkState(const std::string &linkState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleSwssLinkStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handleSwssLinkStateNotification,
         &mLinkManagerStateMachine,
         label
     )));
@@ -125,7 +125,7 @@ void MuxPort::handlePeerLinkState(const std::string &linkState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handlePeerLinkStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handlePeerLinkStateNotification,
         &mLinkManagerStateMachine,
         label
     )));
@@ -142,7 +142,7 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleGetServerMacAddressNotification,
+        &link_manager::ActiveStandbyStateMachine::handleGetServerMacAddressNotification,
         &mLinkManagerStateMachine,
         address
     )));
@@ -168,7 +168,7 @@ void MuxPort::handleGetMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleGetMuxStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handleGetMuxStateNotification,
         &mLinkManagerStateMachine,
         label
     )));
@@ -192,7 +192,7 @@ void MuxPort::handleProbeMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleProbeMuxStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handleProbeMuxStateNotification,
         &mLinkManagerStateMachine,
         label
     )));
@@ -218,7 +218,7 @@ void MuxPort::handleMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleMuxStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handleMuxStateNotification,
         &mLinkManagerStateMachine,
         label
     )));
@@ -244,7 +244,7 @@ void MuxPort::handleMuxConfig(const std::string &config)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleMuxConfigNotification,
+        &link_manager::ActiveStandbyStateMachine::handleMuxConfigNotification,
         &mLinkManagerStateMachine,
         mode
     )));
@@ -261,7 +261,7 @@ void MuxPort::handleDefaultRouteState(const std::string &routeState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleDefaultRouteStateNotification,
+        &link_manager::ActiveStandbyStateMachine::handleDefaultRouteStateNotification,
         &mLinkManagerStateMachine,
         routeState
     )));
@@ -278,7 +278,7 @@ void MuxPort::resetPckLossCount()
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleResetLinkProberPckLossCount,
+        &link_manager::ActiveStandbyStateMachine::handleResetLinkProberPckLossCount,
         &mLinkManagerStateMachine
     )));
 }

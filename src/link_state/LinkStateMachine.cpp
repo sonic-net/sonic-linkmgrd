@@ -38,7 +38,7 @@ DownEvent LinkStateMachine::mDownEvent;
 
 //
 // ---> LinkStateMachine(
-//          link_manager::LinkManagerStateMachine &linkManagerStateMachine,
+//          link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
 //          LinkState::Label label
@@ -47,7 +47,7 @@ DownEvent LinkStateMachine::mDownEvent;
 // class constructor
 //
 LinkStateMachine::LinkStateMachine(
-    link_manager::LinkManagerStateMachine &linkManagerStateMachine,
+    link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     LinkState::Label label
@@ -91,10 +91,10 @@ void LinkStateMachine::postLinkManagerEvent(LinkState* linkState)
     boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::LinkManagerStateMachine::*) (link_manager::LinkStateEvent&, LinkState::Label)>
-            (&link_manager::LinkManagerStateMachine::handleStateChange),
+        static_cast<void (link_manager::ActiveStandbyStateMachine::*) (link_manager::LinkStateEvent&, LinkState::Label)>
+            (&link_manager::ActiveStandbyStateMachine::handleStateChange),
         &mLinkManagerStateMachine,
-        link_manager::LinkManagerStateMachine::getLinkStateEvent(),
+        link_manager::ActiveStandbyStateMachine::getLinkStateEvent(),
         linkState->getStateLabel()
     )));
 }
