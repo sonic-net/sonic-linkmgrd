@@ -1073,8 +1073,12 @@ void LinkManagerStateMachine::LinkProberStandbyMuxActiveLinkUpTransitionFunction
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
+        // If entering by link prober state change, probe mux state immediately. 
         enterMuxWaitState(nextState);
     } else {
+        // There can be a delay for hardware state change in switchovers.
+        // So if not entering by link prober state change, start a timer for mux state probing. 
+        // When timer expires and if link prober & mux state remain inconsistent, do mux state probing. 
         startMuxProbeTimer();
     }
 }
@@ -1108,8 +1112,12 @@ void LinkManagerStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunction
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
+        // If entering by link prober state change, probe mux state immediately.     
         enterMuxWaitState(nextState);
     } else {
+        // There can be a delay for hardware state change in switchovers.
+        // So if not entering by link prober state change, start a timer for mux state probing. 
+        // When timer expires and if link prober & mux state remain inconsistent, do mux state probing. 
         startMuxProbeTimer();
     }
 }
