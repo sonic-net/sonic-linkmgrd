@@ -20,6 +20,7 @@
 #include <bitset>
 #include <boost/function.hpp>
 #include <functional>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -210,6 +211,164 @@ public:
      * @return const CompositeState& 
      */
     const CompositeState& getCompositeState() { return mCompositeState; };
+
+public:
+    /**
+    *@method handleSwssBladeIpv4AddressUpdate
+    *
+    *@brief initialize LinkProber component. Note if this is the last component to be initialized,
+    *       state machine will be activated
+    *
+    *@return none
+    */
+    virtual void handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
+
+    /**
+    *@method handleGetServerMacNotification
+    *
+    *@brief handle get Server MAC address
+    *
+    *@param address (in)    Server MAC address
+    *
+    *@return none
+    */
+    virtual void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
+
+    /**
+    *@method handleGetMuxStateNotification
+    *
+    *@brief handle get MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    virtual void handleGetMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleProbeMuxStateNotification
+    *
+    *@brief handle probe MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    virtual void handleProbeMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleMuxStateNotification
+    *
+    *@brief handle MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    virtual void handleMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleSwssLinkStateNotification
+    *
+    *@brief handle link state change notification
+    *
+    *@param label (in)  new LinkState label
+    *
+    *@return none
+    */
+    virtual void handleSwssLinkStateNotification(const link_state::LinkState::Label label);
+
+    /**
+     * @method handlePeerLinkStateNotification
+     * 
+     * @brief handle peer link state notification
+     * 
+     * @param label (in) new peer link state label
+     * 
+     * @return none
+    */
+    virtual void handlePeerLinkStateNotification(const link_state::LinkState::Label label);
+
+    /**
+    *@method handleMuxConfigNotification
+    *
+    *@brief handle MUX configuration change notification
+    *
+    *@param mode (in)  new MUX config mode
+    *
+    *@return none
+    */
+    virtual void handleMuxConfigNotification(const common::MuxPortConfig::Mode mode);
+
+    /**
+    *@method handleSuspendTimerExpiry
+    *
+    *@brief handle suspend timer expiry notification from LinkProber
+    *
+    *@return none
+    */
+    virtual void handleSuspendTimerExpiry();
+
+    /**
+    *@method handleSwitchActiveCommandCompletion
+    *
+    *@brief handle completion of sending switch command to peer ToR
+    *
+    *@return none
+    */
+    virtual void handleSwitchActiveCommandCompletion();
+
+    /**
+    *@method handleSwitchActiveRequestEvent
+    *
+    *@brief handle switch active request from peer ToR
+    *
+    *@return none
+    */
+    virtual void handleSwitchActiveRequestEvent();
+
+    /**
+     * @method handleDefaultRouteStateNotification(const std::string &routeState)
+     * 
+     * @brief handle default route state notification from routeorch
+     * 
+     * @param routeState
+     * 
+     * @return none
+    */
+    virtual void handleDefaultRouteStateNotification(const std::string& routeState);
+
+    /**
+     * @method handlePostPckLossRatioNotification
+     * 
+     * @brief handle get post pck loss ratio 
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
+    */
+    virtual void handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+
+    /**
+     * @method handleResetLinkProberPckLossCount
+     * 
+     * @brief reset link prober heartbeat packet loss count 
+     * 
+     * @return none
+    */
+    virtual void handleResetLinkProberPckLossCount();
+
+    /**
+    *@method setComponentInitState
+    *
+    *@brief set component inti state. This method is used for testing
+    *
+    *@param component (in)  component index
+    *
+    *@return none
+    */
+    virtual void setComponentInitState(uint8_t component);
 
 private:
     friend class ActiveStandbyStateMachine;
