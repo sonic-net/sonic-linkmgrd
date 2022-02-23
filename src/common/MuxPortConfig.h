@@ -53,6 +53,15 @@ public:
         Standby
     };
 
+    /**
+     * @enum PortCableType
+     * 
+     * @brief Port cable type
+     */
+    enum PortCableType {
+        ActiveStandby
+    };
+
 public:
     /**
     *@method MuxPortConfig
@@ -82,7 +91,8 @@ public:
     MuxPortConfig(
         MuxConfig &muxConfig,
         const std::string &portName,
-        uint16_t serverId
+        uint16_t serverId,
+        PortCableType portCableType = ActiveStandby
     );
 
     /**
@@ -251,6 +261,15 @@ public:
     */
     inline Mode getMode() const {return mMode;};
 
+    /**
+    *@method getPortCableType
+    *
+    *@brief getter for port cable type
+    *
+    *@return port cable type
+    */
+    inline PortCableType getPortCableType() const {return mPortCableType;};
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
@@ -258,6 +277,7 @@ private:
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
     Mode mMode = Manual;
+    PortCableType mPortCableType = ActiveStandby;
 };
 
 } /* namespace common */
