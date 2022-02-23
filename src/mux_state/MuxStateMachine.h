@@ -32,7 +32,7 @@
 #include "mux_state/UnknownState.h"
 
 namespace link_manager {
-class ActiveStandbyStateMachine;
+class LinkManagerStateMachineBase;
 } /* namespace link_manager */
 
 namespace mux_state
@@ -110,13 +110,13 @@ public:
     *
     *@brief class constructor
     *
-    *@param linkManagerStateMachine (in)    reference to ActiveStandbyStateMachine
+    *@param linkManagerStateMachinePtr (in) pointer to LinkManagerStateMachineBase
     *@param strand (in)                     reference to boost serialization object
     *@param muxPortConfig (in)              reference to MuxPortConfig object
     *@param label (in)                      state machine initial state
     */
     MuxStateMachine(
-        link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+        link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig,
         MuxState::Label label
@@ -284,7 +284,7 @@ private:
     static ErrorEvent mErrorEvent;
 
 private:
-    link_manager::ActiveStandbyStateMachine &mLinkManagerStateMachine;
+    link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
     ActiveState mActiveState;
     StandbyState mStandbyState;
     UnknownState mUnknownState;

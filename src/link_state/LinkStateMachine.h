@@ -29,7 +29,7 @@
 #include "UpState.h"
 
 namespace link_manager {
-class ActiveStandbyStateMachine;
+class LinkManagerStateMachineBase;
 } /* namespace link_manager */
 
 namespace link_state
@@ -85,13 +85,13 @@ public:
     *
     *@brief class constructor
     *
-    *@param linkManagerStateMachine (in)    reference to ActiveStandbyStateMachine
+    *@param linkManagerStateMachinePtr (in) pointer to LinkManagerStateMachineBase
     *@param strand (in)                     reference to boost serialization object
     *@param muxPortConfig (in)              reference to MuxPortConfig object
     *@param label (in)                      state machine initial state
     */
     LinkStateMachine(
-        link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+        link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig,
         LinkState::Label label
@@ -192,7 +192,7 @@ private:
     static DownEvent mDownEvent;
 
 private:
-    link_manager::ActiveStandbyStateMachine &mLinkManagerStateMachine;
+    link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
     UpState mUpState;
     DownState mDownState;
 };

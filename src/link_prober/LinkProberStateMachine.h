@@ -31,6 +31,7 @@
 #include "link_prober/WaitState.h"
 
 namespace link_manager {
+class LinkManagerStateMachineBase;
 class ActiveStandbyStateMachine;
 } /* namespace link_manager */
 
@@ -131,13 +132,13 @@ public:
     *
     *@brief class constructor
     *
-    *@param linkManagerStateMachine (in)    reference to ActiveStandbyStateMachine
+    *@param linkManagerStateMachinePtr (in) pointer to LinkManagerStateMachineBase
     *@param strand (in)                     reference to boost serialization object
     *@param muxPortConfig (in)              reference to MuxPortConfig object
     *@param label (in)                      state machine initial state
     */
     LinkProberStateMachine(
-        link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+        link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig,
         LinkProberState::Label label
@@ -352,7 +353,7 @@ private:
     static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
 
 private:
-    link_manager::ActiveStandbyStateMachine &mLinkManagerStateMachine;
+    link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
     ActiveState mActiveState;
     StandbyState mStandbyState;
     UnknownState mUnknownState;

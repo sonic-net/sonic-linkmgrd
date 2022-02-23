@@ -57,22 +57,27 @@ MuxPort::MuxPort(
     common::MuxConfig &muxConfig,
     const std::string &portName,
     uint16_t serverId,
-    boost::asio::io_service &ioService
+    boost::asio::io_service &ioService,
+    common::MuxPortConfig::PortCableType portCableType
 ) :
     mDbInterfacePtr(dbInterfacePtr),
     mMuxPortConfig(
         muxConfig,
         portName,
-        serverId
+        serverId,
+        portCableType
     ),
-    mStrand(ioService),
-    mLinkManagerStateMachine(
-        this,
-        mStrand,
-        mMuxPortConfig
-    )
+    mStrand(ioService)
 {
     assert(dbInterfacePtr != nullptr);
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+        mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
+            this,
+            mStrand,
+            mMuxPortConfig
+        );
+    }
+    assert(mLinkManagerStateMachinePtr.get() != nullptr);
 }
 
 void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
@@ -81,8 +86,8 @@ void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate,
+        mLinkManagerStateMachinePtr.get(),
         address
     )));
 }
@@ -103,8 +108,8 @@ void MuxPort::handleLinkState(const std::string &linkState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleSwssLinkStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleSwssLinkStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         label
     )));
 }
@@ -125,8 +130,8 @@ void MuxPort::handlePeerLinkState(const std::string &linkState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handlePeerLinkStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handlePeerLinkStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         label
     )));
 }
@@ -142,8 +147,8 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleGetServerMacAddressNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleGetServerMacAddressNotification,
+        mLinkManagerStateMachinePtr.get(),
         address
     )));
 }
@@ -168,8 +173,8 @@ void MuxPort::handleGetMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleGetMuxStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleGetMuxStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         label
     )));
 }
@@ -192,8 +197,8 @@ void MuxPort::handleProbeMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleProbeMuxStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleProbeMuxStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         label
     )));
 }
@@ -218,8 +223,8 @@ void MuxPort::handleMuxState(const std::string &muxState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleMuxStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleMuxStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         label
     )));
 }
@@ -244,8 +249,8 @@ void MuxPort::handleMuxConfig(const std::string &config)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleMuxConfigNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
+        mLinkManagerStateMachinePtr.get(),
         mode
     )));
 }
@@ -261,8 +266,8 @@ void MuxPort::handleDefaultRouteState(const std::string &routeState)
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleDefaultRouteStateNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleDefaultRouteStateNotification,
+        mLinkManagerStateMachinePtr.get(),
         routeState
     )));
 }
@@ -278,8 +283,8 @@ void MuxPort::resetPckLossCount()
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleResetLinkProberPckLossCount,
-        &mLinkManagerStateMachine
+        &link_manager::LinkManagerStateMachineBase::handleResetLinkProberPckLossCount,
+        mLinkManagerStateMachinePtr.get()
     )));
 }
 

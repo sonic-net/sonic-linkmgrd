@@ -38,7 +38,7 @@ DownEvent LinkStateMachine::mDownEvent;
 
 //
 // ---> LinkStateMachine(
-//          link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+//          link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
 //          LinkState::Label label
@@ -47,13 +47,13 @@ DownEvent LinkStateMachine::mDownEvent;
 // class constructor
 //
 LinkStateMachine::LinkStateMachine(
-    link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+    link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     LinkState::Label label
 ) :
     common::StateMachine(strand, muxPortConfig),
-    mLinkManagerStateMachine(linkManagerStateMachine),
+    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr),
     mUpState(*this, muxPortConfig),
     mDownState(*this, muxPortConfig)
 {
@@ -88,13 +88,13 @@ void LinkStateMachine::enterState(LinkState::Label label)
 inline
 void LinkStateMachine::postLinkManagerEvent(LinkState* linkState)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::ActiveStandbyStateMachine::*) (link_manager::LinkStateEvent&, LinkState::Label)>
-            (&link_manager::ActiveStandbyStateMachine::handleStateChange),
-        &mLinkManagerStateMachine,
-        link_manager::ActiveStandbyStateMachine::getLinkStateEvent(),
+        static_cast<void (link_manager::LinkManagerStateMachineBase::*) (link_manager::LinkStateEvent&, LinkState::Label)>
+            (&link_manager::LinkManagerStateMachineBase::handleStateChange),
+        mLinkManagerStateMachinePtr,
+        link_manager::LinkManagerStateMachineBase::getLinkStateEvent(),
         linkState->getStateLabel()
     )));
 }
