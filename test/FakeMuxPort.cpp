@@ -42,10 +42,14 @@ FakeMuxPort::FakeMuxPort(
         muxConfig,
         portName,
         serverId,
-        ioService
+        ioService,
+        common::MuxPortConfig::PortCableType::ActiveStandby
+    ),
+    mActiveStandbyStateMachinePtr(
+        std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())
     ),
     mFakeLinkProber(
-        std::make_shared<FakeLinkProber> (&getLinkManagerStateMachine()->getLinkProberStateMachine())
+        std::make_shared<FakeLinkProber> (&mActiveStandbyStateMachinePtr->getLinkProberStateMachine())
     )
 {
     std::string prog_name = "linkmgrd-test";
@@ -53,25 +57,25 @@ FakeMuxPort::FakeMuxPort(
     common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug);
     common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
     mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
-    getLinkManagerStateMachine()->setInitializeProberFnPtr(
+    getActiveStandbyStateMachinePtr()->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
     );
-    getLinkManagerStateMachine()->setStartProbingFnPtr(
+    getActiveStandbyStateMachinePtr()->setStartProbingFnPtr(
         boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
     );
-    getLinkManagerStateMachine()->setUpdateEthernetFrameFnPtr(
+    getActiveStandbyStateMachinePtr()->setUpdateEthernetFrameFnPtr(
         boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
     );
-    getLinkManagerStateMachine()->setProbePeerTorFnPtr(
+    getActiveStandbyStateMachinePtr()->setProbePeerTorFnPtr(
         boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
     );
-    getLinkManagerStateMachine()->setSuspendTxFnPtr(
+    getActiveStandbyStateMachinePtr()->setSuspendTxFnPtr(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
     );
-    getLinkManagerStateMachine()->setResumeTxFnPtr(
+    getActiveStandbyStateMachinePtr()->setResumeTxFnPtr(
         boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
     );
-    getLinkManagerStateMachine()->setSendPeerSwitchCommandFnPtr(
+    getActiveStandbyStateMachinePtr()->setSendPeerSwitchCommandFnPtr(
         boost::bind(&FakeLinkProber::sendPeerSwitchCommand, mFakeLinkProber.get())
     );
 }

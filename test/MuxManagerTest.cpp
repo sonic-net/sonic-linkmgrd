@@ -122,11 +122,11 @@ void MuxManagerTest::processMuxPortConfigNotifiction(std::deque<swss::KeyOpField
     mDbInterfacePtr->processMuxPortConfigNotifiction(entries);
 }
 
-link_manager::ActiveStandbyStateMachine::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
+link_manager::LinkManagerStateMachineBase::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
-    return muxPortPtr->getLinkManagerStateMachine()->getCompositeState();
+    return muxPortPtr->getLinkManagerStateMachinePtr()->getCompositeState();
 }
 
 void MuxManagerTest::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers)
@@ -178,6 +178,9 @@ void MuxManagerTest::processGetMuxState(const std::string &portName, const std::
 void MuxManagerTest::createPort(std::string port)
 {
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 0);
+    EXPECT_TRUE(mMuxManagerPtr->mPortCableTypeMap.size() == 0);
+
+    mMuxManagerPtr->mPortCableTypeMap[port] = common::MuxPortConfig::PortCableType::ActiveStandby;
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {port, "SET", {{"oper_status", "up"}}},
@@ -185,7 +188,9 @@ void MuxManagerTest::createPort(std::string port)
 
     mDbInterfacePtr->processLinkStateNotifiction(entries);
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap["Ethernet0"];
-    link_manager::ActiveStandbyStateMachine* linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachine();
+    std::shared_ptr<link_manager::ActiveStandbyStateMachine> linkManagerStateMachine = std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine> (
+        muxPortPtr->getLinkManagerStateMachinePtr()
+    );
 
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
     EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 0);
