@@ -32,6 +32,7 @@
 
 #include "MuxPort.h"
 #include "common/MuxConfig.h"
+#include "common/MuxPortConfig.h"
 #include "DbInterface.h"
 
 namespace test {
@@ -42,6 +43,9 @@ namespace mux
 {
 using PortMap = std::map<std::string, std::shared_ptr<MuxPort>>;
 using PortMapIterator = PortMap::iterator;
+
+using PortCableTypeMap = std::map<std::string, common::MuxPortConfig::PortCableType>;
+using PortCableTypeMapIterator = PortCableTypeMap::iterator;
 
 /**
  *@class MuxManager
@@ -246,6 +250,18 @@ public:
     void updateMuxPortConfig(const std::string &portName, const std::string &linkState);
 
     /**
+    *@method updatePortCableType
+    *
+    *@brief update port cable type
+    *
+    *@param portName (in)   port name
+    *@param cableType (in)  port cable type
+    *
+    *@return none
+    */
+    void updatePortCableType(const std::string &portName, const std::string &cableType);
+
+    /**
      * @method resetPckLossCount
      * 
      * @brief reset ICMP packet loss count. 
@@ -396,6 +412,7 @@ private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr;
 
     PortMap mPortMap;
+    PortCableTypeMap mPortCableTypeMap;
 
     std::string mIpv4DefaultRouteState = "na";
     std::string mIpv6DefaultRouteState = "na";

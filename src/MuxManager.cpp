@@ -160,6 +160,24 @@ void MuxManager::updateMuxPortConfig(const std::string &portName, const std::str
     }
 }
 
+//
+// ---> updatePortCableType(const std::string &portName, const std::string &cableType);
+//
+// update port cable type
+//
+void MuxManager::updatePortCableType(const std::string &portName, const std::string &cableType)
+{
+    MUXLOGWARNING(boost::format("%s: Port cable type: %s") % portName % cableType);
+
+    common::MuxPortConfig::PortCableType portCableType;
+    if (cableType == "active-standby") {
+        portCableType = common::MuxPortConfig::PortCableType::ActiveStandby;
+    } else {
+        portCableType = common::MuxPortConfig::PortCableType::ActiveStandby;
+    }
+    mPortCableTypeMap.insert({portName, portCableType});
+}
+
 // 
 // ---> resetPckLossCount(const std::string &portName);
 //
@@ -308,7 +326,8 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
                 mMuxConfig,
                 portName,
                 serverId,
-                mIoService
+                mIoService,
+                mPortCableTypeMap[portName]
             );
             mPortMap.insert({portName, muxPortPtr});
         }
