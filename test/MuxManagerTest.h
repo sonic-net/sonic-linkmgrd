@@ -57,7 +57,7 @@ public:
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getTorMacAddress(std::string port);
     void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
-    link_manager::ActiveStandbyStateMachine::CompositeState getCompositeStateMachineState(std::string port);
+    link_manager::LinkManagerStateMachineBase::CompositeState getCompositeStateMachineState(std::string port);
     void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);
     void processServerMacAddress(std::string port, std::array<char, MAX_ADDR_SIZE + 1> ip, std::array<char, MAX_ADDR_SIZE + 1> mac);
     void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
