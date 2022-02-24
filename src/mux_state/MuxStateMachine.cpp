@@ -40,7 +40,7 @@ ErrorEvent MuxStateMachine::mErrorEvent;
 
 //
 // ---> MuxStateMachine(
-//          link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+//          link_manager::LinkManagerStateMachineBase &linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
 //          MuxState::Label label
@@ -49,13 +49,13 @@ ErrorEvent MuxStateMachine::mErrorEvent;
 // class constructor
 //
 MuxStateMachine::MuxStateMachine(
-    link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+    link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     MuxState::Label label
 ) :
     common::StateMachine(strand, muxPortConfig),
-    mLinkManagerStateMachine(linkManagerStateMachine),
+    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr),
     mActiveState(*this, muxPortConfig),
     mStandbyState(*this, muxPortConfig),
     mUnknownState(*this, muxPortConfig),
@@ -102,13 +102,13 @@ void MuxStateMachine::enterState(MuxState::Label label)
 inline
 void MuxStateMachine::postLinkManagerEvent(MuxState* muxState)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::ActiveStandbyStateMachine::*) (link_manager::MuxStateEvent&, MuxState::Label)>
-            (&link_manager::ActiveStandbyStateMachine::handleStateChange),
-        &mLinkManagerStateMachine,
-        link_manager::ActiveStandbyStateMachine::getMuxStateEvent(),
+        static_cast<void (link_manager::LinkManagerStateMachineBase::*) (link_manager::MuxStateEvent&, MuxState::Label)>
+            (&link_manager::LinkManagerStateMachineBase::handleStateChange),
+        mLinkManagerStateMachinePtr,
+        link_manager::LinkManagerStateMachineBase::getMuxStateEvent(),
         muxState->getStateLabel()
     )));
 }

@@ -314,13 +314,13 @@ protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;
     /**
-    *@method getLinkManagerStateMachine
+    *@method getLinkManagerStateMachinePtr
     *
-    *@brief getter for ActiveStandbyStateMachine object (used during unit test)
+    *@brief getter for LinkManagerStateMachinePtr (used during unit test)
     *
-    *@return pointer to ActiveStandbyStateMachine object
+    *@return shared pointer to LinkManagerStateMachineBase object
     */
-    link_manager::ActiveStandbyStateMachine* getLinkManagerStateMachine() {return &mLinkManagerStateMachine;};
+    std::shared_ptr<link_manager::LinkManagerStateMachineBase> getLinkManagerStateMachinePtr() {return mLinkManagerStateMachinePtr;};
 
     /**
     *@method setComponentInitState
@@ -329,14 +329,14 @@ protected:
     *
     *@param component (in)  component index
     */
-    void setComponentInitState(uint8_t component) {mLinkManagerStateMachine.setComponentInitState(component);};
+    void setComponentInitState(uint8_t component) {mLinkManagerStateMachinePtr->setComponentInitState(component);};
 
 private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 
-    link_manager::ActiveStandbyStateMachine mLinkManagerStateMachine;
+    std::shared_ptr<link_manager::LinkManagerStateMachineBase> mLinkManagerStateMachinePtr;
 };
 
 } /* namespace mux */
