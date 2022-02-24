@@ -44,7 +44,8 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
     common::MuxPortConfig &muxPortConfig,
     CompositeState initialCompositeState)
     : StateMachine(strand, muxPortConfig),
-      mCompositeState(initialCompositeState) {
+      mCompositeState(initialCompositeState)
+{
 }
 
 //
@@ -52,7 +53,8 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
 //
 // initialize transition function table to NOOP functions
 //
-void LinkManagerStateMachineBase::initializeTransitionFunctionTable() {
+void LinkManagerStateMachineBase::initializeTransitionFunctionTable()
+{
     MUXLOGWARNING("Initialize State Transition Table With NO-OP...");
     for (uint8_t linkProberState = link_prober::LinkProberState::Label::Active;
          linkProberState < link_prober::LinkProberState::Label::Count;
@@ -72,8 +74,157 @@ void LinkManagerStateMachineBase::initializeTransitionFunctionTable() {
 //
 // NO-OP transition function
 //
-void LinkManagerStateMachineBase::noopTransitionFunction(CompositeState &nextState) {
+void LinkManagerStateMachineBase::noopTransitionFunction(CompositeState &nextState)
+{
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
+
+//
+// ---> handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
+//
+// initialize LinkProber component. Note if this is the last component to be initialized,
+// state machine will be activated
+//
+void LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
+//
+// handle get Server MAC address
+//
+void LinkManagerStateMachineBase::handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleGetMuxStateNotification(mux_state::MuxState::Label label);
+//
+// handle get MUX state notification
+//
+void LinkManagerStateMachineBase::handleGetMuxStateNotification(mux_state::MuxState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleProbeMuxStateNotification(mux_state::MuxState::Label label);
+//
+// handle MUX state notification. Source of notification could be app_db via xcvrd
+//
+void LinkManagerStateMachineBase::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleMuxStateNotification(mux_state::MuxState::Label label);
+//
+// handle MUX state notification
+//
+void LinkManagerStateMachineBase::handleMuxStateNotification(mux_state::MuxState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleSwssLinkStateNotification(const link_state::LinkState::Label label);
+//
+// handle link state change notification
+//
+void LinkManagerStateMachineBase::handleSwssLinkStateNotification(const link_state::LinkState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+// ---> handlePeerLinkStateNotification(const link_state::LinkState::Label label);
+//
+// handle peer link state change notification
+//
+void LinkManagerStateMachineBase::handlePeerLinkStateNotification(const link_state::LinkState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleMuxConfigNotification(const common::MuxPortConfig::Mode mode);
+//
+// handle MUX configuration change notification
+//
+void LinkManagerStateMachineBase::handleMuxConfigNotification(const common::MuxPortConfig::Mode mode)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleSuspendTimerExpiry();
+//
+// handle suspend timer expiry notification from LinkProber
+//
+void LinkManagerStateMachineBase::handleSuspendTimerExpiry()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleSwitchActiveCommandCompletion();
+//
+// handle completion of sending switch command to peer ToR
+//
+void LinkManagerStateMachineBase::handleSwitchActiveCommandCompletion()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleSwitchActiveRequestEvent();
+//
+// handle switch active request from peer ToR
+//
+void LinkManagerStateMachineBase::handleSwitchActiveRequestEvent()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleDefaultRouteStateNotification(const std::string &routeState);
+//
+// handle default route state notification from routeorch
+//
+void LinkManagerStateMachineBase::handleDefaultRouteStateNotification(const std::string &routeState)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+//
+// handle post pck loss ratio
+//
+void LinkManagerStateMachineBase::handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+// ---> handleResetLinkProberPckLossCount();
+//
+// reset link prober heartbeat packet loss count
+//
+void LinkManagerStateMachineBase::handleResetLinkProberPckLossCount()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+// ---> LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
+//
+// set component inti state. This method is used for testing
+//
+void LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+};
 
 } /* namespace link_manager */
