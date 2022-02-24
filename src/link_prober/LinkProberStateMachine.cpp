@@ -43,7 +43,7 @@ SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
 
 //
 // ---> LinkProberStateMachine(
-//          link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+//          link_manager::LinkManagerStateMachineBase &linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
 //          LinkProberState::Label label
@@ -52,13 +52,13 @@ SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
 // class constructor
 //
 LinkProberStateMachine::LinkProberStateMachine(
-    link_manager::ActiveStandbyStateMachine &linkManagerStateMachine,
+    link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     LinkProberState::Label label
 ) :
     StateMachine(strand, muxPortConfig),
-    mLinkManagerStateMachine(linkManagerStateMachine),
+    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr),
     mActiveState(*this, muxPortConfig),
     mStandbyState(*this, muxPortConfig),
     mUnknownState(*this, muxPortConfig),
@@ -101,13 +101,13 @@ void LinkProberStateMachine::enterState(LinkProberState::Label label)
 inline
 void LinkProberStateMachine::postLinkManagerEvent(LinkProberState* linkProberState)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::ActiveStandbyStateMachine::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
-            (&link_manager::ActiveStandbyStateMachine::handleStateChange),
-        &mLinkManagerStateMachine,
-        link_manager::ActiveStandbyStateMachine::getLinkProberEvent(),
+        static_cast<void (link_manager::LinkManagerStateMachineBase::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
+            (&link_manager::LinkManagerStateMachineBase::handleStateChange),
+        mLinkManagerStateMachinePtr,
+        link_manager::LinkManagerStateMachineBase::getLinkProberEvent(),
         linkProberState->getStateLabel()
     )));
 }
@@ -201,11 +201,11 @@ void LinkProberStateMachine::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &e
 //
 void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleSuspendTimerExpiry,
-        &mLinkManagerStateMachine
+        &link_manager::LinkManagerStateMachineBase::handleSuspendTimerExpiry,
+        mLinkManagerStateMachinePtr
     )));
 }
 
@@ -216,11 +216,11 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
 //
 void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleSwitchActiveCommandCompletion,
-        &mLinkManagerStateMachine
+        &link_manager::LinkManagerStateMachineBase::handleSwitchActiveCommandCompletion,
+        mLinkManagerStateMachinePtr
     )));
 }
 
@@ -231,11 +231,11 @@ void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &swit
 //
 void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleSwitchActiveRequestEvent,
-        &mLinkManagerStateMachine
+        &link_manager::LinkManagerStateMachineBase::handleSwitchActiveRequestEvent,
+        mLinkManagerStateMachinePtr
     )));
 }
 
@@ -246,11 +246,11 @@ void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActive
 //
 void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handleGetServerMacAddressNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleGetServerMacAddressNotification,
+        mLinkManagerStateMachinePtr,
         address
     )));
 }
@@ -262,11 +262,11 @@ void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, E
 //
 void LinkProberStateMachine::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) 
 {
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_manager::ActiveStandbyStateMachine::handlePostPckLossRatioNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handlePostPckLossRatioNotification,
+        mLinkManagerStateMachinePtr,
         unknownEventCount,
         expectedPacketCount
     )));

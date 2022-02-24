@@ -82,9 +82,9 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
         {link_prober::LinkProberState::Label::Unknown, mux_state::MuxState::Label::Wait, link_state::LinkState::Label::Down}
     ),
     mMuxPortPtr(muxPortPtr),
-    mLinkProberStateMachine(*this, strand, muxPortConfig, ps(mCompositeState)),
-    mMuxStateMachine(*this, strand, muxPortConfig, ms(mCompositeState)),
-    mLinkStateMachine(*this, strand, muxPortConfig, ls(mCompositeState)),
+    mLinkProberStateMachine(this, strand, muxPortConfig, ps(mCompositeState)),
+    mMuxStateMachine(this, strand, muxPortConfig, ms(mCompositeState)),
+    mLinkStateMachine(this, strand, muxPortConfig, ls(mCompositeState)),
     mDeadlineTimer(strand.context()),
     mWaitTimer(strand.context())
 {
