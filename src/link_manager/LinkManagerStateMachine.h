@@ -461,7 +461,7 @@ private:
     /**
     *@method handleLinkWaitTimeout
     *
-    *@brief handle when LinkProber heartbeats were lost due link down, bad cable or server down
+    *@brief handle when LinkProber heartbeats were lost due link down, bad cable, server down or state mismatching
     *
     *@param errorCode (in)          timer error code
     *
