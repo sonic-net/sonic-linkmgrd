@@ -933,7 +933,7 @@ void LinkManagerStateMachine::startMuxProbeTimer(uint32_t factor)
 //
 // ---> handleMuxProbeTimeout(boost::system::error_code errorCode);
 //
-// handle when LinkProber heartbeats were lost due link down, bad cable or server down
+// handle when LinkProber heartbeats were lost due link down, bad cable, server down or state mismatching
 //
 void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
@@ -942,7 +942,12 @@ void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code er
     if (errorCode == boost::system::errc::success &&
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Wait ||
          ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
-         ls(mCompositeState) == link_state::LinkState::Label::Down)) {
+         ls(mCompositeState) == link_state::LinkState::Label::Down ||
+         (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Active) ||
+        (ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Standby))
+    ) {
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
@@ -1065,8 +1070,18 @@ void LinkManagerStateMachine::LinkProberStandbyMuxActiveLinkUpTransitionFunction
 )
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    // Probe the MUX state as internal MUX state is active while LP reports standby link
-    enterMuxWaitState(nextState);
+
+    if ((ps(mCompositeState) != ps(nextState)) &&
+        (ps(nextState) == link_prober::LinkProberState::Label::Active ||
+         ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
+        // If entering by link prober state change, probe mux state immediately. 
+        enterMuxWaitState(nextState);
+    } else {
+        // There can be a delay for hardware state change in switchovers.
+        // So if not entering by link prober state change, start a timer for mux state probing. 
+        // When timer expires and if link prober & mux state remain inconsistent, do mux state probing. 
+        startMuxProbeTimer();
+    }
 }
 
 //
@@ -1095,7 +1110,17 @@ void LinkManagerStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    enterMuxWaitState(nextState);
+    if ((ps(mCompositeState) != ps(nextState)) &&
+        (ps(nextState) == link_prober::LinkProberState::Label::Active ||
+         ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
+        // If entering by link prober state change, probe mux state immediately.     
+        enterMuxWaitState(nextState);
+    } else {
+        // There can be a delay for hardware state change in switchovers.
+        // So if not entering by link prober state change, start a timer for mux state probing. 
+        // When timer expires and if link prober & mux state remain inconsistent, do mux state probing. 
+        startMuxProbeTimer();
+    }
 }
 
 //
