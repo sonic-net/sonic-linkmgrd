@@ -103,7 +103,7 @@ clean-targets:
 		$(OBJS_LINKMGRD) $(OBJS_LINKMGRD_TEST)
 
 clean: clean-targets
-	$(RM) $(LINKMGRD_TARGET) $(LINKMGRD_TEST_TARGET) *.html
+	$(RM) $(LINKMGRD_TARGET) $(LINKMGRD_TEST_TARGET) *.html linkmgrd-test-result.xml
 	$(FIND) . -name *.gcda -exec rm -f {} \;
 	$(FIND) . -name *.gcno -exec rm -f {} \;
 	$(FIND) . -name *.gcov -exec rm -f {} \;
