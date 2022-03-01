@@ -414,6 +414,28 @@ private:
     void getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+    *@method processPortCableType
+    *
+    *@brief process port cable type and build a map of port name to cable type
+    *
+    *@param entries   config_db MUX_CABLE entries
+    *
+    *@return none
+    */
+    inline void processPortCableType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+
+   /**
+    *@method getPortCableType
+    *
+    *@brief retrieve per port cable type
+    *
+    *@param configDbConnector   config db connector
+    *
+    *@return none
+    */
+    void getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
     *@method processMuxPortConfigNotifiction
     *
     *@brief process MUX port configuration change notification

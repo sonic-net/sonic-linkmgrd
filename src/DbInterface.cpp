@@ -585,6 +585,47 @@ void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDb
 }
 
 //
+// ---> processPortCableType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process port cable type and build a map of port name to cable type
+//
+void DbInterface::processPortCableType(std::vector<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string portName = kfvKey(entry);
+        std::string operation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::string field = "cable_type";
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+        );
+        std::string portCableType = (cit != fieldValues.cend() ? cit->second : "active-standby");
+
+        MUXLOGDEBUG(boost::format("port: %s, %s = %s") % portName % field % portCableType);
+
+        mMuxManagerPtr->updatePortCableType(portName, portCableType);
+    }
+}
+
+//
+// ---> getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve per port cable type
+//
+void DbInterface::getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading port cable types");
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    std::vector<swss::KeyOpFieldsValuesTuple> entries;
+
+    configDbMuxCableTable.getContent(entries);
+    processPortCableType(entries);
+}
+
+//
 // ---> processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
 // process MUX port configuration change notification
@@ -988,6 +1029,7 @@ void DbInterface::handleSwssNotification()
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
+    getPortCableType(configDbPtr);
     getServerIpAddress(configDbPtr);
 
     NetMsgInterface netMsgInterface(*this);
