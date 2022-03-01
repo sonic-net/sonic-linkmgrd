@@ -82,7 +82,8 @@ public:
         common::MuxConfig &muxConfig,
         const std::string &portName,
         uint16_t serverId,
-        boost::asio::io_service &ioService
+        boost::asio::io_service &ioService,
+        common::MuxPortConfig::PortCableType portCableType
     );
 
     /**
