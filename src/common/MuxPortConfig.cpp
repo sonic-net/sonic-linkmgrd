@@ -34,11 +34,13 @@ namespace common
 MuxPortConfig::MuxPortConfig(
     MuxConfig &muxConfig,
     const std::string &portName,
-    uint16_t serverId
+    uint16_t serverId,
+    PortCableType portCableType
 ) :
     mMuxConfig(muxConfig),
     mPortName(portName),
-    mServerId(serverId)
+    mServerId(serverId),
+    mPortCableType(portCableType)
 {
 }
 
