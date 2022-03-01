@@ -56,6 +56,7 @@ public:
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getTorMacAddress(std::string port);
+    common::MuxPortConfig::PortCableType getPortCableType(const std::string &port);
     void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     link_manager::LinkManagerStateMachineBase::CompositeState getCompositeStateMachineState(std::string port);
     void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);
@@ -66,6 +67,7 @@ public:
     void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     void updateServerMacAddress(boost::asio::ip::address serverIp, const uint8_t *serverMac);
     void processGetMuxState(const std::string &portName, const std::string &muxState);
+    void updatePortCableType(const std::string &port, const std::string &cableType);
     void createPort(std::string port);
 
 public:
