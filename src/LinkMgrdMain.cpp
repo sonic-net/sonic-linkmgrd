@@ -59,7 +59,7 @@ namespace {
 int main(int argc, const char* argv[])
 {
     int retValue = EXIT_SUCCESS;
-
+    int dummyVal = -1;
     //
     // Constants for command line argument strings:
     //
