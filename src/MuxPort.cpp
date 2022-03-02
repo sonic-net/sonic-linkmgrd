@@ -37,6 +37,7 @@
 #include <boost/random/mersenne_twister.hpp>
 
 #include "MuxPort.h"
+#include "common/MuxException.h"
 #include "common/MuxLogger.h"
 
 namespace mux
@@ -57,24 +58,27 @@ MuxPort::MuxPort(
     common::MuxConfig &muxConfig,
     const std::string &portName,
     uint16_t serverId,
-    boost::asio::io_service &ioService
+    boost::asio::io_service &ioService,
+    common::MuxPortConfig::PortCableType portCableType
 ) :
     mDbInterfacePtr(dbInterfacePtr),
     mMuxPortConfig(
         muxConfig,
         portName,
-        serverId
+        serverId,
+        portCableType
     ),
-    mStrand(ioService),
-    mLinkManagerStateMachinePtr(
-        std::make_shared<link_manager::ActiveStandbyStateMachine>(
+    mStrand(ioService)
+{
+    assert(dbInterfacePtr != nullptr);
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+        mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
             this,
             mStrand,
             mMuxPortConfig
-        )
-    )
-{
-    assert(dbInterfacePtr != nullptr);
+        );
+    }
+    assert(mLinkManagerStateMachinePtr.get() != nullptr);
 }
 
 void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)

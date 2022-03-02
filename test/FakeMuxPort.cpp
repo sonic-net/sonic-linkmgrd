@@ -42,7 +42,8 @@ FakeMuxPort::FakeMuxPort(
         muxConfig,
         portName,
         serverId,
-        ioService
+        ioService,
+        common::MuxPortConfig::PortCableType::ActiveStandby
     ),
     mActiveStandbyStateMachinePtr(
         std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())

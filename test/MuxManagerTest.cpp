@@ -129,6 +129,11 @@ link_manager::LinkManagerStateMachineBase::CompositeState MuxManagerTest::getCom
     return muxPortPtr->getLinkManagerStateMachinePtr()->getCompositeState();
 }
 
+common::MuxPortConfig::PortCableType MuxManagerTest::getPortCableType(const std::string &port)
+{
+    return mMuxManagerPtr->mPortCableTypeMap.at(port);
+}
+
 void MuxManagerTest::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers)
 {
     mDbInterfacePtr->processServerIpAddress(servers);
@@ -175,9 +180,18 @@ void MuxManagerTest::processGetMuxState(const std::string &portName, const std::
     mMuxManagerPtr->processGetMuxState(portName, muxState);
 }
 
+void MuxManagerTest::updatePortCableType(const std::string &port, const std::string &cableType)
+{
+    mMuxManagerPtr->updatePortCableType(port, cableType);
+}
+
 void MuxManagerTest::createPort(std::string port)
 {
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 0);
+    EXPECT_TRUE(mMuxManagerPtr->mPortCableTypeMap.size() == 0);
+
+    updatePortCableType(port, "active-standby");
+    EXPECT_TRUE(mMuxManagerPtr->mPortCableTypeMap.size() == 1);
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {port, "SET", {{"oper_status", "up"}}},
@@ -236,6 +250,20 @@ void MuxManagerTest::createPort(std::string port)
     runIoService();
 
     EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::MuxStateComponent) == 1);
+}
+
+TEST_F(MuxManagerTest, UpdatePortCableTypeActiveStandby)
+{
+    std::string port = "Ethernet0";
+    updatePortCableType(port, "active-standby");
+    EXPECT_TRUE(getPortCableType(port) == common::MuxPortConfig::PortCableType::ActiveStandby);
+}
+
+TEST_F(MuxManagerTest, UpdatePortCableTypeUnsupported)
+{
+    std::string port = "Ethernet0";
+    updatePortCableType(port, "active-standby-active");
+    EXPECT_TRUE(getPortCableType(port) == common::MuxPortConfig::PortCableType::ActiveStandby);
 }
 
 TEST_F(MuxManagerTest, AddPort)
