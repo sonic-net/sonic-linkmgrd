@@ -1,3 +1,5 @@
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/Azure/sonic-linkmgrd.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-linkmgrd/alerts/)
+
 # Project
 
 
