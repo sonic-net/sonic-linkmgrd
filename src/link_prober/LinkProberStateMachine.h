@@ -24,7 +24,7 @@
 #ifndef LINK_PROBER_LINKPROBERSTATEMACHINE_H_
 #define LINK_PROBER_LINKPROBERSTATEMACHINE_H_
 
-#include <common/StateMachine.h>
+#include "common/StateMachine.h"
 #include "link_prober/ActiveState.h"
 #include "link_prober/StandbyState.h"
 #include "link_prober/UnknownState.h"
@@ -103,32 +103,34 @@ public:
     ~SwitchActiveRequestEvent() = default;
 };
 
+class LinkProberStateMachine;
+
 /**
- *@class LinkProberStateMachine
+ *@class LinkProberStateMachineBase
  *
- *@brief maintains LinkProber state machine
+ *@brief base link prober state machine class to maintains common interfaces
  */
-class LinkProberStateMachine:  public common::StateMachine
+class LinkProberStateMachineBase : public common::StateMachine
 {
 public:
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineBase
     *
     *@brief class default constructor
     */
-    LinkProberStateMachine() = delete;
+    LinkProberStateMachineBase() = delete;
 
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineBase
     *
     *@brief class copy constructor
     *
-    *@param LinkProberStateMachine (in)  reference to LinkProberStateMachine object to be copied
+    *@param LinkProberStateMachine (in)  reference to LinkProberStateMachineBase object to be copied
     */
-    LinkProberStateMachine(const LinkProberStateMachine &) = delete;
+    LinkProberStateMachineBase(const LinkProberStateMachine &) = delete;
 
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineBase
     *
     *@brief class constructor
     *
@@ -137,19 +139,18 @@ public:
     *@param muxPortConfig (in)              reference to MuxPortConfig object
     *@param label (in)                      state machine initial state
     */
-    LinkProberStateMachine(
+    LinkProberStateMachineBase(
         link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
         boost::asio::io_service::strand &strand,
-        common::MuxPortConfig &muxPortConfig,
-        LinkProberState::Label label
+        common::MuxPortConfig &muxPortConfig
     );
 
     /**
-    *@method ~LinkProberStateMachine
+    *@method ~LinkProberStateMachineBase
     *
     *@brief class destructor
     */
-    virtual ~LinkProberStateMachine() = default;
+    virtual ~LinkProberStateMachineBase() = default;
 
     /**
     *@method enterState
@@ -160,7 +161,7 @@ public:
     *
     *@return none
     */
-    void enterState(LinkProberState::Label label);
+    virtual void enterState(LinkProberState::Label label) = 0;
 
     /**
     *@method postLinkProberStateEvent
@@ -195,7 +196,7 @@ public:
     *
     *@return none
     */
-    void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
+    virtual void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
 
     /**
     *@method processEvent
@@ -206,7 +207,7 @@ public:
     *
     *@return none
     */
-    void processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent);
+    virtual void processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent);
 
     /**
     *@method processEvent
@@ -217,7 +218,7 @@ public:
     *
     *@return none
     */
-    void processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
+    virtual void processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
 
     /**
     *@method handleMackAddressUpdate
@@ -228,44 +229,21 @@ public:
     *
     *@return none
     */
-    void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);
-
-   /**
-    *@method getActiveState
-    *
-    *@brief getter for ActiveState object
-    *
-    *@return pointer to ActiveState object
-    */
-    ActiveState* getActiveState() {return &mActiveState;};
+    virtual void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);
 
     /**
-    *@method getStandbyState
-    *
-    *@brief getter for StandbyState object
-    *
-    *@return pointer to StandbyState object
+     * @method handlePckLossRatioUpdate
+     * 
+     * @brief post pck loss ratio update to link manager
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
     */
-    StandbyState* getStandbyState() {return &mStandbyState;};
+    virtual void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
-    /**
-    *@method getUnknownState
-    *
-    *@brief getter for UnknownState object
-    *
-    *@return pointer to UnknownState object
-    */
-    UnknownState* getUnknownState() {return &mUnknownState;};
-
-    /**
-    *@method getWaitState
-    *
-    *@brief getter for WaitState object
-    *
-    *@return pointer to WaitState object
-    */
-    WaitState* getWaitState() {return &mWaitState;};
-
+public:
     /**
     *@method getIcmpSelfEvent
     *
@@ -320,18 +298,6 @@ public:
     */
     static SwitchActiveRequestEvent& getSwitchActiveRequestEvent() {return mSwitchActiveRequestEvent;};
 
-    /**
-     * @method handlePckLossRatioUpdate
-     * 
-     * @brief post pck loss ratio update to link manager
-     * 
-     * @param unknownEventCount (in) count of missing icmp packets
-     * @param expectedPacketCount (in) count of expected icmp packets
-     * 
-     * @return none
-    */
-    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
-
 private:
     /**
     *@method postLinkManagerEvent
@@ -353,7 +319,168 @@ private:
     static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
 
 private:
+    friend class LinkProberStateMachine;
+
+private:
     link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
+};
+
+/**
+ *@class LinkProberStateMachine
+ *
+ *@brief maintains LinkProber state machine
+ */
+class LinkProberStateMachine:  public LinkProberStateMachineBase
+{
+public:
+    using LinkProberStateMachineBase::processEvent;
+    using LinkProberStateMachineBase::postLinkProberStateEvent;
+
+public:
+    /**
+    *@method LinkProberStateMachine
+    *
+    *@brief class default constructor
+    */
+    LinkProberStateMachine() = delete;
+
+    /**
+    *@method LinkProberStateMachine
+    *
+    *@brief class copy constructor
+    *
+    *@param LinkProberStateMachine (in)  reference to LinkProberStateMachine object to be copied
+    */
+    LinkProberStateMachine(const LinkProberStateMachine &) = delete;
+
+    /**
+    *@method LinkProberStateMachine
+    *
+    *@brief class constructor
+    *
+    *@param linkManagerStateMachinePtr (in) pointer to LinkManagerStateMachineBase
+    *@param strand (in)                     reference to boost serialization object
+    *@param muxPortConfig (in)              reference to MuxPortConfig object
+    *@param label (in)                      state machine initial state
+    */
+    LinkProberStateMachine(
+        link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
+        boost::asio::io_service::strand &strand,
+        common::MuxPortConfig &muxPortConfig,
+        LinkProberState::Label label
+    );
+
+    /**
+    *@method ~LinkProberStateMachine
+    *
+    *@brief class destructor
+    */
+    virtual ~LinkProberStateMachine() = default;
+
+    /**
+    *@method enterState
+    *
+    *@brief force the state machine to enter a given state
+    *
+    *@param label (in)  label of target state
+    *
+    *@return none
+    */
+    void enterState(LinkProberState::Label label) override;
+
+    /**
+    *@method processEvent
+    *
+    *@brief process LinkProberState suspend timer expiry event
+    *
+    *@param suspendTimerExpiredEvent (in)  reference to the SuspendTimerExpiredEvent event
+    *
+    *@return none
+    */
+    void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent) override;
+
+    /**
+    *@method processEvent
+    *
+    *@brief process LinkProberState send switch command completion
+    *
+    *@param switchActiveCommandCompleteEvent (in)  reference to the SwitchActiveCommandCompleteEvent event
+    *
+    *@return none
+    */
+    void processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent) override;
+
+    /**
+    *@method processEvent
+    *
+    *@brief process LinkProberState switch active request
+    *
+    *@param switchActiveRequestEvent (in)  reference to the SwitchActiveRequestEvent event
+    *
+    *@return none
+    */
+    void processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent) override;
+
+    /**
+    *@method handleMackAddressUpdate
+    *
+    *@brief process LinkProberState MAC address update event
+    *
+    *@param address (in)    Server MAC address
+    *
+    *@return none
+    */
+    void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address) override;
+
+   /**
+    *@method getActiveState
+    *
+    *@brief getter for ActiveState object
+    *
+    *@return pointer to ActiveState object
+    */
+    ActiveState* getActiveState() {return &mActiveState;};
+
+    /**
+    *@method getStandbyState
+    *
+    *@brief getter for StandbyState object
+    *
+    *@return pointer to StandbyState object
+    */
+    StandbyState* getStandbyState() {return &mStandbyState;};
+
+    /**
+    *@method getUnknownState
+    *
+    *@brief getter for UnknownState object
+    *
+    *@return pointer to UnknownState object
+    */
+    UnknownState* getUnknownState() {return &mUnknownState;};
+
+    /**
+    *@method getWaitState
+    *
+    *@brief getter for WaitState object
+    *
+    *@return pointer to WaitState object
+    */
+    WaitState* getWaitState() {return &mWaitState;};
+
+    /**
+     * @method handlePckLossRatioUpdate
+     * 
+     * @brief post pck loss ratio update to link manager
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
+    */
+    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
+
+private:
     ActiveState mActiveState;
     StandbyState mStandbyState;
     UnknownState mUnknownState;

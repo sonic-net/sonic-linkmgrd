@@ -34,12 +34,173 @@ namespace link_prober
 //
 // static members
 //
-IcmpSelfEvent LinkProberStateMachine::mIcmpSelfEvent;
-IcmpPeerEvent LinkProberStateMachine::mIcmpPeerEvent;
-IcmpUnknownEvent LinkProberStateMachine::mIcmpUnknownEvent;
-SuspendTimerExpiredEvent LinkProberStateMachine::mSuspendTimerExpiredEvent;
-SwitchActiveCommandCompleteEvent LinkProberStateMachine::mSwitchActiveCommandCompleteEvent;
-SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
+IcmpSelfEvent LinkProberStateMachineBase::mIcmpSelfEvent;
+IcmpPeerEvent LinkProberStateMachineBase::mIcmpPeerEvent;
+IcmpUnknownEvent LinkProberStateMachineBase::mIcmpUnknownEvent;
+SuspendTimerExpiredEvent LinkProberStateMachineBase::mSuspendTimerExpiredEvent;
+SwitchActiveCommandCompleteEvent LinkProberStateMachineBase::mSwitchActiveCommandCompleteEvent;
+SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
+
+LinkProberStateMachineBase::LinkProberStateMachineBase(
+    link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
+    boost::asio::io_service::strand &strand,
+    common::MuxPortConfig &muxPortConfig
+) :
+    StateMachine(strand, muxPortConfig),
+    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr)
+{
+}
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(E &e);
+//
+// post LinkProberState event to the state machine
+//
+template<class E>
+void LinkProberStateMachineBase::postLinkProberStateEvent(E &e)
+{
+    boost::asio::io_service::strand &strand = getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (LinkProberStateMachineBase::*) (decltype(e))>
+            (&LinkProberStateMachineBase::processEvent<decltype(e)>),
+        this,
+        e
+    )));
+}
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpSelfEvent &e);
+//
+// post LinkProberState IcmpSelfEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpSelfEvent>(IcmpSelfEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpPeerEvent &e);
+//
+// post LinkProberState IcmpPeerEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerEvent>(IcmpPeerEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpUnknownEvent &e);
+//
+// post LinkProberState IcmpUnknownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpUnknownEvent>(IcmpUnknownEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(T &t);
+//
+// process LinkProberState event
+//
+template <typename T>
+void LinkProberStateMachineBase::processEvent(T &t)
+{
+    LinkProberState *currentLinkProberState = dynamic_cast<LinkProberState *> (getCurrentState());
+    LinkProberState *nextLinkProberState = currentLinkProberState->handleEvent(t);
+    if (nextLinkProberState != currentLinkProberState) {
+        postLinkManagerEvent(nextLinkProberState);
+    }
+    setCurrentState(nextLinkProberState);
+}
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpSelfEvent &t);
+//
+// process LinkProberState IcmpSelfEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpSelfEvent&>(IcmpSelfEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpPeerEvent &t);
+//
+// process LinkProberState IcmpPeerEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpPeerEvent&>(IcmpPeerEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpUnknownEvent &t);
+//
+// process LinkProberState IcmpUnknownEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &event);
+
+//
+// ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
+//
+// process LinkProberState suspend timer expiry event
+//
+void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent);
+//
+// process LinkProberState switch active complete event
+//
+void LinkProberStateMachineBase::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
+//
+// process LinkProberState switch active request event
+//
+void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);
+//
+// process LinkProberState MAC address update event
+//
+void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+//
+// post pck loss ratio update to link manager
+//
+void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> postLinkManagerEvent(LinkProberState* linkProberState);
+//
+// post LinkProberState change event to LinkManager state machine
+//
+inline
+void LinkProberStateMachineBase::postLinkManagerEvent(LinkProberState* linkProberState)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (link_manager::LinkManagerStateMachineBase::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
+            (&link_manager::LinkManagerStateMachineBase::handleStateChange),
+        mLinkManagerStateMachinePtr,
+        link_manager::LinkManagerStateMachineBase::getLinkProberEvent(),
+        linkProberState->getStateLabel()
+    )));
+}
 
 //
 // ---> LinkProberStateMachine(
@@ -57,8 +218,7 @@ LinkProberStateMachine::LinkProberStateMachine(
     common::MuxPortConfig &muxPortConfig,
     LinkProberState::Label label
 ) :
-    StateMachine(strand, muxPortConfig),
-    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr),
+    LinkProberStateMachineBase(linkManagerStateMachinePtr, strand, muxPortConfig),
     mActiveState(*this, muxPortConfig),
     mStandbyState(*this, muxPortConfig),
     mUnknownState(*this, muxPortConfig),
@@ -92,107 +252,6 @@ void LinkProberStateMachine::enterState(LinkProberState::Label label)
         break;
     }
 }
-
-//
-// ---> postLinkManagerEvent(LinkProberState* linkProberState);
-//
-// post LinkProberState change event to LinkManager state machine
-//
-inline
-void LinkProberStateMachine::postLinkManagerEvent(LinkProberState* linkProberState)
-{
-    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
-    boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::LinkManagerStateMachineBase::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
-            (&link_manager::LinkManagerStateMachineBase::handleStateChange),
-        mLinkManagerStateMachinePtr,
-        link_manager::LinkManagerStateMachineBase::getLinkProberEvent(),
-        linkProberState->getStateLabel()
-    )));
-}
-
-//
-// ---> LinkProberStateMachine::postLinkProberStateEvent(E &e);
-//
-// post LinkProberState event to the state machine
-//
-template<class E>
-void LinkProberStateMachine::postLinkProberStateEvent(E &e)
-{
-    boost::asio::io_service::strand &strand = getStrand();
-    boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (LinkProberStateMachine::*) (decltype(e))>
-            (&LinkProberStateMachine::processEvent<decltype(e)>),
-        this,
-        e
-    )));
-}
-
-//
-// ---> LinkProberStateMachine::postLinkProberStateEvent(IcmpSelfEvent &e);
-//
-// post LinkProberState IcmpSelfEvent to the state machine
-//
-template
-void LinkProberStateMachine::postLinkProberStateEvent<IcmpSelfEvent>(IcmpSelfEvent &event);
-
-//
-// ---> LinkProberStateMachine::postLinkProberStateEvent(IcmpPeerEvent &e);
-//
-// post LinkProberState IcmpPeerEvent to the state machine
-//
-template
-void LinkProberStateMachine::postLinkProberStateEvent<IcmpPeerEvent>(IcmpPeerEvent &event);
-
-//
-// ---> LinkProberStateMachine::postLinkProberStateEvent(IcmpUnknownEvent &e);
-//
-// post LinkProberState IcmpUnknownEvent to the state machine
-//
-template
-void LinkProberStateMachine::postLinkProberStateEvent<IcmpUnknownEvent>(IcmpUnknownEvent &event);
-
-//
-// ---> LinkProberStateMachine::processEvent(T &t);
-//
-// process LinkProberState event
-//
-template <typename T>
-void LinkProberStateMachine::processEvent(T &t)
-{
-    LinkProberState *currentLinkProberState = dynamic_cast<LinkProberState *> (getCurrentState());
-    LinkProberState *nextLinkProberState = currentLinkProberState->handleEvent(t);
-    if (nextLinkProberState != currentLinkProberState) {
-        postLinkManagerEvent(nextLinkProberState);
-    }
-    setCurrentState(nextLinkProberState);
-}
-
-//
-// ---> LinkProberStateMachine::processEvent(IcmpSelfEvent &t);
-//
-// process LinkProberState IcmpSelfEvent
-//
-template
-void LinkProberStateMachine::processEvent<IcmpSelfEvent&>(IcmpSelfEvent &event);
-
-//
-// ---> LinkProberStateMachine::processEvent(IcmpPeerEvent &t);
-//
-// process LinkProberState IcmpPeerEvent
-//
-template
-void LinkProberStateMachine::processEvent<IcmpPeerEvent&>(IcmpPeerEvent &event);
-
-//
-// ---> LinkProberStateMachine::processEvent(IcmpUnknownEvent &t);
-//
-// process LinkProberState IcmpUnknownEvent
-//
-template
-void LinkProberStateMachine::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &event);
 
 //
 // ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
