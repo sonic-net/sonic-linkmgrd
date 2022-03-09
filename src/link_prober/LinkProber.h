@@ -408,6 +408,33 @@ private:
     *@return the appended TLV size
     */
     size_t appendTlvDummy(size_t paddingSize, int seqNo);
+    
+    /**
+     * @method decreaseProbingIntervalAfterSwitch
+     *  
+     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+     * 
+     * @return none
+     */
+    void decreaseProbingIntervalAfterSwitch();
+
+    /**
+     * @method revertProbingIntervalAfterSwitch
+     * 
+     * @brief revert probing interval change after switch 
+     * 
+     * @return none
+     */
+    void revertProbingIntervalChangeAfterSwitch();
+
+    /**
+     * @method getProbingInterval
+     * 
+     * @brief get link prober interval
+     * 
+     * @return link prober interval
+     */
+    uint32_t getProbingInterval() 
 
     friend class test::LinkProberTest;
 
@@ -447,6 +474,8 @@ private:
 
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;
+
+    bool mDecreaseProbingInterval = false;
 };
 
 } /* namespace link_prober */

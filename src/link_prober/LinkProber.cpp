@@ -532,7 +532,7 @@ void LinkProber::startTimer()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
     // time out these heartbeats
-    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(mMuxPortConfig.getTimeoutIpv4_msec()));
+    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
     mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
         &LinkProber::handleTimeout,
         this,
@@ -746,6 +746,36 @@ void LinkProber::resetIcmpPacketCounts()
         mIcmpUnknownEventCount,
         mIcmpPacketCount
     )));
+}
+
+//
+// ---> decreaseProbingInter
+//
+//  adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+//
+void LinkProber::decreaseProbingIntervalAfterSwitch()
+{
+    mDecreaseProbingInterval =  true;
+}
+
+//
+// ---> revertProbingIntervalChangeAfterSwitch
+// 
+// revert probing interval change after switch 
+//
+void LinkProber::revertProbingIntervalChangeAfterSwitch()
+{
+    mDecreaseProbingInterval = false;
+}
+
+//
+// ---> getProbingInterval
+// 
+// get link prober interval
+//
+uint32_t LinkProber::getProbingInterval()
+{
+    return mDecreaseProbingInterval? 10:mMuxPortConfig.getTimeoutIpv4_msec();
 }
 
 } /* namespace link_prober */
