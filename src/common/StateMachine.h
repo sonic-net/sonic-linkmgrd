@@ -36,6 +36,7 @@ class ActiveStandbyStateMachine;
 }
 
 namespace link_prober {
+class LinkProberStateMachineBase;
 class LinkProberStateMachine;
 }
 
@@ -109,6 +110,7 @@ private:
     friend class link_manager::LinkManagerStateMachineBase;
     friend class link_manager::ActiveStandbyStateMachine;
     friend class link_prober::LinkProberStateMachine;
+    friend class link_prober::LinkProberStateMachineBase;
     friend class mux_state::MuxStateMachine;
     friend class link_state::LinkStateMachine;
 
