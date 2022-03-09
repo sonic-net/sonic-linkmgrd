@@ -357,6 +357,16 @@ public:
     */
     void addOrUpdateDefaultRouteState(bool is_v4, const std::string &routeState);
 
+    /**
+     * @method processAppDbState
+     * 
+     * @brief process app db state retrived 
+     * 
+     * @param portName Mux port name
+     * @param state  Mux port state retrived 
+     */
+    void processAppDbState(const std::string &portName, const std::string &state);
+
 private:
     /**
     *@method getMuxPortPtrOrThrow

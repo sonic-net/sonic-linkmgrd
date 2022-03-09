@@ -1000,6 +1000,38 @@ void DbInterface::handleDefaultRouteStateNotification(swss::SubscriberStateTable
     processDefaultRouteStateNotification(entries);
 }
 
+// 
+// ---> getAppDbState(const std::string &portName);
+//
+// get app db state written by linkmgrd
+// 
+void getAppDbState(const std::string &portName)
+{
+    MUXLOGDEBUG(portName);
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handleGetAppDbState,
+        this,
+        portName
+    )));
+}
+
+// 
+// ---> handleGetAppDbState(const std::string &portName);
+// 
+// handle get app db state written by linkmgrd
+// 
+void handleGetAppDbState(const std::string &portName)
+{
+    MUXLOGDEBUG(portName);
+
+    std::string state;
+    if (mAppDbMuxTablePtr->hget(portName, "state", state)) {
+        mMuxManagerPtr->processAppDbState(portName, state);
+    } 
+}
+
 //
 // ---> handleSwssNotification();
 //

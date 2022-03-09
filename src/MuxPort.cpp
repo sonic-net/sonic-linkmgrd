@@ -289,4 +289,23 @@ void MuxPort::resetPckLossCount()
     )));
 }
 
+//
+// ---> handleAppDbState(const std::string &muxState);
+//
+// handle state retrieve from app db
+//
+void MuxPort::handleAppDbState(const std::string &state)
+{
+    MUXLOGDEBUG(boost::format("port: %s, app db mux state: %s") % mMuxPortConfig.getPortName() % state);
+
+    mux_state::MuxState::Label label = mux_state::MuxState::Label::Unknown;
+    if (muxState == "active") {
+        label = mux_state::MuxState::Label::Active;
+    } else if (muxState == "standby") {
+        label = mux_state::MuxState::Label::Standby;
+    } else {
+        MUXLOGERROR(boost::format("port: %s, retrieved unexpected MUX_CABLE_TABLE state in app db. ") % mMuxPortConfig.getPortName() % state);
+    }
+}
+
 } /* namespace mux */

@@ -598,6 +598,24 @@ private:
     */
     void handleDefaultRouteStateNotification(swss::SubscriberStateTable &statedbRouteTable);
 
+    /**
+     * @method getAppDbState
+     * 
+     * @brief get app db state written by linkmgrd
+     * 
+     * @return
+     */
+    virtual void getAppDbState(const std::string &portName);
+
+    /**
+     * @method handleGetAppDbState
+     * 
+     * @brief handle get app db state written by linkmgrd 
+     * 
+     * @return none
+     */
+    void handleGetAppDbState(const std::string &portName);
+
 private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;

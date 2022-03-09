@@ -858,6 +858,8 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void ()> mDescreaseIntervalFnPtr;
+    boost::function<uin32_t ()> mRevertIntervalFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
