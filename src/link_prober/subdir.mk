@@ -4,6 +4,7 @@ CPP_SRCS += \
     ./src/link_prober/IcmpPayload.cpp \
     ./src/link_prober/LinkProber.cpp \
     ./src/link_prober/LinkProberState.cpp \
+    ./src/link_prober/LinkProberStateMachineBase.cpp \
     ./src/link_prober/LinkProberStateMachine.cpp \
     ./src/link_prober/StandbyState.cpp \
     ./src/link_prober/UnknownState.cpp \
@@ -14,6 +15,7 @@ OBJS += \
     ./src/link_prober/IcmpPayload.o \
     ./src/link_prober/LinkProber.o \
     ./src/link_prober/LinkProberState.o \
+    ./src/link_prober/LinkProberStateMachineBase.o \
     ./src/link_prober/LinkProberStateMachine.o \
     ./src/link_prober/StandbyState.o \
     ./src/link_prober/UnknownState.o \
@@ -24,6 +26,7 @@ CPP_DEPS += \
     ./src/link_prober/IcmpPayload.d \
     ./src/link_prober/LinkProber.d \
     ./src/link_prober/LinkProberState.d \
+    ./src/link_prober/LinkProberStateMachineBase.d \
     ./src/link_prober/LinkProberStateMachine.d \
     ./src/link_prober/StandbyState.d \
     ./src/link_prober/UnknownState.d \
