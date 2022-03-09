@@ -29,12 +29,12 @@ namespace link_prober
 {
 
 //
-// ---> LinkProberState(LinkProberStateMachine &stateMachine, common::MuxPortConfig &muxPortConfig);
+// ---> LinkProberState(LinkProberStateMachineBase &stateMachine, common::MuxPortConfig &muxPortConfig);
 //
 // class constructor
 //
 LinkProberState::LinkProberState(
-    LinkProberStateMachine &stateMachine,
+    LinkProberStateMachineBase &stateMachine,
     common::MuxPortConfig &muxPortConfig
 ) :
     common::State(

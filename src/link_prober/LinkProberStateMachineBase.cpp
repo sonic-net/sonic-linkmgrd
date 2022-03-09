@@ -40,7 +40,11 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
     common::MuxPortConfig &muxPortConfig
 ) :
     StateMachine(strand, muxPortConfig),
-    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr)
+    mLinkManagerStateMachinePtr(linkManagerStateMachinePtr),
+    mActiveState(*this, muxPortConfig),
+    mStandbyState(*this, muxPortConfig),
+    mUnknownState(*this, muxPortConfig),
+    mWaitState(*this, muxPortConfig)
 {
 }
 

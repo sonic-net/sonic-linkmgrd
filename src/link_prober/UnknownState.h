@@ -30,7 +30,7 @@
 
 namespace link_prober
 {
-class LinkProberStateMachine;
+class LinkProberStateMachineBase;
 
 /**
  *@class UnknownState
@@ -61,11 +61,11 @@ public:
     *
     *@brief class constructor
     *
-    *@param stateMachine (in)   reference to LinkProberStateMachine
+    *@param stateMachine (in)   reference to LinkProberStateMachineBase
     *@param muxPortConfig (in)  reference to MuxPortConfig object
     */
     UnknownState(
-        LinkProberStateMachine &stateMachine,
+        LinkProberStateMachineBase &stateMachine,
         common::MuxPortConfig &muxPortConfig
     );
 

@@ -139,42 +139,6 @@ public:
     */
     void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address) override;
 
-   /**
-    *@method getActiveState
-    *
-    *@brief getter for ActiveState object
-    *
-    *@return pointer to ActiveState object
-    */
-    ActiveState* getActiveState() {return &mActiveState;};
-
-    /**
-    *@method getStandbyState
-    *
-    *@brief getter for StandbyState object
-    *
-    *@return pointer to StandbyState object
-    */
-    StandbyState* getStandbyState() {return &mStandbyState;};
-
-    /**
-    *@method getUnknownState
-    *
-    *@brief getter for UnknownState object
-    *
-    *@return pointer to UnknownState object
-    */
-    UnknownState* getUnknownState() {return &mUnknownState;};
-
-    /**
-    *@method getWaitState
-    *
-    *@brief getter for WaitState object
-    *
-    *@return pointer to WaitState object
-    */
-    WaitState* getWaitState() {return &mWaitState;};
-
     /**
      * @method handlePckLossRatioUpdate
      * 
@@ -186,12 +150,6 @@ public:
      * @return none
     */
     void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
-
-private:
-    ActiveState mActiveState;
-    StandbyState mStandbyState;
-    UnknownState mUnknownState;
-    WaitState mWaitState;
 };
 
 } /* namespace link_prober */
