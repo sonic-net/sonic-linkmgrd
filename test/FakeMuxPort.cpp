@@ -49,7 +49,7 @@ FakeMuxPort::FakeMuxPort(
         std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())
     ),
     mFakeLinkProber(
-        std::make_shared<FakeLinkProber> (&mActiveStandbyStateMachinePtr->getLinkProberStateMachine())
+        std::make_shared<FakeLinkProber> (mActiveStandbyStateMachinePtr->getLinkProberStateMachinePtr().get())
     )
 {
     std::string prog_name = "linkmgrd-test";

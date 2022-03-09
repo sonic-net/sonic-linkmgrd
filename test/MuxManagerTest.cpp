@@ -211,7 +211,7 @@ void MuxManagerTest::createPort(std::string port)
     EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 1);
 
     // Initialize a FakeLinkProber
-    mFakeLinkProber = std::make_shared<FakeLinkProber> (&linkManagerStateMachine->getLinkProberStateMachine());
+    mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachine->getLinkProberStateMachinePtr().get());
     linkManagerStateMachine->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
     );
