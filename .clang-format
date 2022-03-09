@@ -1,0 +1,37 @@
+---
+# use default Google style, but with several differences
+# for more detail, please refer to: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: Google
+IndentWidth: 4
+---
+Language: Cpp
+# same level indent for class access level, eg: public
+AccessModifierOffset: -4
+# allow inline functions, short if statement, short loop on a single line
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+# not start new line for openinig brace:
+#   1. enum, struct, union and class opening brace
+#   2. else statement
+#   3. catch statement
+# start new line for opening brace:
+#   1. function definition
+#   2. namespace definition
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: false
+  AfterStruct: false
+  AfterUnion: false
+  SplitEmptyFunction: false
+  BeforeElse: false
+  BeforeCatch: false
+  AfterFunction: true
+  AfterNamespace: true
+# no line width limit
+ColumnLimit: 0
+KeepEmptyLinesAtTheStartOfBlocks: true
+SortIncludes: true
+SpacesBeforeTrailingComments: 1
+# always break an open bracket, place closing bracket on a new line
+AlignAfterOpenBracket: BlockIndent
