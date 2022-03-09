@@ -74,7 +74,7 @@ public:
     *
     *@brief class constructor
     *
-    *@param stateMachine (in)   reference to LinkProberStateMachine object
+    *@param stateMachine (in)   reference to LinkStateMachine object
     *@param muxPortConfig (in)  reference to MuxPortConfig object
     */
     LinkState(
