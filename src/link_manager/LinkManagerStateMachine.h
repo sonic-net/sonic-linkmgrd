@@ -437,6 +437,17 @@ public:
     */
     void handleResetLinkProberPckLossCount();
 
+    /**
+     * @method handleAppDbStateRetrieved
+     * 
+     * @brief handle retrieved state in app db written by linkmgrd for switchover purpose
+     * 
+     * @param label (in) mux state label
+     * 
+     * @return none
+     */
+    void handleAppDbStateRetrieved(mux_state::MuxState::Label label);
+
 private:
     /**
     *@method updateMuxLinkmgrState

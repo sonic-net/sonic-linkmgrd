@@ -306,6 +306,13 @@ void MuxPort::handleAppDbState(const std::string &state)
     } else {
         MUXLOGERROR(boost::format("port: %s, retrieved unexpected MUX_CABLE_TABLE state in app db. ") % mMuxPortConfig.getPortName() % state);
     }
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleAppDbStateRetrieved,
+        mLinkManagerStateMachinePtr.get(),
+        label
+    )));
 }
 
 } /* namespace mux */

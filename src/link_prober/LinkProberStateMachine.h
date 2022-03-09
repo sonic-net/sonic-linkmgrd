@@ -185,7 +185,32 @@ public:
      * 
      * @return none
     */
-    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
+    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+
+    /**
+     * @method handleAppDbStateRetrieved
+     * 
+     */
+
+private:
+    /**
+    *@method postLinkManagerEvent
+    *
+    *@brief post LinkProberState change event to LinkManager state machine
+    *
+    *@param linkProberState (in)    pointer to current LinkProberState
+    *
+    *@return none
+    */
+    inline void postLinkManagerEvent(LinkProberState* linkProberState);
+
+private:
+    static IcmpSelfEvent mIcmpSelfEvent;
+    static IcmpPeerEvent mIcmpPeerEvent;
+    static IcmpUnknownEvent mIcmpUnknownEvent;
+    static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
+    static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
+    static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
 
 private:
     ActiveState mActiveState;
