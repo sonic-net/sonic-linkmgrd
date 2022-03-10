@@ -775,7 +775,7 @@ void LinkProber::revertProbingIntervalChangeAfterSwitch()
 //
 uint32_t LinkProber::getProbingInterval()
 {
-    return mDecreaseProbingInterval? 10:mMuxPortConfig.getTimeoutIpv4_msec();
+    return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
 }
 
 } /* namespace link_prober */
