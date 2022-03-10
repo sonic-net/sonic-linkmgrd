@@ -32,12 +32,12 @@ namespace link_prober
 {
 
 //
-// ---> StandbyState(LinkProberStateMachine &stateMachine, common::MuxPortConfig &muxPortConfig);
+// ---> StandbyState(LinkProberStateMachineBase &stateMachine, common::MuxPortConfig &muxPortConfig);
 //
 // class constructor
 //
 StandbyState::StandbyState(
-    LinkProberStateMachine &stateMachine,
+    LinkProberStateMachineBase &stateMachine,
     common::MuxPortConfig &muxPortConfig
 ) :
     LinkProberState(stateMachine, muxPortConfig)
@@ -53,7 +53,7 @@ LinkProberState* StandbyState::handleEvent(IcmpPeerEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    LinkProberStateMachine *stateMachine = dynamic_cast<LinkProberStateMachine *> (getStateMachine());
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState =
         dynamic_cast<LinkProberState *> (stateMachine->getStandbyState());
 
@@ -71,7 +71,7 @@ LinkProberState* StandbyState::handleEvent(IcmpSelfEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    LinkProberStateMachine *stateMachine = dynamic_cast<LinkProberStateMachine *> (getStateMachine());
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState;
 
     mUnknownEventCount = 0;
@@ -94,7 +94,7 @@ LinkProberState* StandbyState::handleEvent(IcmpUnknownEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    LinkProberStateMachine *stateMachine = dynamic_cast<LinkProberStateMachine *> (getStateMachine());
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState;
 
     mSelfEventCount = 0;

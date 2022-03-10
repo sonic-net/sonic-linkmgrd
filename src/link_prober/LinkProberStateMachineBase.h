@@ -241,6 +241,43 @@ public:
     virtual void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
 public:
+   /**
+    *@method getActiveState
+    *
+    *@brief getter for ActiveState object
+    *
+    *@return pointer to ActiveState object
+    */
+    ActiveState* getActiveState() {return &mActiveState;};
+
+    /**
+    *@method getStandbyState
+    *
+    *@brief getter for StandbyState object
+    *
+    *@return pointer to StandbyState object
+    */
+    StandbyState* getStandbyState() {return &mStandbyState;};
+
+    /**
+    *@method getUnknownState
+    *
+    *@brief getter for UnknownState object
+    *
+    *@return pointer to UnknownState object
+    */
+    UnknownState* getUnknownState() {return &mUnknownState;};
+
+    /**
+    *@method getWaitState
+    *
+    *@brief getter for WaitState object
+    *
+    *@return pointer to WaitState object
+    */
+    WaitState* getWaitState() {return &mWaitState;};
+
+public:
     /**
      *@method getIcmpSelfEvent
      *
@@ -320,6 +357,10 @@ private:
 
 private:
     link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
+    ActiveState mActiveState;
+    StandbyState mStandbyState;
+    UnknownState mUnknownState;
+    WaitState mWaitState;
 };
 } // namespace link_prober
 

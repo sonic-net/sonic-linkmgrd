@@ -128,9 +128,11 @@ public:
      * @param initialCompositeState         initial Composite states
      */
     LinkManagerStateMachineBase(
+        mux::MuxPort *muxPortPtr,
         boost::asio::io_service::strand& strand,
         common::MuxPortConfig& muxPortConfig,
-        CompositeState initialCompositeState);
+        CompositeState initialCompositeState
+    );
 
     /**
      * @method ~LinkManagerStateMachineBase
@@ -370,6 +372,34 @@ public:
      */
     virtual void setComponentInitState(uint8_t component);
 
+public:
+    /**
+    *@method getLinkProberStateMachinePtr
+    *
+    *@brief getter for LinkProberStateMachineBase pointer
+    *
+    *@return reference to LinkProberStateMachine pointer
+    */
+    std::shared_ptr<link_prober::LinkProberStateMachineBase> getLinkProberStateMachinePtr() {return mLinkProberStateMachinePtr;};
+
+    /**
+    *@method getMuxStateMachine
+    *
+    *@brief getter for MuxStateMachine object
+    *
+    *@return reference to MuxStateMachine object
+    */
+    mux_state::MuxStateMachine& getMuxStateMachine() {return mMuxStateMachine;};
+
+    /**
+    *@method getLinkStateMachine
+    *
+    *@brief getter for LinkStateMachine object
+    *
+    *@return reference to LinkStateMachine object
+    */
+    link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
+
 private:
     friend class ActiveStandbyStateMachine;
 
@@ -408,6 +438,12 @@ private:
                                               [mux_state::MuxState::Label::Count]
                                               [link_state::LinkState::Label::Count];
     LinkManagerStateMachineBase::CompositeState mCompositeState;
+
+    mux::MuxPort *mMuxPortPtr;
+    std::shared_ptr<link_prober::LinkProberStateMachineBase> mLinkProberStateMachinePtr;
+    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
+    mux_state::MuxStateMachine mMuxStateMachine;
+    link_state::LinkStateMachine mLinkStateMachine;
 
     Label mLabel = Label::Uninitialized;
 };

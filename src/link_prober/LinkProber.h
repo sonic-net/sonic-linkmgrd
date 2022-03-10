@@ -80,12 +80,12 @@ public:
     *
     *@param muxPortConfig (in)          reference to MuxPortConfig object
     *@param ioService (in)              reference to boost io_service object
-    *@param linkProberStateMachine (in) reference to LinkProberStateMachine object
+    *@param linkProberStateMachinePtr (in) reference to LinkProberStateMachineBase object
     */
     LinkProber(
         common::MuxPortConfig &muxPortConfig,
         boost::asio::io_service &ioService,
-        LinkProberStateMachine &linkProberStateMachine
+        LinkProberStateMachineBase *linkProberStateMachinePtr
     );
 
     /**
@@ -417,7 +417,7 @@ private:
 private:
     common::MuxPortConfig &mMuxPortConfig;
     boost::asio::io_service &mIoService;
-    LinkProberStateMachine &mLinkProberStateMachine;
+    LinkProberStateMachineBase *mLinkProberStateMachinePtr;
 
     uint16_t mTxSeqNo = 0xffff;
     uint16_t mRxSelfSeqNo = 0;
