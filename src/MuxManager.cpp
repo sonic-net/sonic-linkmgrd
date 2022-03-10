@@ -313,21 +313,6 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
     }
 }
 
-// 
-// ---> processAppDbState(const std::string &portName, const std::string &state);
-// 
-// process app db state retrived 
-//
-void MuxManager::processAppDbState(const std::string &portName, const std::string &state)
-{
-    MUXLOGINFO(boost::format("%s: app db mux state: %s") % portName % state);
-
-    PortMapIterator portMapInterator = mPortMap.find(portName);
-    if (portMapInterator != mPortMap.end()) {
-        portMapInterator->second->handleAppDbState(state);
-    }
-}
-
 //
 // ---> getMuxPortPtrOrThrow(const std::string &portName);
 //

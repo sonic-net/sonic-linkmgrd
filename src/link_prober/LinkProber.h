@@ -169,6 +169,27 @@ public:
     */
     void resetIcmpPacketCounts();
 
+    /**
+     * @method decreaseProbeIntervalAfterSwitch
+     *  
+     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+     * 
+     * @param switchTime_msec (in) switchover is expected to complete  within this time window
+     * @param expectingLinkProberEvent (in) depends on which state LinkManager is switching to, link prober expects self or peer events
+     * 
+     * @return none
+     */
+    void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
+
+    /**
+     * @method revertProbeIntervalAfterSwitchComplete 
+     * 
+     * @brief revert probe interval change after switchover is completed
+     * 
+     * @return none
+     */
+    void revertProbeIntervalAfterSwitchComplete();
+
 private:
     /**
     *@method handleUpdateEthernetFrame
@@ -410,31 +431,24 @@ private:
     size_t appendTlvDummy(size_t paddingSize, int seqNo);
     
     /**
-     * @method decreaseProbingIntervalAfterSwitch
-     *  
-     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
-     * 
-     * @return none
-     */
-    void decreaseProbingIntervalAfterSwitch();
-
-    /**
-     * @method revertProbingIntervalAfterSwitch
-     * 
-     * @brief revert probing interval change after switch 
-     * 
-     * @return none
-     */
-    void revertProbingIntervalChangeAfterSwitch();
-
-    /**
      * @method getProbingInterval
      * 
      * @brief get link prober interval
      * 
      * @return link prober interval
      */
-    uint32_t getProbingInterval() 
+    uint32_t getProbingInterval(); 
+
+    /**
+     * @method handleSwitchoverTimeout
+     * 
+     * @brief handle switchover time out 
+     * 
+     * @param errorCode (in) socket error code 
+     * 
+     * @return none
+     */
+    void handleSwitchoverTimeout(boost::syetem::error_code errorCode);
 
     friend class test::LinkProberTest;
 
@@ -459,6 +473,7 @@ private:
     boost::asio::io_service::strand mStrand;
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mSuspendTimer;
+    boost::asio::deadline_timer mSwitchoverTimer;
     boost::asio::posix::stream_descriptor mStream;
 
     std::shared_ptr<SockFilter> mSockFilterPtr;
@@ -471,11 +486,10 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+    bool mDecreaseProbingInterval = false;
 
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;
-
-    bool mDecreaseProbingInterval = false;
 };
 
 } /* namespace link_prober */

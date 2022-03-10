@@ -46,7 +46,7 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
-std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end"};
+std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end", "link_prober_wait_start", "link_prober_active_start", "link_prober_standby_start"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -998,38 +998,6 @@ void DbInterface::handleDefaultRouteStateNotification(swss::SubscriberStateTable
 
     statedbRouteTable.pops(entries);
     processDefaultRouteStateNotification(entries);
-}
-
-// 
-// ---> getAppDbState(const std::string &portName);
-//
-// get app db state written by linkmgrd
-// 
-void getAppDbState(const std::string &portName)
-{
-    MUXLOGDEBUG(portName);
-
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
-        &DbInterface::handleGetAppDbState,
-        this,
-        portName
-    )));
-}
-
-// 
-// ---> handleGetAppDbState(const std::string &portName);
-// 
-// handle get app db state written by linkmgrd
-// 
-void handleGetAppDbState(const std::string &portName)
-{
-    MUXLOGDEBUG(portName);
-
-    std::string state;
-    if (mAppDbMuxTablePtr->hget(portName, "state", state)) {
-        mMuxManagerPtr->processAppDbState(portName, state);
-    } 
 }
 
 //

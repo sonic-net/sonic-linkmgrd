@@ -275,6 +275,11 @@ void ActiveStandbyStateMachine::enterLinkProberState(CompositeState &nextState, 
 {
     mLinkProberStateMachinePtr->enterState(label);
     ps(nextState) = label;
+
+    // link prober entering wait indicating switchover is initiated, but a switchover can be skipped if mode == manual.
+    if(label == link_prober::LinkProberState::Label::Wait) {
+        mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberWaitStart);
+    }
 }
 
 //
@@ -332,7 +337,7 @@ void ActiveStandbyStateMachine::switchMuxState(
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mMuxPortPtr->setMuxState(label);
-        mDecreaseIntervalFnPtr();
+        mDecreaseIntervalFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec())); 
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
@@ -382,10 +387,10 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
             mDecreaseIntervalFnPtr = boost::bind(
-                &link_prober::LinkProber::decreaseProbingIntervalAfterSwitch, mLinkProberPtr.get()
+                &link_prober::LinkProber::decreaseProbeIntervalAfterSwitch, mLinkProberPtr.get(), boost::placeholders::_1
             );
             mRevertIntervalFnPtr = boost::bind(
-                &link_prober::LinkProber::revertProbingIntervalAfterSwitch, mLinkProberPtr.get()
+                &link_prober::LinkProber::revertProbeIntervalAfterSwitchComplete, mLinkProberPtr.get()
             );
             mComponentInitState.set(LinkProberComponent);
 
@@ -452,13 +457,17 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
             mLinkProberStateName[state]
         );
 
-        // update state db link prober metrics to collect pck loss data
+        // update state db link prober metrics to collect link prober state change data
         if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
             mContinuousLinkProberUnknownEvent = false;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
         } else if (state == link_prober::LinkProberState::Label::Unknown) {
             mContinuousLinkProberUnknownEvent = true;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownStart);
+        } else if (state == link_prober::LinkProberState::Label::Active) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberActiveStart);
+        } else if (state == link_prober::LinkProberState::Label::Standby) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberStandbyStart);
         }
 
         CompositeState nextState = mCompositeState;
@@ -470,7 +479,6 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
     if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
         mResumeTxFnPtr();
-        mRevertIntervalFnPtr();
     }
 
     updateMuxLinkmgrState();
@@ -875,13 +883,6 @@ void ActiveStandbyStateMachine::handleResetLinkProberPckLossCount()
 
     mResetIcmpPacketCountsFnPtr();
 }
-
-//
-// --> handleAppDbStateRetrieved
-//
-// handle retrieved state in app db written by linkmgrd for switchover purpose
-//
-void Acative
 
 //
 // ---> updateMuxLinkmgrState();

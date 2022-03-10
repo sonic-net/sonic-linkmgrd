@@ -311,27 +311,6 @@ public:
     */
     void resetPckLossCount();
 
-    /**
-    *@method getAppDbState
-    *
-    *@brief retrieve the current MUX state in app db 
-    *
-    *@param portName (in)   MUX/port name
-    *
-    *@return app db state
-    */
-    inline void getAppDbState() {mDbInterfacePtr->getAppDbState(mMuxPortConfig.getPortName());};
-
-    /**
-     * @method handleAppDbState
-     * 
-     * @brief handle MUX state retrieve from app db
-     * 
-     * @param state (in) app db state written by linkmgrd 
-     * 
-     */
-    void handleAppDbState(const std::sting &state);
-
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

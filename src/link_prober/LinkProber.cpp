@@ -749,23 +749,49 @@ void LinkProber::resetIcmpPacketCounts()
 }
 
 //
-// ---> decreaseProbingInter
+// ---> decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
 //
 //  adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
 //
-void LinkProber::decreaseProbingIntervalAfterSwitch()
+void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
 {
-    mDecreaseProbingInterval =  true;
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mSwitchoverTimer.expires_from_now(boost::posix_time::milliseconds(switchTime_msec));
+    mSwitchoverTimer.async_wait(mStrand.wrap(boost::bind(
+        &LinkProber::handleSwitchoverTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
+
+    mDecreaseProbingInterval = true;
+}
+
+// ---> revertProbeIntervalAfterSwitchComplete();
+//
+// revert probe interval change after switchover is completed
+// 
+void LinkProber::revertProbeIntervalAfterSwitchComplete()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mSwitchoverTimer.cancel();
+    mDecreaseProbingInterval = false;
 }
 
 //
-// ---> revertProbingIntervalChangeAfterSwitch
-// 
-// revert probing interval change after switch 
+// ---> handleSwitchoverTimeout(boost::syetem::error_code errorCode)
 //
-void LinkProber::revertProbingIntervalChangeAfterSwitch()
+// handle switchover time out 
+// 
+void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
 {
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
     mDecreaseProbingInterval = false;
+    if (errorCode == boost::system::errc::success) {
+        MUXLOGWARNING(boost::format("%s: link prober timeout on waiting for expected ICMP event after switchover is triggered ") % mMuxPortConfig.getPortName());
+    }
 }
 
 //

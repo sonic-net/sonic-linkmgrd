@@ -79,6 +79,9 @@ public:
     enum class LinkProberMetrics {
         LinkProberUnknownStart, 
         LinkProberUnknownEnd,
+        LinkProberWaitStart,
+        LinkProberActiveStart,
+        LinkProberStandbyStart,
 
         Count
     };
@@ -409,17 +412,6 @@ public:
      * @return none
     */
     void handleResetLinkProberPckLossCount();
-
-    /**
-     * @method handleAppDbStateRetrieved
-     * 
-     * @brief handle retrieved state in app db written by linkmgrd for switchover purpose
-     * 
-     * @param label (in) mux state label
-     * 
-     * @return none
-     */
-    void handleAppDbStateRetrieved(mux_state::MuxState::Label label);
 
 private:
     /**
@@ -836,7 +828,7 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
-    boost::function<void ()> mDescreaseIntervalFnPtr;
+    boost::function<void (uint32_t switchTime_msec)> mDescreaseIntervalFnPtr;
     boost::function<uin32_t ()> mRevertIntervalFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
@@ -846,7 +838,7 @@ private:
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
-    bool mContinuousLinkProberUnknownEvent = false;
+    bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     std::bitset<ComponentCount> mComponentInitState = {0};
 };
