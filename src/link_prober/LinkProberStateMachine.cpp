@@ -46,11 +46,7 @@ LinkProberStateMachine::LinkProberStateMachine(
     common::MuxPortConfig &muxPortConfig,
     LinkProberState::Label label
 ) :
-    LinkProberStateMachineBase(linkManagerStateMachinePtr, strand, muxPortConfig),
-    mActiveState(*this, muxPortConfig),
-    mStandbyState(*this, muxPortConfig),
-    mUnknownState(*this, muxPortConfig),
-    mWaitState(*this, muxPortConfig)
+    LinkProberStateMachineBase(linkManagerStateMachinePtr, strand, muxPortConfig)
 {
     enterState(label);
 }

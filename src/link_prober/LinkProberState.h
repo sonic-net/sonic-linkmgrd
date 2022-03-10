@@ -28,7 +28,7 @@
 
 namespace link_prober
 {
-class LinkProberStateMachine;
+class LinkProberStateMachineBase;
 class IcmpPeerEvent;
 class IcmpSelfEvent;
 class IcmpUnknownEvent;
@@ -78,11 +78,11 @@ public:
     *
     *@brief class constructor
     *
-    *@param stateMachine (in)   reference to LinkProberStateMachine object
+    *@param stateMachine (in)   reference to LinkProberStateMachineBase object
     *@param muxPortConfig (in)  reference to MuxPortConfig object
     */
     LinkProberState(
-        LinkProberStateMachine &stateMachine,
+        LinkProberStateMachineBase &stateMachine,
         common::MuxPortConfig &muxPortConfig
     );
 

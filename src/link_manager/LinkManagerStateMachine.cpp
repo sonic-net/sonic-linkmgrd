@@ -78,13 +78,11 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
     common::MuxPortConfig &muxPortConfig
 ) :
     LinkManagerStateMachineBase(
-        strand, muxPortConfig,
+        muxPortPtr,
+        strand,
+        muxPortConfig,
         {link_prober::LinkProberState::Label::Unknown, mux_state::MuxState::Label::Wait, link_state::LinkState::Label::Down}
     ),
-    mMuxPortPtr(muxPortPtr),
-    mLinkProberStateMachine(this, strand, muxPortConfig, ps(mCompositeState)),
-    mMuxStateMachine(this, strand, muxPortConfig, ms(mCompositeState)),
-    mLinkStateMachine(this, strand, muxPortConfig, ls(mCompositeState)),
     mDeadlineTimer(strand.context()),
     mWaitTimer(strand.context())
 {
@@ -275,7 +273,7 @@ void ActiveStandbyStateMachine::setLabel(Label label) {
 //
 void ActiveStandbyStateMachine::enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label)
 {
-    mLinkProberStateMachine.enterState(label);
+    mLinkProberStateMachinePtr->enterState(label);
     ps(nextState) = label;
 }
 
@@ -357,7 +355,7 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
             mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
                 mMuxPortConfig,
                 getStrand().context(),
-                mLinkProberStateMachine
+                mLinkProberStateMachinePtr.get()
             );
             mInitializeProberFnPtr = boost::bind(
                 &link_prober::LinkProber::initialize, mLinkProberPtr.get()
@@ -448,7 +446,7 @@ void ActiveStandbyStateMachine::activateStateMachine()
 //
 void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state)
 {
-    if ((dynamic_cast<link_prober::LinkProberState *> (mLinkProberStateMachine.getCurrentState()))->getStateLabel() == state) {
+    if ((dynamic_cast<link_prober::LinkProberState *> (mLinkProberStateMachinePtr->getCurrentState()))->getStateLabel() == state) {
         MUXLOGWARNING(boost::format("%s: Received link prober event, new state: %s") %
             mMuxPortConfig.getPortName() %
             mLinkProberStateName[state]

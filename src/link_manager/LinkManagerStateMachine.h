@@ -145,33 +145,6 @@ public:
     */
     void initializeTransitionFunctionTable();
 
-    /**
-    *@method getLinkProberStateMachine
-    *
-    *@brief getter for LinkProberStateMachine object
-    *
-    *@return reference to LinkProberStateMachine object
-    */
-    link_prober::LinkProberStateMachine& getLinkProberStateMachine() {return mLinkProberStateMachine;};
-
-    /**
-    *@method getMuxStateMachine
-    *
-    *@brief getter for MuxStateMachine object
-    *
-    *@return reference to MuxStateMachine object
-    */
-    mux_state::MuxStateMachine& getMuxStateMachine() {return mMuxStateMachine;};
-
-    /**
-    *@method getLinkStateMachine
-    *
-    *@brief getter for LinkStateMachine object
-    *
-    *@return reference to LinkStateMachine object
-    */
-    link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
-
 private:
     /**
     *@method setLabel
@@ -850,12 +823,6 @@ private:
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
 private:
-    mux::MuxPort *mMuxPortPtr;
-    link_prober::LinkProberStateMachine mLinkProberStateMachine;
-    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
-    mux_state::MuxStateMachine mMuxStateMachine;
-    link_state::LinkStateMachine mLinkStateMachine;
-
     link_state::LinkState::Label mPeerLinkState = link_state::LinkState::Label::Down;
 
     boost::asio::deadline_timer mDeadlineTimer;

@@ -31,7 +31,7 @@ namespace test
 class FakeLinkProber
 {
 public:
-    FakeLinkProber(link_prober::LinkProberStateMachine *linkProberStateMachine);
+    FakeLinkProber(link_prober::LinkProberStateMachineBase *linkProberStateMachine);
     virtual ~FakeLinkProber() = default;
 
     template<class E>
@@ -61,7 +61,7 @@ public:
     uint64_t mIcmpPacketCount = 0;
 
 private:
-    link_prober::LinkProberStateMachine *mLinkProberStateMachine;
+    link_prober::LinkProberStateMachineBase *mLinkProberStateMachine;
 };
 
 } /* namespace test */

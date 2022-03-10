@@ -40,12 +40,25 @@ std::vector<std::string> LinkManagerStateMachineBase::mLinkHealthName = {"Uninit
 // class constructor
 //
 LinkManagerStateMachineBase::LinkManagerStateMachineBase(
+    mux::MuxPort *muxPortPtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
     CompositeState initialCompositeState)
     : StateMachine(strand, muxPortConfig),
-      mCompositeState(initialCompositeState)
+      mCompositeState(initialCompositeState),
+      mMuxPortPtr(muxPortPtr),
+      mMuxStateMachine(this, strand, muxPortConfig, ms(mCompositeState)),
+      mLinkStateMachine(this, strand, muxPortConfig, ls(mCompositeState))
 {
+    switch (mMuxPortConfig.getPortCableType()) {
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachine>(
+                this, strand, mMuxPortConfig, ps(mCompositeState)
+            );
+            break;
+        default:
+            break;
+    }
 }
 
 //

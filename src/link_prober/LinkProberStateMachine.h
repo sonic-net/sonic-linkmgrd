@@ -139,42 +139,6 @@ public:
     */
     void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address) override;
 
-   /**
-    *@method getActiveState
-    *
-    *@brief getter for ActiveState object
-    *
-    *@return pointer to ActiveState object
-    */
-    ActiveState* getActiveState() {return &mActiveState;};
-
-    /**
-    *@method getStandbyState
-    *
-    *@brief getter for StandbyState object
-    *
-    *@return pointer to StandbyState object
-    */
-    StandbyState* getStandbyState() {return &mStandbyState;};
-
-    /**
-    *@method getUnknownState
-    *
-    *@brief getter for UnknownState object
-    *
-    *@return pointer to UnknownState object
-    */
-    UnknownState* getUnknownState() {return &mUnknownState;};
-
-    /**
-    *@method getWaitState
-    *
-    *@brief getter for WaitState object
-    *
-    *@return pointer to WaitState object
-    */
-    WaitState* getWaitState() {return &mWaitState;};
-
     /**
      * @method handlePckLossRatioUpdate
      * 
@@ -185,38 +149,7 @@ public:
      * 
      * @return none
     */
-    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
-
-    /**
-     * @method handleAppDbStateRetrieved
-     * 
-     */
-
-private:
-    /**
-    *@method postLinkManagerEvent
-    *
-    *@brief post LinkProberState change event to LinkManager state machine
-    *
-    *@param linkProberState (in)    pointer to current LinkProberState
-    *
-    *@return none
-    */
-    inline void postLinkManagerEvent(LinkProberState* linkProberState);
-
-private:
-    static IcmpSelfEvent mIcmpSelfEvent;
-    static IcmpPeerEvent mIcmpPeerEvent;
-    static IcmpUnknownEvent mIcmpUnknownEvent;
-    static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
-    static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
-    static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
-
-private:
-    ActiveState mActiveState;
-    StandbyState mStandbyState;
-    UnknownState mUnknownState;
-    WaitState mWaitState;
+    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
 };
 
 } /* namespace link_prober */

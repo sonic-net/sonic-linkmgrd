@@ -31,7 +31,7 @@ namespace test
 {
 
 FakeLinkProber::FakeLinkProber(
-    link_prober::LinkProberStateMachine *linkProberStateMachine
+    link_prober::LinkProberStateMachineBase *linkProberStateMachine
 ) :
     mLinkProberStateMachine(linkProberStateMachine)
 {
@@ -43,8 +43,8 @@ void FakeLinkProber::postLinkProberEvent(E &e)
     boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_prober::LinkProberStateMachine::*) (decltype(e))>
-            (&link_prober::LinkProberStateMachine::processEvent<decltype(e)>),
+        static_cast<void (link_prober::LinkProberStateMachineBase::*) (decltype(e))>
+            (&link_prober::LinkProberStateMachineBase::processEvent<decltype(e)>),
         mLinkProberStateMachine,
         e
     )));
@@ -65,10 +65,10 @@ void FakeLinkProber::postSuspendTimerExpiredEvent()
     boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_prober::LinkProberStateMachine::*) (link_prober::SuspendTimerExpiredEvent&)>
-            (&link_prober::LinkProberStateMachine::processEvent),
+        static_cast<void (link_prober::LinkProberStateMachineBase::*) (link_prober::SuspendTimerExpiredEvent&)>
+            (&link_prober::LinkProberStateMachineBase::processEvent),
         mLinkProberStateMachine,
-        link_prober::LinkProberStateMachine::getSuspendTimerExpiredEvent()
+        link_prober::LinkProberStateMachineBase::getSuspendTimerExpiredEvent()
     )));
 }
 
@@ -131,7 +131,7 @@ void FakeLinkProber::resetIcmpPacketCounts()
     boost::asio::io_service::strand &strand = mLinkProberStateMachine->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        &link_prober::LinkProberStateMachine::handlePckLossRatioUpdate,
+        &link_prober::LinkProberStateMachineBase::handlePckLossRatioUpdate,
         mLinkProberStateMachine,
         mIcmpUnknownEventCount,
         mIcmpPacketCount
