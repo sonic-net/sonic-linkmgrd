@@ -74,6 +74,7 @@ LinkProber::LinkProber(
     mStrand(mIoService),
     mDeadlineTimer(mIoService),
     mSuspendTimer(mIoService),
+    mSwitchoverTimer(mIoService),
     mStream(mIoService)
 {
     try {
@@ -753,7 +754,7 @@ void LinkProber::resetIcmpPacketCounts()
 //
 //  adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
 //
-void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
+void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
 {
     MUXLOGWARNING(mMuxPortConfig.getPortName());
 
@@ -780,7 +781,7 @@ void LinkProber::revertProbeIntervalAfterSwitchComplete()
 }
 
 //
-// ---> handleSwitchoverTimeout(boost::syetem::error_code errorCode)
+// ---> handleSwitchoverTimeout(boost::system::error_code errorCode)
 //
 // handle switchover time out 
 // 

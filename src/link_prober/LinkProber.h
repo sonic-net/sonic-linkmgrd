@@ -448,7 +448,7 @@ private:
      * 
      * @return none
      */
-    void handleSwitchoverTimeout(boost::syetem::error_code errorCode);
+    void handleSwitchoverTimeout(boost::system::error_code errorCode);
 
     friend class test::LinkProberTest;
 

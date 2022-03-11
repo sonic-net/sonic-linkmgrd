@@ -337,7 +337,7 @@ void ActiveStandbyStateMachine::switchMuxState(
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mMuxPortPtr->setMuxState(label);
-        mDecreaseIntervalFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec())); 
+        mDecreaseIntervalFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec()); 
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
