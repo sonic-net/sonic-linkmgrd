@@ -314,6 +314,20 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
 }
 
 //
+// ---> getMuxPortCableType(const std::string &portName);
+//
+// retrieve the mux port cable type for port
+//
+inline common::MuxPortConfig::PortCableType MuxManager::getMuxPortCableType(const std::string &portName)
+{
+    PortCableTypeMapIterator portCableTypeIter = mPortCableTypeMap.find(portName);
+    if (portCableTypeIter == mPortCableTypeMap.end()) {
+        mPortCableTypeMap.insert({portName, common::MuxPortConfig::PortCableType::DefaultType});
+    }
+    return mPortCableTypeMap[portName];
+}
+
+//
 // ---> getMuxPortPtrOrThrow(const std::string &portName);
 //
 // retrieve a pointer to MuxPort if it exist or create a new MuxPort object
@@ -321,6 +335,7 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
 std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &portName)
 {
     std::shared_ptr<MuxPort> muxPortPtr;
+    common::MuxPortConfig::PortCableType muxPortCableType = getMuxPortCableType(portName);
 
     try {
         PortMapIterator portMapIterator = mPortMap.find(portName);
@@ -332,7 +347,7 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
                 portName,
                 serverId,
                 mIoService,
-                mPortCableTypeMap.at(portName)
+                muxPortCableType
             );
             mPortMap.insert({portName, muxPortPtr});
         }

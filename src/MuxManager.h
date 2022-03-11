@@ -359,6 +359,17 @@ public:
 
 private:
     /**
+    *@method getMuxPortCableType
+    *
+    *@brief retrieve the mux port cable type for port
+    *
+    *@param portName (in)   Mux port name
+    *
+    *@return port cable type
+    */
+    inline common::MuxPortConfig::PortCableType getMuxPortCableType(const std::string &portName);
+
+    /**
     *@method getMuxPortPtrOrThrow
     *
     *@brief retrieve a pointer to MuxPort if it exist or create a new MuxPort object
