@@ -755,7 +755,7 @@ void LinkProber::resetIcmpPacketCounts()
 //
 void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     mSwitchoverTimer.expires_from_now(boost::posix_time::milliseconds(switchTime_msec));
     mSwitchoverTimer.async_wait(mStrand.wrap(boost::bind(
@@ -773,7 +773,7 @@ void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
 // 
 void LinkProber::revertProbeIntervalAfterSwitchComplete()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     mSwitchoverTimer.cancel();
     mDecreaseProbingInterval = false;
@@ -786,7 +786,7 @@ void LinkProber::revertProbeIntervalAfterSwitchComplete()
 // 
 void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     mDecreaseProbingInterval = false;
     if (errorCode == boost::system::errc::success) {
@@ -801,6 +801,7 @@ void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
 //
 uint32_t LinkProber::getProbingInterval()
 {
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
     return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
 }
 
