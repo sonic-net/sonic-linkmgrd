@@ -33,6 +33,8 @@ IcmpUnknownEvent LinkProberStateMachineBase::mIcmpUnknownEvent;
 SuspendTimerExpiredEvent LinkProberStateMachineBase::mSuspendTimerExpiredEvent;
 SwitchActiveCommandCompleteEvent LinkProberStateMachineBase::mSwitchActiveCommandCompleteEvent;
 SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
+IcmpPeerActiveEvent LinkProberStateMachineBase::mIcmpPeerActiveEvent;
+IcmpPeerUnknownEvent LinkProberStateMachineBase::mIcmpPeerUnknownEvent;
 
 LinkProberStateMachineBase::LinkProberStateMachineBase(
     link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
@@ -44,7 +46,9 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
     mActiveState(*this, muxPortConfig),
     mStandbyState(*this, muxPortConfig),
     mUnknownState(*this, muxPortConfig),
-    mWaitState(*this, muxPortConfig)
+    mWaitState(*this, muxPortConfig),
+    mPeerActiveState(*this, muxPortConfig),
+    mPeerUnknownState(*this, muxPortConfig)
 {
 }
 
@@ -58,12 +62,11 @@ void LinkProberStateMachineBase::postLinkProberStateEvent(E &e)
 {
     boost::asio::io_service::strand &strand = getStrand();
     boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (LinkProberStateMachineBase::*) (decltype(e))>
-            (&LinkProberStateMachineBase::processEvent<decltype(e)>),
-        this,
-        e
-    )));
+    ioService.post(
+        strand.wrap(
+            [this, &e]() { processEvent(e); }
+        )
+    );
 }
 
 //
@@ -89,6 +92,22 @@ void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerEvent>(IcmpPee
 //
 template
 void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpUnknownEvent>(IcmpUnknownEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpPeerActiveEvent &e);
+//
+// post LinkProberState IcmpPeerActiveEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerActiveEvent>(IcmpPeerActiveEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpPeerUnknownEvent &e);
+//
+// post LinkProberState IcmpPeerUnknownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerUnknownEvent>(IcmpPeerUnknownEvent &event);
 
 //
 // ---> LinkProberStateMachineBase::processEvent(T &t);
@@ -137,7 +156,27 @@ void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEven
 //
 void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(IcmpPeerActiveEvent &suspendTimerExpiredEvent);
+//
+// process LinkProberState suspend timer expiry event
+//
+void LinkProberStateMachineBase::processEvent(IcmpPeerActiveEvent &icmpPeerActiveEvent)
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(IcmpPeerUnknownEvent &suspendTimerExpiredEvent);
+//
+// process LinkProberState suspend timer expiry event
+//
+void LinkProberStateMachineBase::processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent)
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
 }
 
 //
@@ -147,7 +186,7 @@ void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendT
 //
 void LinkProberStateMachineBase::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGERROR(mMuxPortConfig.getPortName());
 }
 
 //
@@ -157,7 +196,7 @@ void LinkProberStateMachineBase::processEvent(SwitchActiveCommandCompleteEvent &
 //
 void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGERROR(mMuxPortConfig.getPortName());
 }
 
 //
@@ -167,7 +206,7 @@ void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchAc
 //
 void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGERROR(mMuxPortConfig.getPortName());
 }
 
 //
@@ -177,7 +216,7 @@ void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_
 //
 void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGERROR(mMuxPortConfig.getPortName());
 }
 
 //
