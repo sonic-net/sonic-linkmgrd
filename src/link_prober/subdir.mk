@@ -1,6 +1,8 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
     ./src/link_prober/ActiveState.cpp \
+    ./src/link_prober/PeerActiveState.cpp \
+    ./src/link_prober/PeerUnknownState.cpp \
     ./src/link_prober/IcmpPayload.cpp \
     ./src/link_prober/LinkProber.cpp \
     ./src/link_prober/LinkProberState.cpp \
@@ -12,6 +14,8 @@ CPP_SRCS += \
 
 OBJS += \
     ./src/link_prober/ActiveState.o \
+    ./src/link_prober/PeerActiveState.o \
+    ./src/link_prober/PeerUnknownState.o \
     ./src/link_prober/IcmpPayload.o \
     ./src/link_prober/LinkProber.o \
     ./src/link_prober/LinkProberState.o \
@@ -23,6 +27,8 @@ OBJS += \
 
 CPP_DEPS += \
     ./src/link_prober/ActiveState.d \
+    ./src/link_prober/PeerActiveState.d \
+    ./src/link_prober/PeerUnknownState.d \
     ./src/link_prober/IcmpPayload.d \
     ./src/link_prober/LinkProber.d \
     ./src/link_prober/LinkProberState.d \
