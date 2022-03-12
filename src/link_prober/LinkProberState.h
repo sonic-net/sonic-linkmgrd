@@ -33,6 +33,8 @@ class IcmpPeerEvent;
 class IcmpSelfEvent;
 class IcmpUnknownEvent;
 class SuspendTimerExpiredEvent;
+class IcmpPeerActiveEvent;
+class IcmpPeerUnknownEvent;
 
 /**
  *@class LinkProberState
@@ -102,7 +104,7 @@ public:
     *
     *@return pointer to next LinkProberState
     */
-    virtual LinkProberState* handleEvent(IcmpPeerEvent &event) = 0;
+    virtual LinkProberState* handleEvent(IcmpPeerEvent &event);
 
     /**
     *@method handleEvent
@@ -113,7 +115,7 @@ public:
     *
     *@return pointer to next LinkProberState
     */
-    virtual LinkProberState* handleEvent(IcmpSelfEvent &event) = 0;
+    virtual LinkProberState* handleEvent(IcmpSelfEvent &event);
 
     /**
     *@method handleEvent
@@ -124,7 +126,29 @@ public:
     *
     *@return pointer to next LinkProberState
     */
-    virtual LinkProberState* handleEvent(IcmpUnknownEvent &event) = 0;
+    virtual LinkProberState* handleEvent(IcmpUnknownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpPeerActiveEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpPeerActiveEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpPeerActiveEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpPeerUnknownEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpPeerUnknownEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpPeerUnknownEvent &event);
 
     /**
     *@method getStateLabel
