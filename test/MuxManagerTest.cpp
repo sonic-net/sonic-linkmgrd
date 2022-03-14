@@ -227,6 +227,9 @@ void MuxManagerTest::createPort(std::string port)
     linkManagerStateMachine->setDecreaseIntervalFnPtr(
         boost::bind(&FakeLinkProber::decreaseProbeIntervalAfterSwitch, mFakeLinkProber.get(), boost::placeholders::_1)
     );
+    linkManagerStateMachine->setRevertIntervalFnPtr(
+        boost::bind(&FakeLinkProber::revertProbeIntervalAfterSwitchComplete, mFakeLinkProber.get())
+    );
 
     linkManagerStateMachine->mComponentInitState.set(0);
 
