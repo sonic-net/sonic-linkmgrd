@@ -898,6 +898,7 @@ void ActiveStandbyStateMachine::updateMuxLinkmgrState()
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
          ms(mCompositeState) == mux_state::MuxState::Label::Standby))) {
         label = Label::Healthy;
+        mRevertIntervalFnPtr();
     }
 
     setLabel(label);
