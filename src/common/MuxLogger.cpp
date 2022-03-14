@@ -86,7 +86,8 @@ MuxLoggerPtr MuxLogger::getInstance()
 void MuxLogger::initialize(
     std::string &prog,
     std::string &path,
-    boost::log::trivial::severity_level level
+    boost::log::trivial::severity_level level,
+    bool extraLogFile
 )
 {
     namespace trivial = boost::log::trivial;
@@ -99,12 +100,13 @@ void MuxLogger::initialize(
     boost::log::settings settings;
     boost::log::init_from_settings(settings);
 
-//    boost::filesystem::remove(path);
-
-//    boost::log::add_file_log(
-//        keywords::file_name = path,
-//        keywords::format = "[%TimeStamp%] [%Severity%] %Message%"
-//    );
+    if (extraLogFile) {
+        boost::filesystem::remove(path);
+        boost::log::add_file_log(
+            keywords::file_name = path,
+            keywords::format = "[%TimeStamp%] [%Severity%] %Message%"
+        );
+    }
 
     boost::log::add_common_attributes();
     boost::log::core::get()->set_exception_handler(
