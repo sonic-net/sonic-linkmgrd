@@ -616,7 +616,8 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
 
     if (mComponentInitState.all() && ms(mCompositeState) != label &&
         ms(mCompositeState) != mux_state::MuxState::Wait &&
-        ms(mCompositeState) != mux_state::MuxState::Error) {
+        ms(mCompositeState) != mux_state::MuxState::Error &&
+        ms(mCompositeState) != mux_state::MuxState::Unknown) {
         // notify swss of mux state change
         MUXLOGWARNING(boost::format("%s: Switching MUX state from '%s' to '%s' to match linkmgrd/xcvrd state") %
             mMuxPortConfig.getPortName() %
