@@ -893,6 +893,20 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
 
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxUnknownGetMuxStateActive)
+{
+    setMuxActive();
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    // even get mux state "active" in state db, which is mismatching from "unknown", LinkManager shouldn't switch to "unknown"
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    handleGetMuxState("active", 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxActive2Error2Active)
 {
     setMuxActive();

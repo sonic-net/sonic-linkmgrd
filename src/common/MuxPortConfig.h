@@ -59,7 +59,9 @@ public:
      * @brief Port cable type
      */
     enum PortCableType {
-        ActiveStandby
+        ActiveStandby,
+        ActiveActive,
+        DefaultType = ActiveStandby
     };
 
 public:
