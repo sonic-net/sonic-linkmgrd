@@ -168,13 +168,13 @@ void DbInterface::postMetricsEvent(
 //        link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
 //    );
 //
-// post link probe pck loss event to state db 
+// post link probe event to state db 
 void DbInterface::postLinkProberMetricsEvent(
         const std::string &portName, 
         link_manager::ActiveStandbyStateMachine::LinkProberMetrics metrics
 )
 {
-    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
+    MUXLOGWARNING(boost::format("%s: posting link prober event %s") %
         portName %
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
@@ -393,7 +393,7 @@ void DbInterface::handlePostLinkProberMetrics(
     boost::posix_time::ptime time
 )
 {
-    MUXLOGWARNING(boost::format("%s: posting link prober pck loss event %s") %
+    MUXLOGWARNING(boost::format("%s: posting link prober event %s") %
         portName %
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
