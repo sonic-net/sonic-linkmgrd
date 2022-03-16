@@ -109,13 +109,14 @@ public:
     *
     *@brief initialize MUX logging class
     *
-    *@param prog (in)   program name to be used when logging
-    *@param path (in)   path on file system to MUX logging file
-    *@param level (in)  minimum logging severity level
+    *@param prog (in)           program name to be used when logging
+    *@param path (in)           path on file system to MUX logging file
+    *@param level (in)          minimum logging severity level
+    *@param extraLogFile (in)   save log in an extra log file
     *
     *@return none
     */
-    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level);
+    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level, bool extraLogFile);
 
     /**
     *@method setLevel
