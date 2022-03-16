@@ -8,6 +8,7 @@ LIBS := \
     -lboost_log \
     -lboost_log_setup \
     -lboost_program_options \
+    -lboost_filesystem \
     -lnl-3 \
     -lnl-route-3
 
