@@ -30,6 +30,7 @@
 #include <linux/filter.h>
 
 #include <boost/asio.hpp>
+#include <boost/function.hpp>
 
 #include "IcmpPayload.h"
 #include "LinkProberStateMachine.h"
@@ -456,9 +457,18 @@ private:
     static SockFilter mIcmpFilter[];
 
 private:
+    void reportHeartbeatReplyReceivedActiveStandby();
+    void reportHeartbeatReplyReceivedActiveActive();
+    void reportHeartbeatReplyNotReceivedActiveStandby();
+    void reportHeartbeatReplyNotReceivedActiveActive();
+
+private:
     common::MuxPortConfig &mMuxPortConfig;
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
+
+    boost::function<void ()> mReportHeartbeatReplyReceivedFuncPtr;
+    boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;
 
     uint16_t mTxSeqNo = 0xffff;
     uint16_t mRxSelfSeqNo = 0;
