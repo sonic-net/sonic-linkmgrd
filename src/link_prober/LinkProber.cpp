@@ -271,7 +271,7 @@ void LinkProber::sendHeartbeat()
     MUXLOGTRACE(mMuxPortConfig.getPortName());
 
     // check if suspend timer is running
-    if (!mSuspendTx) {
+    if ((!mSuspendTx) && (!mShutdownTx)) {
         updateIcmpSequenceNo();
         boost::system::error_code errorCode;
         mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
@@ -746,6 +746,20 @@ void LinkProber::resetIcmpPacketCounts()
         mIcmpUnknownEventCount,
         mIcmpPacketCount
     )));
+}
+
+void LinkProber::shutdownTxProbes()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mShutdownTx = true;
+}
+
+void LinkProber::restartTxProbes()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mShutdownTx = false;
 }
 
 } /* namespace link_prober */

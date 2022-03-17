@@ -169,6 +169,24 @@ public:
     */
     void resetIcmpPacketCounts();
 
+    /**
+     * @method shutdownTxProbes
+     * 
+     * @brief stop sending ICMP ECHOREQUEST packets indefinitely.
+     * 
+     * @return none
+     */
+    void shutdownTxProbes();
+
+    /**
+     * @method restartTxProbes
+     * 
+     * @brief restart sending ICMP ECHOREQUEST packets
+     * 
+     * @return none
+     */
+    void restartTxProbes();
+
 private:
     /**
     *@method handleUpdateEthernetFrame
@@ -444,6 +462,7 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+    bool mShutdownTx = false;
 
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;

@@ -390,6 +390,15 @@ public:
     void handleDefaultRouteStateNotification(const std::string &routeState);
 
     /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    void shutdownOrRestartLinkProberOnDefaultRoute();
+
+    /**
      * @method handlePostPckLossRatioNotification
      * 
      * @brief handle get post pck loss ratio 
@@ -825,6 +834,8 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void ()> mShutdownTxFnPtr;
+    boost::function<void ()> mRestartTxFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
@@ -834,6 +845,8 @@ private:
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
     bool mContinuousLinkProberUnknownEvent = false;
+
+    std::string mDefaultRouteState = "na";
 
     std::bitset<ComponentCount> mComponentInitState = {0};
 };
