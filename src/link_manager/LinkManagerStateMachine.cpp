@@ -384,7 +384,7 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
                 &link_prober::LinkProber::shutdownTxProbes, mLinkProberPtr.get()
             );
             mRestartTxFnPtr = boost::bind(
-                &link_prober::LinkProber::restartTxProbes(), mLinkProberPtr.get()
+                &link_prober::LinkProber::restartTxProbes, mLinkProberPtr.get()
             );
             mComponentInitState.set(LinkProberComponent);
 
@@ -849,16 +849,17 @@ void ActiveStandbyStateMachine::handleDefaultRouteStateNotification(const std::s
 //
 void ActiveStandbyStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 {
-    if (mComponentInitState.all() && mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
-        if (mDefaultRouteState == "na") {
+    MUXLOGWARNING(boost::format("%s: default route state: %s") % mMuxPortConfig.getPortName() % mDefaultRouteState);
+
+    if (mComponentInitState.all()) {
+        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == "na") {
             mShutdownTxFnPtr();
-        }
-        
-        if (mDefaultRouteState == "ok")
-        {
+        } else {
+            // If mux mode is in manual/standby/active mode, we should restart link prober. 
+            // If default route state is "ok", we should retart link prober.
             mRestartTxFnPtr();
         }
-    } 
+    }
 }
 
 //
