@@ -224,6 +224,12 @@ void MuxManagerTest::createPort(std::string port)
     linkManagerStateMachine->setSuspendTxFnPtr(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
     );
+    linkManagerStateMachine->setShutdownTxFnPtr(
+        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachine->setRestartTxFnPtr(
+        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
 
     linkManagerStateMachine->mComponentInitState.set(0);
 

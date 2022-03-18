@@ -137,4 +137,18 @@ void FakeLinkProber::resetIcmpPacketCounts()
         mIcmpPacketCount
     )));
 }
+
+void FakeLinkProber::shutdownTxProbes()
+{
+    MUXLOGINFO("");
+
+    mShutdownTxProbeCallCount++;
+}
+
+void FakeLinkProber::restartTxProbes()
+{
+    MUXLOGINFO("");
+    
+    mRestartTxProbeCallCount++;
+}
 } /* namespace test */

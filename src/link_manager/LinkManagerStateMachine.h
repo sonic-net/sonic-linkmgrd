@@ -820,6 +820,32 @@ private:
     */
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
+    /**
+     * @method setShutdownTxFnPtr
+     * 
+     * @brief set shutdownTxFnPtr. This method is used for testing
+     * 
+     * @param shutdownTxFnPtr (in) pointer to new ShutdownTxFnPtr
+     * 
+     * @return none
+     */
+    void setShutdownTxFnPtr(boost::function<void ()> shutdownTxFnPtr) {
+        mShutdownTxFnPtr = shutdownTxFnPtr;
+    }
+
+    /**
+     * @method setRestartTxFnPtr
+     * 
+     * @brief set restartTxFnPtr. This method is used for testing
+     * 
+     * @param restartTxFnPtr (in) pointer to new restartTxFnPtr
+     * 
+     * @return none
+     */
+    void setRestartTxFnPtr(boost::function<void ()> restartTxFnPtr) {
+        mRestartTxFnPtr = restartTxFnPtr;
+    }
+
 private:
     link_state::LinkState::Label mPeerLinkState = link_state::LinkState::Label::Down;
 

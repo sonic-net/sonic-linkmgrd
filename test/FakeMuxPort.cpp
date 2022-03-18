@@ -79,6 +79,12 @@ FakeMuxPort::FakeMuxPort(
     getActiveStandbyStateMachinePtr()->setSendPeerSwitchCommandFnPtr(
         boost::bind(&FakeLinkProber::sendPeerSwitchCommand, mFakeLinkProber.get())
     );
+    getActiveStandbyStateMachinePtr()->setShutdownTxFnPtr(
+        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
+    );
+    getActiveStandbyStateMachinePtr()->setRestartTxFnPtr(
+        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
 }
 
 void FakeMuxPort::activateStateMachine()
