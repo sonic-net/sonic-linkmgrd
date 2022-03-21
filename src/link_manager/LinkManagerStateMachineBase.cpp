@@ -93,6 +93,16 @@ void LinkManagerStateMachineBase::noopTransitionFunction(CompositeState &nextSta
 }
 
 //
+// ---> handlePeerStateChange(LinkProberEvent& event, link_prober::LinkProberState::Label state)
+//
+// handle peer LinkProberEvent
+//
+void LinkManagerStateMachineBase::handlePeerStateChange(LinkProberEvent& event, link_prober::LinkProberState::Label state)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
 //
 // initialize LinkProber component. Note if this is the last component to be initialized,

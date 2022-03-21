@@ -179,6 +179,16 @@ public:
     virtual void handleStateChange(LinkStateEvent& event, link_state::LinkState::Label state) = 0;
 
     /**
+     * @method handlePeerStateChange
+     *
+     * @brief handle peer LinkProberEvent
+     *
+     * @param event                         reference to a peer LinkProberEvent object
+     * @param state                         new LinkProberState label
+     */
+    virtual void handlePeerStateChange(LinkProberEvent& event, link_prober::LinkProberState::Label state);
+
+    /**
      * @method getLinkProberEvent
      *
      * @brief Get the Link Prober Event object
