@@ -349,7 +349,7 @@ void LinkProber::handleRecv(
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    if (errorCode != boost::asio::error::operation_aborted) {
+    if (!errorCode) {
         iphdr *ipHeader = reinterpret_cast<iphdr *> (mRxBuffer.data() + sizeof(ether_header));
         icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (
             mRxBuffer.data() + sizeof(ether_header) + sizeof(iphdr)
@@ -456,10 +456,11 @@ void LinkProber::handleInitRecv(
 //
 void LinkProber::handleTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGTRACE(boost::format("%s: server: %d, mRxSelfSeqNo: %d, mTxSeqNo: %d") %
+    MUXLOGTRACE(boost::format("%s: server: %d, mRxSelfSeqNo: %d, mRxPeerSeqNo: %d, mTxSeqNo: %d") %
         mMuxPortConfig.getPortName() %
         mMuxPortConfig.getServerId() %
         mRxSelfSeqNo %
+        mRxPeerSeqNo %
         mTxSeqNo
     );
 
