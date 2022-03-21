@@ -128,6 +128,7 @@ public:
 };
 
 class LinkProberStateMachine;
+class LinkProberStateMachineActiveActive;
 
 /**
  *@class LinkProberStateMachineBase
@@ -441,6 +442,7 @@ private:
 
 private:
     friend class LinkProberStateMachine;
+    friend class LinkProberStateMachineActiveActive;
 
 private:
     link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
