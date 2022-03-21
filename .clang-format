@@ -28,6 +28,7 @@ BraceWrapping:
   BeforeCatch: false
   AfterFunction: true
   AfterNamespace: true
+  AfterClass: true
 # no line width limit
 ColumnLimit: 0
 KeepEmptyLinesAtTheStartOfBlocks: true
@@ -35,3 +36,4 @@ SortIncludes: true
 SpacesBeforeTrailingComments: 1
 # always break an open bracket, place closing bracket on a new line
 AlignAfterOpenBracket: BlockIndent
+SortIncludes: false
