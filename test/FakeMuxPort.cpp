@@ -52,11 +52,6 @@ FakeMuxPort::FakeMuxPort(
         std::make_shared<FakeLinkProber> (mActiveStandbyStateMachinePtr->getLinkProberStateMachinePtr().get())
     )
 {
-    std::string prog_name = "linkmgrd-test";
-    std::string log_filename = "/tmp/" + prog_name + ".log";
-    bool extraLogFile = true;
-    common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug, extraLogFile);
-    common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
     mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
     getActiveStandbyStateMachinePtr()->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())

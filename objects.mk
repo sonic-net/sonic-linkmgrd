@@ -13,5 +13,5 @@ LIBS := \
     -lnl-route-3
 
 LIBS_TEST := \
-    -lgtest_main \
-    -lgtest
+    -lgtest \
+    -lgmock
