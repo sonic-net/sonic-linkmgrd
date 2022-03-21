@@ -281,6 +281,17 @@ public:
     */
     inline uint32_t getDecreasedTimeoutIpv4_msec() const {return mMuxConfig.getDecreasedTimeoutIpv4_msec();};
 
+    /**
+     * @method setPortCableType
+     * 
+     * @brief Set the Port Cable Type object
+     * 
+     * @param portCableType         port cable type
+     * 
+     * @return none
+     */
+    inline void setPortCableType(PortCableType portCableType) { mPortCableType = portCableType; };
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
