@@ -38,6 +38,7 @@
 
 namespace test {
 class LinkProberTest;
+class LinkProberMockTest;
 }
 
 namespace link_prober
@@ -452,14 +453,46 @@ private:
     void handleSwitchoverTimeout(boost::system::error_code errorCode);
 
     friend class test::LinkProberTest;
+    friend class test::LinkProberMockTest;
 
 private:
     static SockFilter mIcmpFilter[];
 
 private:
+    /**
+     * @method reportHeartbeatReplyReceivedActiveStandby
+     * 
+     * @brief report heartbeat reply received to active-standby mode link prober state machine
+     * 
+     * @return none
+     */
     void reportHeartbeatReplyReceivedActiveStandby();
+
+    /**
+     * @method reportHeartbeatReplyReceivedActiveActive
+     * 
+     * @brief report heartbeat reply received to active-active mode link prober state machine
+     * 
+     * @return none
+     */
     void reportHeartbeatReplyReceivedActiveActive();
+
+    /**
+     * @method reportHeartbeatReplyNotReceivedActiveStandby
+     * 
+     * @brief report heartbeat reply not received to active-standby mode link prober state machine
+     * 
+     * @return none
+     */
     void reportHeartbeatReplyNotReceivedActiveStandby();
+
+    /**
+     * @method reportHeartbeatReplyNotReceivedActiveActive
+     * 
+     * @brief report heartbeat reply not received to active-active mode link prober state machine
+     * 
+     * @return none
+     */
     void reportHeartbeatReplyNotReceivedActiveActive();
 
 private:

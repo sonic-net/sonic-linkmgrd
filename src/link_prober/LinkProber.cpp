@@ -108,11 +108,11 @@ LinkProber::LinkProber(
         }
         case common::MuxPortConfig::PortCableType::ActiveStandby: {
             mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyReceivedActiveActive,
+                &LinkProber::reportHeartbeatReplyReceivedActiveStandby,
                 this
             );
             mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyNotReceivedActiveActive,
+                &LinkProber::reportHeartbeatReplyNotReceivedActiveStandby,
                 this
             );
             break;
