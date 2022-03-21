@@ -54,7 +54,8 @@ public:
         Standby,
         Unknown,
         Wait,
-
+        PeerActive,
+        PeerUnknown,
         Count
     };
 

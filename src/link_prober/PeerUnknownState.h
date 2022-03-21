@@ -106,7 +106,7 @@ public:
      *
      *@return LinkProberState Unknown label
      */
-    virtual LinkProberState::Label getStateLabel() override { return LinkProberState::Label::Unknown; };
+    virtual LinkProberState::Label getStateLabel() override { return LinkProberState::Label::PeerUnknown; };
 
 private:
     uint8_t mPeerEventCount = 0;
