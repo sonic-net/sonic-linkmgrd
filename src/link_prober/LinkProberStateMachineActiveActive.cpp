@@ -107,10 +107,20 @@ void LinkProberStateMachineActiveActive::processEvent(IcmpPeerActiveEvent &icmpP
 {
     LinkProberState *currentPeerState = getCurrentPeerState();
     LinkProberState *nextPeerState = currentPeerState->handleEvent(icmpPeerActiveEvent);
-    if (nextPeerState != currentPeerState) {
-        postLinkManagerPeerEvent(nextPeerState);
+    if (nextPeerState == nullptr) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
     }
-    setCurrentPeerState(nextPeerState);
 }
 
 //
@@ -122,10 +132,20 @@ void LinkProberStateMachineActiveActive::processEvent(IcmpPeerUnknownEvent &Icmp
 {
     LinkProberState *currentPeerState = getCurrentPeerState();
     LinkProberState *nextPeerState = currentPeerState->handleEvent(IcmpPeerUnknownEvent);
-    if (nextPeerState != currentPeerState) {
-        postLinkManagerPeerEvent(nextPeerState);
+    if (nextPeerState == nullptr) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
     }
-    setCurrentPeerState(nextPeerState);
 }
 
 //

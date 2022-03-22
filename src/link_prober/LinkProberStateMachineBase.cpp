@@ -119,10 +119,20 @@ void LinkProberStateMachineBase::processEvent(T &t)
 {
     LinkProberState *currentLinkProberState = dynamic_cast<LinkProberState *> (getCurrentState());
     LinkProberState *nextLinkProberState = currentLinkProberState->handleEvent(t);
-    if (nextLinkProberState != currentLinkProberState) {
-        postLinkManagerEvent(nextLinkProberState);
+    if (nextLinkProberState == nullptr) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentLinkProberState->getStateLabel()
+        );
+    } else {
+        if (nextLinkProberState != currentLinkProberState) {
+            postLinkManagerEvent(nextLinkProberState);
+        }
+        setCurrentState(nextLinkProberState);
     }
-    setCurrentState(nextLinkProberState);
 }
 
 //
