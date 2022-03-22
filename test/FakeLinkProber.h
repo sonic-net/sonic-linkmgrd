@@ -47,6 +47,9 @@ public:
     void resumeTxProbes();
     void sendPeerSwitchCommand();
     void resetIcmpPacketCounts();
+    void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
+    void revertProbeIntervalAfterSwitchComplete();
+
 
 public:
     uint32_t mInitializeCallCount = 0;
@@ -59,6 +62,9 @@ public:
 
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;
+
+    uint32_t mDecreaseIntervalCallCount = 0;
+    uint32_t mRevertIntervalCallCount = 0;
 
 private:
     link_prober::LinkProberStateMachine *mLinkProberStateMachine;

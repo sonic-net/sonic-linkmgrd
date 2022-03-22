@@ -124,6 +124,9 @@ public:
     enum class LinkProberMetrics {
         LinkProberUnknownStart, 
         LinkProberUnknownEnd,
+        LinkProberWaitStart,
+        LinkProberActiveStart,
+        LinkProberStandbyStart,
 
         Count
     };
@@ -927,6 +930,32 @@ private:
     */
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
+    /**
+     * @method setDecreaseIntervalFnPtr
+     * 
+     * @brief set new DecreaseIntervalFnPtr for the state machine. This method is used for testing
+     * 
+     * @param DecreaseIntervalFnPtr (in) pointer to new DecreaseIntervalFnPtr
+     * 
+     * @return none
+     */
+    void setDecreaseIntervalFnPtr(boost::function<void (uint32_t switchTime_msec)> DecreaseIntervalFnPtr) {
+        mDecreaseIntervalFnPtr = DecreaseIntervalFnPtr;
+    };
+
+    /**
+     * @method setRevertIntervalFnPtr
+     * 
+     * @brief set new RevertIntervalFnPtr for the state machine. This method is used for testing
+     * 
+     * @param  RevertIntervalFnPtr (in) pointer to new RevertIntervalFnPtr
+     * 
+     * @return none
+     */
+    void setRevertIntervalFnPtr(boost::function<void ()>  RevertIntervalFnPtr) {
+        mRevertIntervalFnPtr = RevertIntervalFnPtr;
+    };
+
 private:
     static TransitionFunction mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
                                                      [mux_state::MuxState::Label::Count]
@@ -968,6 +997,8 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void (uint32_t switchTime_msec)> mDecreaseIntervalFnPtr;
+    boost::function<void ()> mRevertIntervalFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
@@ -976,7 +1007,7 @@ private:
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
-    bool mContinuousLinkProberUnknownEvent = false;
+    bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;
