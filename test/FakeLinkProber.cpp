@@ -137,4 +137,19 @@ void FakeLinkProber::resetIcmpPacketCounts()
         mIcmpPacketCount
     )));
 }
+
+void FakeLinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
+{
+    MUXLOGINFO("");
+
+    mDecreaseIntervalCallCount++;
+}
+
+void FakeLinkProber::revertProbeIntervalAfterSwitchComplete()
+{
+    MUXLOGINFO("");
+
+    mRevertIntervalCallCount++;
+}
+
 } /* namespace test */
