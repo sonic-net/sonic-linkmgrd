@@ -437,7 +437,7 @@ private:
      * 
      * @return link prober interval
      */
-    uint32_t getProbingInterval(); 
+    inline uint32_t getProbingInterval(); 
 
     /**
      * @method handleSwitchoverTimeout

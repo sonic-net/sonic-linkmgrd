@@ -800,7 +800,7 @@ void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
 // 
 // get link prober interval
 //
-uint32_t LinkProber::getProbingInterval()
+inline uint32_t LinkProber::getProbingInterval()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
     return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
