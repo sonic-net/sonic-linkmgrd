@@ -304,7 +304,7 @@ void LinkManagerStateMachine::enterLinkProberState(CompositeState &nextState, li
 
     // link prober entering wait indicating switchover is initiated, but a switchover can be skipped if mode == manual.
     if(label == link_prober::LinkProberState::Label::Wait) {
-        mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberWaitStart);
+        mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberWaitStart);
     }
 }
 
