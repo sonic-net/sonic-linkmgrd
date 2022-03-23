@@ -260,15 +260,6 @@ public:
     */
     inline uint32_t getDecreasedTimeoutIpv4_msec() const {return mMuxConfig.getDecreasedTimeoutIpv4_msec();};
 
-    /**
-    *@method getDecreasedTimeoutIpv4_msec
-    *
-    *@brief getter for decreased IPv4 LinkProber timeout in msec
-    *
-    *@return timeout in msec
-    */
-    inline uint32_t getDecreasedTimeoutIpv4_msec() const {return mMuxConfig.getDecreasedTimeoutIpv4_msec();};
-
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
