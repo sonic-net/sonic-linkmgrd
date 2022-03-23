@@ -79,6 +79,9 @@ public:
     enum class LinkProberMetrics {
         LinkProberUnknownStart, 
         LinkProberUnknownEnd,
+        LinkProberWaitStart,
+        LinkProberActiveStart,
+        LinkProberStandbyStart,
 
         Count
     };
@@ -846,6 +849,32 @@ private:
         mRestartTxFnPtr = restartTxFnPtr;
     }
 
+    /**
+     * @method setDecreaseIntervalFnPtr
+     * 
+     * @brief set new DecreaseIntervalFnPtr for the state machine. This method is used for testing
+     * 
+     * @param DecreaseIntervalFnPtr (in) pointer to new DecreaseIntervalFnPtr
+     * 
+     * @return none
+     */
+    void setDecreaseIntervalFnPtr(boost::function<void (uint32_t switchTime_msec)> DecreaseIntervalFnPtr) {
+        mDecreaseIntervalFnPtr = DecreaseIntervalFnPtr;
+    };
+
+    /**
+     * @method setRevertIntervalFnPtr
+     * 
+     * @brief set new RevertIntervalFnPtr for the state machine. This method is used for testing
+     * 
+     * @param  RevertIntervalFnPtr (in) pointer to new RevertIntervalFnPtr
+     * 
+     * @return none
+     */
+    void setRevertIntervalFnPtr(boost::function<void ()>  RevertIntervalFnPtr) {
+        mRevertIntervalFnPtr = RevertIntervalFnPtr;
+    };
+
 private:
     link_state::LinkState::Label mPeerLinkState = link_state::LinkState::Label::Down;
 
@@ -860,8 +889,13 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+<<<<<<< HEAD
     boost::function<void ()> mShutdownTxFnPtr;
     boost::function<void ()> mRestartTxFnPtr;
+=======
+    boost::function<void (uint32_t switchTime_msec)> mDecreaseIntervalFnPtr;
+    boost::function<void ()> mRevertIntervalFnPtr;
+>>>>>>> c43cf7a95acd61a2191cdb4909e5c3615071b3aa
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
@@ -870,7 +904,7 @@ private:
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
-    bool mContinuousLinkProberUnknownEvent = false;
+    bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     std::string mDefaultRouteState = "na";
 

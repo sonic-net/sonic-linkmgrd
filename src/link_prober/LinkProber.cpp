@@ -74,6 +74,7 @@ LinkProber::LinkProber(
     mStrand(mIoService),
     mDeadlineTimer(mIoService),
     mSuspendTimer(mIoService),
+    mSwitchoverTimer(mIoService),
     mStream(mIoService)
 {
     try {
@@ -532,7 +533,7 @@ void LinkProber::startTimer()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
     // time out these heartbeats
-    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(mMuxPortConfig.getTimeoutIpv4_msec()));
+    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
     mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
         &LinkProber::handleTimeout,
         this,
@@ -760,6 +761,63 @@ void LinkProber::restartTxProbes()
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     mShutdownTx = false;
+}
+
+//
+// ---> decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
+//
+//  adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+//
+void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mSwitchoverTimer.expires_from_now(boost::posix_time::milliseconds(switchTime_msec));
+    mSwitchoverTimer.async_wait(mStrand.wrap(boost::bind(
+        &LinkProber::handleSwitchoverTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
+
+    mDecreaseProbingInterval = true;
+}
+
+// ---> revertProbeIntervalAfterSwitchComplete();
+//
+// revert probe interval change after switchover is completed
+// 
+void LinkProber::revertProbeIntervalAfterSwitchComplete()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mSwitchoverTimer.cancel();
+    mDecreaseProbingInterval = false;
+}
+
+//
+// ---> handleSwitchoverTimeout(boost::system::error_code errorCode)
+//
+// handle switchover time out 
+// 
+void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mDecreaseProbingInterval = false;
+    if (errorCode == boost::system::errc::success) {
+        MUXLOGWARNING(boost::format("%s: link prober timeout on waiting for expected ICMP event after switchover is triggered ") % mMuxPortConfig.getPortName());
+    }
+}
+
+//
+// ---> getProbingInterval
+// 
+// get link prober interval
+//
+inline uint32_t LinkProber::getProbingInterval()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
 }
 
 } /* namespace link_prober */
