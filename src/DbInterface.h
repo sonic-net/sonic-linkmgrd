@@ -176,10 +176,10 @@ public:
     /**
      * @method postLinkProberMetricsEvent
      * 
-     * @brief post link prober pck loss event
+     * @brief post link prober event
      * 
      * @param portName (in) port name 
-     * @param metrics (in) pck loss event name 
+     * @param metrics (in) link prober event name 
      * 
      * @return none
      * 
@@ -316,7 +316,7 @@ private:
     /**
      * @method handlePostLinkProberMetrics
      * 
-     * @brief post link prober pck loss event to state db 
+     * @brief post link prober event to state db 
      * 
      * @param portName (in) port name
      * @param metrics (in) metrics data

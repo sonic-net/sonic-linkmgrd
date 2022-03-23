@@ -266,6 +266,15 @@ public:
     *@return IPv4 address
     */
     inline boost::asio::ip::address getLoopbackIpv4Address() {return mLoopbackIpv4Address;};
+    
+    /**
+    *@method getDecreasedTimeoutIpv4_msec
+    *
+    *@brief getter for decreased IPv4 LinkProber timeout in msec
+    *
+    *@return timeout in msec
+    */
+    inline uint32_t getDecreasedTimeoutIpv4_msec() const {return mDecreasedTimeoutIpv4_msec;};
 
 private:
     uint8_t mNumberOfThreads = 5;
@@ -276,6 +285,8 @@ private:
     uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
+
+    uint32_t mDecreasedTimeoutIpv4_msec = 10;
 
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");

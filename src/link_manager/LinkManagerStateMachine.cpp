@@ -301,6 +301,11 @@ void LinkManagerStateMachine::enterLinkProberState(CompositeState &nextState, li
 {
     mLinkProberStateMachine.enterState(label);
     ps(nextState) = label;
+
+    // link prober entering wait indicating switchover is initiated, but a switchover can be skipped if mode == manual.
+    if(label == link_prober::LinkProberState::Label::Wait) {
+        mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberWaitStart);
+    }
 }
 
 //
@@ -358,6 +363,7 @@ void LinkManagerStateMachine::switchMuxState(
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mMuxPortPtr->setMuxState(label);
+        mDecreaseIntervalFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec()); 
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
@@ -405,6 +411,12 @@ void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::
             );
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
+            );
+            mDecreaseIntervalFnPtr = boost::bind(
+                &link_prober::LinkProber::decreaseProbeIntervalAfterSwitch, mLinkProberPtr.get(), boost::placeholders::_1
+            );
+            mRevertIntervalFnPtr = boost::bind(
+                &link_prober::LinkProber::revertProbeIntervalAfterSwitchComplete, mLinkProberPtr.get()
             );
             mComponentInitState.set(LinkProberComponent);
 
@@ -471,13 +483,17 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
             mLinkProberStateName[state]
         );
 
-        // update state db link prober metrics to collect pck loss data
+        // update state db link prober metrics to collect link prober state change data
         if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
             mContinuousLinkProberUnknownEvent = false;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
         } else if (state == link_prober::LinkProberState::Label::Unknown) {
             mContinuousLinkProberUnknownEvent = true;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownStart);
+        } else if (state == link_prober::LinkProberState::Label::Active) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberActiveStart);
+        } else if (state == link_prober::LinkProberState::Label::Standby) {
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberStandbyStart);
         }
 
         CompositeState nextState = mCompositeState;
@@ -860,7 +876,7 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
     if (mComponentInitState.test(MuxStateComponent)) {
         if (ms(mCompositeState) != mux_state::MuxState::Label::Standby && routeState == "na") {
             mSendPeerSwitchCommandFnPtr();
-            // In case Mux is in wait state, switchMuxSate(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established.
+            // In case Mux is in wait state, switchMuxState(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established.
             mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby);
         } else {
             enterMuxWaitState(mCompositeState);
@@ -909,6 +925,7 @@ void LinkManagerStateMachine::updateMuxLinkmgrState()
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
          ms(mCompositeState) == mux_state::MuxState::Label::Standby))) {
         label = Label::Healthy;
+        mRevertIntervalFnPtr();
     }
 
     setLabel(label);
@@ -988,7 +1005,7 @@ void LinkManagerStateMachine::handleMuxWaitTimeout(boost::system::error_code err
             // on the 3rd timeout, send switch active command to peer
             if (mMuxWaitTimeoutCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) { 
                 mSendPeerSwitchCommandFnPtr();
-                // Mux is in wait state, switchMuxSate(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established. 
+                // Mux is in wait state, switchMuxState(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established. 
                 mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby); 
             }
         } else {
