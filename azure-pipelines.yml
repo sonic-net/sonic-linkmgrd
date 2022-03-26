@@ -51,6 +51,7 @@ jobs:
           libboost-regex1.71-dev \
           googletest \
           libgtest-dev \
+          libgmock-dev \
           libgcc-8-dev \
           libhiredis0.14 \
           libhiredis-dev \

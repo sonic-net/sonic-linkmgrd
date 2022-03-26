@@ -38,6 +38,7 @@ class ActiveStandbyStateMachine;
 namespace link_prober {
 class LinkProberStateMachineBase;
 class LinkProberStateMachine;
+class LinkProberStateMachineActiveActive;
 }
 
 namespace mux_state {
@@ -46,6 +47,10 @@ class MuxStateMachine;
 
 namespace link_state {
 class LinkStateMachine;
+}
+
+namespace test {
+class MockLinkManagerStateMachine;
 }
 
 namespace common
@@ -111,8 +116,10 @@ private:
     friend class link_manager::ActiveStandbyStateMachine;
     friend class link_prober::LinkProberStateMachine;
     friend class link_prober::LinkProberStateMachineBase;
+    friend class link_prober::LinkProberStateMachineActiveActive;
     friend class mux_state::MuxStateMachine;
     friend class link_state::LinkStateMachine;
+    friend class test::MockLinkManagerStateMachine;
 
     /**
     *@method setCurrentState

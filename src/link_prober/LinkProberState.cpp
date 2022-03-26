@@ -21,6 +21,7 @@
  *      Author: Tamer Ahmed
  */
 
+#include "common/MuxLogger.h"
 
 #include <link_prober/LinkProberState.h>
 #include <link_prober/LinkProberStateMachine.h>
@@ -42,6 +43,36 @@ LinkProberState::LinkProberState(
         muxPortConfig
     )
 {
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpPeerEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpSelfEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpUnknownEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpPeerActiveEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpPeerUnknownEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
 }
 
 } /* namespace link_prober */

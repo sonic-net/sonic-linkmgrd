@@ -14,4 +14,5 @@ LIBS := \
 
 LIBS_TEST := \
     -lgtest_main \
-    -lgtest
+    -lgtest \
+    -lgmock

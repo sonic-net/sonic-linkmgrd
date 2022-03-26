@@ -18,6 +18,8 @@
 
 #include "common/StateMachine.h"
 #include "link_prober/ActiveState.h"
+#include "link_prober/PeerActiveState.h"
+#include "link_prober/PeerUnknownState.h"
 #include "link_prober/StandbyState.h"
 #include "link_prober/UnknownState.h"
 #include "link_prober/WaitState.h"
@@ -52,6 +54,7 @@ public:
     IcmpPeerEvent() = default;
     ~IcmpPeerEvent() = default;
 };
+
 /**
  *@class IcmpUnknownEvent
  *
@@ -62,6 +65,30 @@ class IcmpUnknownEvent
 public:
     IcmpUnknownEvent() = default;
     ~IcmpUnknownEvent() = default;
+};
+
+/**
+ *@class IcmpPeerActiveEvent
+ *
+ *@brief signals a IcmpPeerActiveEvent event to LinkProber state machine
+ */
+class IcmpPeerActiveEvent
+{
+public:
+    IcmpPeerActiveEvent() = default;
+    ~IcmpPeerActiveEvent() = default;
+};
+
+/**
+ *@class IcmpPeerUnknownEvent
+ *
+ *@brief signals a IcmpPeerUnknownEvent event to LinkProber state machine
+ */
+class IcmpPeerUnknownEvent
+{
+public:
+    IcmpPeerUnknownEvent() = default;
+    ~IcmpPeerUnknownEvent() = default;
 };
 
 /**
@@ -101,6 +128,7 @@ public:
 };
 
 class LinkProberStateMachine;
+class LinkProberStateMachineActiveActive;
 
 /**
  *@class LinkProberStateMachineBase
@@ -183,6 +211,28 @@ public:
      */
     template <typename T>
     void processEvent(T &t);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process IcmpPeerActiveEvent
+     *
+     *@param icmpPeerActiveEvent (in)  reference to the IcmpPeerActiveEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(IcmpPeerActiveEvent &icmpPeerActiveEvent);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process IcmpPeerUnknownEvent
+     *
+     *@param icmpPeerUnknownEvent (in)  reference to the IcmpPeerUnknownEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent);
 
     /**
      *@method processEvent
@@ -277,6 +327,24 @@ public:
     */
     WaitState* getWaitState() {return &mWaitState;};
 
+    /**
+    *@method getPeerActiveState
+    *
+    *@brief getter for PeerActiveState object
+    *
+    *@return pointer to PeerActiveState object
+    */
+    PeerActiveState* getPeerActiveState() {return &mPeerActiveState;};
+
+    /**
+    *@method getPeerUnknownState
+    *
+    *@brief getter for PeerUnknownState object
+    *
+    *@return pointer to PeerUnknownState object
+    */
+    PeerUnknownState* getPeerUnknownState() {return &mPeerUnknownState;};
+
 public:
     /**
      *@method getIcmpSelfEvent
@@ -332,6 +400,24 @@ public:
      */
     static SwitchActiveRequestEvent &getSwitchActiveRequestEvent() { return mSwitchActiveRequestEvent; };
 
+    /**
+     *@method getIcmpPeerActiveEvent
+     *
+     *@brief getter for IcmpPeerActiveEvent object
+     *
+     *@return pointer to IcmpPeerActiveEvent object
+     */
+    static IcmpPeerActiveEvent &getIcmpPeerActiveEvent() { return mIcmpPeerActiveEvent; }
+
+    /**
+     *@method getIcmpPeerUnknownEvent
+     *
+     *@brief getter for IcmpPeerUnknownEvent object
+     *
+     *@return pointer to IcmpPeerUnknownEvent object
+     */
+    static IcmpPeerUnknownEvent &getIcmpPeerUnknownEvent() { return mIcmpPeerUnknownEvent; }
+
 private:
     /**
      *@method postLinkManagerEvent
@@ -351,9 +437,12 @@ private:
     static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
     static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
     static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
+    static IcmpPeerActiveEvent mIcmpPeerActiveEvent;
+    static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
 
 private:
     friend class LinkProberStateMachine;
+    friend class LinkProberStateMachineActiveActive;
 
 private:
     link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
@@ -361,6 +450,8 @@ private:
     StandbyState mStandbyState;
     UnknownState mUnknownState;
     WaitState mWaitState;
+    PeerActiveState mPeerActiveState;
+    PeerUnknownState mPeerUnknownState;
 };
 } // namespace link_prober
 
