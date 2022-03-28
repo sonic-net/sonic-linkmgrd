@@ -461,12 +461,18 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
         if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
             mContinuousLinkProberUnknownEvent = false;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
-        } else if (state == link_prober::LinkProberState::Label::Unknown) {
+        } 
+        
+        if (mContinuousLinkProberUnknownEvent == false && state == link_prober::LinkProberState::Label::Unknown) {
             mContinuousLinkProberUnknownEvent = true;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownStart);
-        } else if (state == link_prober::LinkProberState::Label::Active) {
+        } 
+        
+        if (state == link_prober::LinkProberState::Label::Active) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberActiveStart);
-        } else if (state == link_prober::LinkProberState::Label::Standby) {
+        }
+         
+        if (state == link_prober::LinkProberState::Label::Standby) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberStandbyStart);
         }
 
