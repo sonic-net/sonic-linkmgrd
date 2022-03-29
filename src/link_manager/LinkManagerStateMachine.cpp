@@ -386,6 +386,12 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
+            mShutdownTxFnPtr = boost::bind(
+                &link_prober::LinkProber::shutdownTxProbes, mLinkProberPtr.get()
+            );
+            mRestartTxFnPtr = boost::bind(
+                &link_prober::LinkProber::restartTxProbes, mLinkProberPtr.get()
+            );
             mDecreaseIntervalFnPtr = boost::bind(
                 &link_prober::LinkProber::decreaseProbeIntervalAfterSwitch, mLinkProberPtr.get(), boost::placeholders::_1
             );
@@ -776,7 +782,7 @@ void ActiveStandbyStateMachine::handleMuxConfigNotification(const common::MuxPor
     }
 
     mMuxPortConfig.setMode(mode);
-
+    shutdownOrRestartLinkProberOnDefaultRoute();
 }
 
 //
@@ -847,15 +853,29 @@ void ActiveStandbyStateMachine::handleDefaultRouteStateNotification(const std::s
 {
     MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
 
-    if (mComponentInitState.test(MuxStateComponent)) {
-        if (ms(mCompositeState) != mux_state::MuxState::Label::Standby && routeState == "na") {
-            mSendPeerSwitchCommandFnPtr();
-            // In case Mux is in wait state, switchMuxState(standby) will be skipped. Setting mux state in app db to be standby so tunnel can be established.
-            mMuxPortPtr->setMuxState(mux_state::MuxState::Label::Standby);
+    mDefaultRouteState = routeState;
+    shutdownOrRestartLinkProberOnDefaultRoute();
+}
+
+//
+//
+// ---> shutdownOrRestartLinkProberOnDefaultRoute();
+//
+// shutdown or restart link prober based on default route state
+//
+void ActiveStandbyStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
+{
+    MUXLOGWARNING(boost::format("%s: default route state: %s") % mMuxPortConfig.getPortName() % mDefaultRouteState);
+
+    if (mComponentInitState.all()) {
+        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == "na") {
+            mShutdownTxFnPtr();
         } else {
-            enterMuxWaitState(mCompositeState);
+            // If mux mode is in manual/standby/active mode, we should restart link prober. 
+            // If default route state is "ok", we should retart link prober.
+            mRestartTxFnPtr();
         }
-    } 
+    }
 }
 
 //

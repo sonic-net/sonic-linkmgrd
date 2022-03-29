@@ -223,6 +223,17 @@ void LinkManagerStateMachineBase::handleDefaultRouteStateNotification(const std:
 }
 
 //
+//
+// ---> shutdownOrRestartLinkProberOnDefaultRoute();
+//
+// shutdown or restart link prober based on default route state
+//
+void LinkManagerStateMachineBase::shutdownOrRestartLinkProberOnDefaultRoute()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 //
 // handle post pck loss ratio

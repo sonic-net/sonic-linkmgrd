@@ -351,6 +351,15 @@ public:
     virtual void handleDefaultRouteStateNotification(const std::string& routeState);
 
     /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    virtual void shutdownOrRestartLinkProberOnDefaultRoute();
+
+    /**
      * @method handlePostPckLossRatioNotification
      *
      * @brief handle get post pck loss ratio

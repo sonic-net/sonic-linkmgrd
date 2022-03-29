@@ -172,6 +172,24 @@ public:
     void resetIcmpPacketCounts();
 
     /**
+     * @method shutdownTxProbes
+     * 
+     * @brief stop sending ICMP ECHOREQUEST packets indefinitely.
+     * 
+     * @return none
+     */
+    void shutdownTxProbes();
+
+    /**
+     * @method restartTxProbes
+     * 
+     * @brief restart sending ICMP ECHOREQUEST packets
+     * 
+     * @return none
+     */
+    void restartTxProbes();
+
+    /**
      * @method decreaseProbeIntervalAfterSwitch
      *  
      * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
@@ -529,6 +547,7 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+    bool mShutdownTx = false;
     bool mDecreaseProbingInterval = false;
 
     uint64_t mIcmpUnknownEventCount = 0;
