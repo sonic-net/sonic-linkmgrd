@@ -138,6 +138,20 @@ void FakeLinkProber::resetIcmpPacketCounts()
     )));
 }
 
+void FakeLinkProber::shutdownTxProbes()
+{
+    MUXLOGINFO("");
+
+    mShutdownTxProbeCallCount++;
+}
+
+void FakeLinkProber::restartTxProbes()
+{
+    MUXLOGINFO("");
+    
+    mRestartTxProbeCallCount++;
+}
+
 void FakeLinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
 {
     MUXLOGINFO("");
