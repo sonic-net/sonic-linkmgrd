@@ -15,7 +15,7 @@
  */
 
 /*
- * LinkProberStateMachine.cpp
+ * LinkProberStateMachineActiveStandby.cpp
  *
  *  Created on: Oct 7, 2020
  *      Author: tamer
@@ -23,15 +23,15 @@
 
 #include <boost/bind/bind.hpp>
 
-#include "link_prober/LinkProberStateMachine.h"
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
+#include "link_manager/LinkManagerStateMachineBase.h"
 #include "common/MuxLogger.h"
 #include "LinkProberState.h"
 
 namespace link_prober
 {
 //
-// ---> LinkProberStateMachine(
+// ---> LinkProberStateMachineActiveStandby(
 //          link_manager::LinkManagerStateMachineBase &linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
@@ -40,7 +40,7 @@ namespace link_prober
 //
 // class constructor
 //
-LinkProberStateMachine::LinkProberStateMachine(
+LinkProberStateMachineActiveStandby::LinkProberStateMachineActiveStandby(
     link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig,
@@ -56,7 +56,7 @@ LinkProberStateMachine::LinkProberStateMachine(
 //
 // force the state machine to enter a given state
 //
-void LinkProberStateMachine::enterState(LinkProberState::Label label)
+void LinkProberStateMachineActiveStandby::enterState(LinkProberState::Label label)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
     switch (label) {
@@ -82,7 +82,7 @@ void LinkProberStateMachine::enterState(LinkProberState::Label label)
 //
 // process LinkProberState suspend timer expiry event
 //
-void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
+void LinkProberStateMachineActiveStandby::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
@@ -97,7 +97,7 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
 //
 // process LinkProberState switch active complete event
 //
-void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
+void LinkProberStateMachineActiveStandby::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
@@ -112,7 +112,7 @@ void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &swit
 //
 // process LinkProberState switch active request event
 //
-void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
+void LinkProberStateMachineActiveStandby::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
@@ -127,7 +127,7 @@ void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActive
 //
 // process LinkProberState MAC address update event
 //
-void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
+void LinkProberStateMachineActiveStandby::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
@@ -143,7 +143,7 @@ void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, E
 //
 // post pck loss ratio update to link manager
 //
-void LinkProberStateMachine::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) 
+void LinkProberStateMachineActiveStandby::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) 
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();

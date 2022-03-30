@@ -18,7 +18,7 @@
 #include <boost/bind/bind.hpp>
 
 #include "common/MuxLogger.h"
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_manager/LinkManagerStateMachineBase.h"
 #include "link_prober/LinkProberState.h"
 
 namespace link_prober

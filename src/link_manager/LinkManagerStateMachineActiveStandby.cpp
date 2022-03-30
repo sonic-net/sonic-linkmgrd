@@ -23,7 +23,7 @@
 
 #include <boost/bind/bind.hpp>
 
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_manager/LinkManagerStateMachineActiveStandby.h"
 #include "common/MuxLogger.h"
 #include "common/MuxException.h"
 #include "MuxPort.h"

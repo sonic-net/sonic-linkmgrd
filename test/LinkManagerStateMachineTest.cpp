@@ -22,7 +22,7 @@
  */
 
 #include "LinkManagerStateMachineTest.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineBase.h"
 
 #define VALIDATE_STATE(p, m, l) \
     do { \
