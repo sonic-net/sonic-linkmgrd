@@ -15,7 +15,7 @@
  */
 
 /*
- * LinkProberStateMachine.h
+ * LinkProberStateMachineActiveStandby.h
  *
  *  Created on: Oct 7, 2020
  *      Author: tamer
@@ -33,11 +33,11 @@ class LinkManagerStateMachineBase;
 namespace link_prober
 {
 /**
- *@class LinkProberStateMachine
+ *@class LinkProberStateMachineActiveStandby
  *
  *@brief maintains LinkProber state machine
  */
-class LinkProberStateMachine:  public LinkProberStateMachineBase
+class LinkProberStateMachineActiveStandby:  public LinkProberStateMachineBase
 {
 public:
     using LinkProberStateMachineBase::processEvent;
@@ -45,23 +45,23 @@ public:
 
 public:
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineActiveStandby
     *
     *@brief class default constructor
     */
-    LinkProberStateMachine() = delete;
+    LinkProberStateMachineActiveStandby() = delete;
 
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineActiveStandby
     *
     *@brief class copy constructor
     *
-    *@param LinkProberStateMachine (in)  reference to LinkProberStateMachine object to be copied
+    *@param LinkProberStateMachineActiveStandby (in)  reference to LinkProberStateMachineActiveStandby object to be copied
     */
-    LinkProberStateMachine(const LinkProberStateMachine &) = delete;
+    LinkProberStateMachineActiveStandby(const LinkProberStateMachineActiveStandby &) = delete;
 
     /**
-    *@method LinkProberStateMachine
+    *@method LinkProberStateMachineActiveStandby
     *
     *@brief class constructor
     *
@@ -70,7 +70,7 @@ public:
     *@param muxPortConfig (in)              reference to MuxPortConfig object
     *@param label (in)                      state machine initial state
     */
-    LinkProberStateMachine(
+    LinkProberStateMachineActiveStandby(
         link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig,
@@ -78,11 +78,11 @@ public:
     );
 
     /**
-    *@method ~LinkProberStateMachine
+    *@method ~LinkProberStateMachineActiveStandby
     *
     *@brief class destructor
     */
-    virtual ~LinkProberStateMachine() = default;
+    virtual ~LinkProberStateMachineActiveStandby() = default;
 
     /**
     *@method enterState

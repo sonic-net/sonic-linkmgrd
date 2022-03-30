@@ -24,7 +24,7 @@
 #include "link_prober/ActiveState.h"
 #include "link_prober/StandbyState.h"
 #include "link_prober/WaitState.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineBase.h"
 
 #include "common/MuxLogger.h"
 

@@ -30,8 +30,9 @@
 #include "MuxPort.h"
 #include "common/MuxConfig.h"
 #include "common/MuxLogger.h"
-#include "link_manager/LinkManagerStateMachine.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_manager/LinkManagerStateMachineActiveStandby.h"
+#include "link_prober/LinkProberStateMachineActiveActive.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
 #include "link_prober/LinkProber.h"
 #include "link_prober/IcmpPayload.h"
 

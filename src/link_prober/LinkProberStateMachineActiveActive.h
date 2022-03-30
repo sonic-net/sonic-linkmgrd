@@ -46,7 +46,7 @@ public:
      *
      *@brief class copy constructor
      *
-     *@param LinkProberStateMachineActiveActive (in)  reference to LinkProberStateMachine object to be copied
+     *@param LinkProberStateMachineActiveActive (in)  reference to LinkProberStateMachineActiveActive object to be copied
      */
     LinkProberStateMachineActiveActive(const LinkProberStateMachineActiveActive &) = delete;
 

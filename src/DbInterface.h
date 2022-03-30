@@ -35,7 +35,7 @@
 #include "swss/producerstatetable.h"
 #include "swss/subscriberstatetable.h"
 
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_manager/LinkManagerStateMachineActiveStandby.h"
 #include "mux_state/MuxState.h"
 
 namespace test {

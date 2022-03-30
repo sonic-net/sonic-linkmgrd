@@ -388,7 +388,7 @@ public:
     *
     *@brief getter for LinkProberStateMachineBase pointer
     *
-    *@return reference to LinkProberStateMachine pointer
+    *@return reference to LinkProberStateMachineBase pointer
     */
     std::shared_ptr<link_prober::LinkProberStateMachineBase> getLinkProberStateMachinePtr() {return mLinkProberStateMachinePtr;};
 

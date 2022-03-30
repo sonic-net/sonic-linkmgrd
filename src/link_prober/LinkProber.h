@@ -33,7 +33,8 @@
 #include <boost/function.hpp>
 
 #include "IcmpPayload.h"
-#include "LinkProberStateMachine.h"
+#include "LinkProberStateMachineActiveActive.h"
+#include "LinkProberStateMachineActiveStandby.h"
 #include "common/MuxPortConfig.h"
 
 namespace test {
