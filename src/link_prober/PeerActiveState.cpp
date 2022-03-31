@@ -16,7 +16,7 @@
 
 #include "link_prober/PeerActiveState.h"
 #include "link_prober/PeerUnknownState.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineBase.h"
 
 #include "common/MuxLogger.h"
 

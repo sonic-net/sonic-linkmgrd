@@ -28,8 +28,8 @@
 #include <memory>
 
 #include "link_prober/LinkProber.h"
-#include "link_prober/LinkProberStateMachine.h"
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_prober/LinkProberStateMachineBase.h"
+#include "link_manager/LinkManagerStateMachineActiveStandby.h"
 
 #include "common/MuxPortConfig.h"
 #include "DbInterface.h"

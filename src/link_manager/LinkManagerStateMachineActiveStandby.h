@@ -21,8 +21,8 @@
  *      Author: tamer
  */
 
-#ifndef LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_
-#define LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_
+#ifndef LINK_MANAGER_LINKMANAGERSTATEMACHINEACTIVESTANDBY_H_
+#define LINK_MANAGER_LINKMANAGERSTATEMACHINEACTIVESTANDBY_H_
 
 #include <bitset>
 #include <functional>
@@ -391,6 +391,15 @@ public:
      * @return none
     */
     void handleDefaultRouteStateNotification(const std::string &routeState);
+
+    /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    void shutdownOrRestartLinkProberOnDefaultRoute();
 
     /**
      * @method handlePostPckLossRatioNotification
@@ -815,6 +824,32 @@ private:
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
     /**
+     * @method setShutdownTxFnPtr
+     * 
+     * @brief set shutdownTxFnPtr. This method is used for testing
+     * 
+     * @param shutdownTxFnPtr (in) pointer to new ShutdownTxFnPtr
+     * 
+     * @return none
+     */
+    void setShutdownTxFnPtr(boost::function<void ()> shutdownTxFnPtr) {
+        mShutdownTxFnPtr = shutdownTxFnPtr;
+    }
+
+    /**
+     * @method setRestartTxFnPtr
+     * 
+     * @brief set restartTxFnPtr. This method is used for testing
+     * 
+     * @param restartTxFnPtr (in) pointer to new restartTxFnPtr
+     * 
+     * @return none
+     */
+    void setRestartTxFnPtr(boost::function<void ()> restartTxFnPtr) {
+        mRestartTxFnPtr = restartTxFnPtr;
+    }
+
+    /**
      * @method setDecreaseIntervalFnPtr
      * 
      * @brief set new DecreaseIntervalFnPtr for the state machine. This method is used for testing
@@ -854,6 +889,8 @@ private:
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void ()> mShutdownTxFnPtr;
+    boost::function<void ()> mRestartTxFnPtr;
     boost::function<void (uint32_t switchTime_msec)> mDecreaseIntervalFnPtr;
     boost::function<void ()> mRevertIntervalFnPtr;
 
@@ -866,9 +903,11 @@ private:
 
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
+    std::string mDefaultRouteState = "na";
+
     std::bitset<ComponentCount> mComponentInitState = {0};
 };
 
 } /* namespace link_manager */
 
-#endif /* LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_ */
+#endif /* LINK_MANAGER_LINKMANAGERSTATEMACHINEACTIVESTANDBY_H_ */

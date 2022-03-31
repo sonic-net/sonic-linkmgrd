@@ -33,7 +33,8 @@
 #include <boost/function.hpp>
 
 #include "IcmpPayload.h"
-#include "LinkProberStateMachine.h"
+#include "LinkProberStateMachineActiveActive.h"
+#include "LinkProberStateMachineActiveStandby.h"
 #include "common/MuxPortConfig.h"
 
 namespace test {
@@ -170,6 +171,24 @@ public:
      * @return none
     */
     void resetIcmpPacketCounts();
+
+    /**
+     * @method shutdownTxProbes
+     * 
+     * @brief stop sending ICMP ECHOREQUEST packets indefinitely.
+     * 
+     * @return none
+     */
+    void shutdownTxProbes();
+
+    /**
+     * @method restartTxProbes
+     * 
+     * @brief restart sending ICMP ECHOREQUEST packets
+     * 
+     * @return none
+     */
+    void restartTxProbes();
 
     /**
      * @method decreaseProbeIntervalAfterSwitch
@@ -529,6 +548,7 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
     bool mSuspendTx = false;
+    bool mShutdownTx = false;
     bool mDecreaseProbingInterval = false;
 
     uint64_t mIcmpUnknownEventCount = 0;

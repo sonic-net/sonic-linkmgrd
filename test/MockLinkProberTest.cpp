@@ -48,7 +48,7 @@ void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableTyp
     );
     switch (portCableType) {
         case common::MuxPortConfig::PortCableType::ActiveStandby: {
-            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachine>(
+            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveStandby>(
                 mLinkManagerStateMachinePtr.get(),
                 mStrand,
                 mMuxPortConfig,

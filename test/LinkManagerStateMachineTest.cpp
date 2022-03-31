@@ -22,7 +22,7 @@
  */
 
 #include "LinkManagerStateMachineTest.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineBase.h"
 
 #define VALIDATE_STATE(p, m, l) \
     do { \
@@ -1059,29 +1059,18 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
 {
     setMuxActive();
 
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 0);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
     postDefaultRouteEvent("na", 3);
-    
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 1);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK) 
 {
     setMuxStandby();
 
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
-    postDefaultRouteEvent("ok", 2);
-
-    VALIDATE_STATE(Standby, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
-
-    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
-    VALIDATE_STATE(Standby, Wait, Up);
-
-    handleMuxState("standby", 3);
-    VALIDATE_STATE(Standby, Standby, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,0);
+    postDefaultRouteEvent("ok", 3);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
