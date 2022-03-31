@@ -24,7 +24,7 @@
 #ifndef FAKELINKPROBER_H_
 #define FAKELINKPROBER_H_
 
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
 namespace test
 {
 

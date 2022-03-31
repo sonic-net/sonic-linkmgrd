@@ -25,7 +25,7 @@
 
 #include "common/MuxLogger.h"
 #include "link_state/LinkStateMachine.h"
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_manager/LinkManagerStateMachineBase.h"
 
 
 namespace link_state

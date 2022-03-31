@@ -24,7 +24,7 @@
 #include "common/MuxLogger.h"
 
 #include <link_prober/LinkProberState.h>
-#include <link_prober/LinkProberStateMachine.h>
+#include <link_prober/LinkProberStateMachineBase.h>
 
 namespace link_prober
 {

@@ -24,7 +24,7 @@
 #include <boost/bind/bind.hpp>
 
 #include "mux_state/MuxStateMachine.h"
-#include "link_manager/LinkManagerStateMachine.h"
+#include "link_manager/LinkManagerStateMachineBase.h"
 #include "common/MuxLogger.h"
 #include "MuxState.h"
 

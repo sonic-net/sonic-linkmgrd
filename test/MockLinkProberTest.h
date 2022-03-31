@@ -21,7 +21,7 @@
 
 #include "common/MuxPortConfig.h"
 #include "link_prober/LinkProber.h"
-#include "link_prober/LinkProberStateMachine.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
 #include "link_prober/LinkProberStateMachineActiveActive.h"
 
 #include "MockLinkManagerStateMachine.h"
