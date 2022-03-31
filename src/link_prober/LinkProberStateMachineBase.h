@@ -127,7 +127,7 @@ public:
     ~SwitchActiveRequestEvent() = default;
 };
 
-class LinkProberStateMachine;
+class LinkProberStateMachineActiveStandby;
 class LinkProberStateMachineActiveActive;
 
 /**
@@ -150,9 +150,9 @@ public:
      *
      *@brief class copy constructor
      *
-     *@param LinkProberStateMachine (in)  reference to LinkProberStateMachineBase object to be copied
+     *@param LinkProberStateMachineBase (in)  reference to LinkProberStateMachineBase object to be copied
      */
-    LinkProberStateMachineBase(const LinkProberStateMachine &) = delete;
+    LinkProberStateMachineBase(const LinkProberStateMachineBase &) = delete;
 
     /**
      *@method LinkProberStateMachineBase
@@ -441,7 +441,7 @@ private:
     static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
 
 private:
-    friend class LinkProberStateMachine;
+    friend class LinkProberStateMachineActiveStandby;
     friend class LinkProberStateMachineActiveActive;
 
 private:
