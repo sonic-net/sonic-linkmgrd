@@ -292,6 +292,15 @@ public:
      */
     inline void setPortCableType(PortCableType portCableType) { mPortCableType = portCableType; };
 
+    /**
+     * @method ifEnableSwitchoverMeasurement
+     * 
+     * @brief check if the feature that decreases link prober interval to measure switch overhead is enabled or not 
+     * 
+     * @return if switch overhead measurement feature is enabled
+     */
+    inline bool ifEnableSwitchoverMeasurement() {return mEnableSwitchoverMeasurement;};
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
@@ -300,6 +309,8 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
+
+    bool mEnableSwitchoverMeasurement = false;
 };
 
 } /* namespace common */
