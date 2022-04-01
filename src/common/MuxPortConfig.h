@@ -276,7 +276,6 @@ private:
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
     Mode mMode = Manual;
-    PortCableType mPortCableType;
 
     bool mEnableSwitchoverMeasurement = false;
 };
