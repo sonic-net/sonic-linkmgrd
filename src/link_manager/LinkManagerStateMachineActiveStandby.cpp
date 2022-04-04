@@ -861,6 +861,9 @@ void ActiveStandbyStateMachine::handleDefaultRouteStateNotification(const std::s
 {
     MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
 
+    if (mDefaultRouteState == "na" && routeState == "ok") {
+        initLinkProberState(mCompositeState);
+    }
     mDefaultRouteState = routeState;
     shutdownOrRestartLinkProberOnDefaultRoute();
 }
