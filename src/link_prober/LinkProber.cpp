@@ -299,9 +299,10 @@ void LinkProber::sendHeartbeat()
 {
     MUXLOGTRACE(mMuxPortConfig.getPortName());
 
+    updateIcmpSequenceNo();
+    
     // check if suspend timer is running
     if ((!mSuspendTx) && (!mShutdownTx)) {
-        updateIcmpSequenceNo();
         boost::system::error_code errorCode;
         mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
 

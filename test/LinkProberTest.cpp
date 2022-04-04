@@ -160,6 +160,17 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
+
+    // sequence number should still be updated when heartbeat is suspended
+    EXPECT_EQ(getRxSelfSeqNo(), 0);
+    EXPECT_EQ(getRxPeerSeqNo(), 0);
+
+    handleSuspendTxProbes();
+    EXPECT_TRUE(getSuspendTx());
+    
+    handleSendHeartbeat();
+    EXPECT_EQ(getRxSelfSeqNo(), 1);
+    EXPECT_EQ(getRxPeerSeqNo(), 1);
 }
 
 TEST_F(LinkProberTest, GenerateGuid)
