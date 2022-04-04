@@ -59,7 +59,7 @@ MuxManager::MuxManager() :
 //
 // initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db
 //
-void MuxManager::initialize()
+void MuxManager::initialize(bool enable_feature_measurement)
 {
     for (uint8_t i = 0; (mMuxConfig.getNumberOfThreads() > 2) &&
                         (i < mMuxConfig.getNumberOfThreads() - 2); i++) {
@@ -69,6 +69,8 @@ void MuxManager::initialize()
     }
 
     mDbInterfacePtr->initialize();
+
+    mMuxConfig.enableSwitchoverMeasurement(enable_feature_measurement);
 }
 
 //

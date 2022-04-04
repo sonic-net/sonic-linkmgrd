@@ -66,6 +66,7 @@ int main(int argc, const char* argv[])
     //
     boost::log::trivial::severity_level level;
     bool extraLogFile = false;
+    bool measureSwitchover = false;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
@@ -78,6 +79,9 @@ int main(int argc, const char* argv[])
         ("extra_log_file,e",
          program_options::bool_switch(&extraLogFile)->default_value(false),
          "Store logs in an extra log file")
+         ("measure_switchover_overhead, m",
+         program_options::bool_switch(&measureSwitchover)->default_value(false),
+         "Decrease link prober interval after switchover to better measure switchover overhead")
     ;
 
     //
@@ -115,7 +119,7 @@ int main(int argc, const char* argv[])
         link_prober::IcmpPayload::generateGuid();
 
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
-        muxManagerPtr->initialize();
+        muxManagerPtr->initialize(measureSwitchover);
         muxManagerPtr->run();
         muxManagerPtr->deinitialize();
     }
