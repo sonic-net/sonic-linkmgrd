@@ -665,7 +665,7 @@ void LinkManagerStateMachine::handleProbeMuxStateNotification(mux_state::MuxStat
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::DriverUpdate) {
-            MUXLOGERROR(boost::format("%s: Received unsolicited MUX state probe notification!") %
+            MUXLOGWARNING(boost::format("%s: Received unsolicited MUX state probe notification!") %
                 mMuxPortConfig.getPortName()
             );
         }
@@ -707,7 +707,7 @@ void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::La
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::SwssUpdate ||
             ms(mCompositeState) != mux_state::MuxState::Wait) {
-            MUXLOGERROR(boost::format("%s: Received unsolicited MUX state change notification!") %
+            MUXLOGWARNING(boost::format("%s: Received unsolicited MUX state change notification!") %
                 mMuxPortConfig.getPortName()
             );
         }
