@@ -42,6 +42,8 @@ public:
     void initializeSendBuffer() {mLinkProber.initializeSendBuffer();};
     void handleUpdateEthernetFrame() {mLinkProber.handleUpdateEthernetFrame();};
     void handleUpdateSequenceNumber() {mLinkProber.updateIcmpSequenceNo();};
+    void handleSuspendTxProbes() {mLinkProber.suspendTxProbes(300);};
+    void handleSendHeartbeat() {mLinkProber.sendHeartbeat();};
     void resetTxBufferTlv() {mLinkProber.resetTxBufferTlv();};
     size_t getTxPacketSize() {return mLinkProber.mTxPacketSize;};
     size_t appendTlvCommand(link_prober::Command commandType);
@@ -54,6 +56,7 @@ public:
 
     uint16_t getRxSelfSeqNo() {return mLinkProber.mRxSelfSeqNo;};
     uint16_t getRxPeerSeqNo() {return mLinkProber.mRxPeerSeqNo;};
+    bool getSuspendTx() {return mLinkProber.mSuspendTx;};
 
     boost::asio::io_service mIoService;
     common::MuxConfig mMuxConfig;
