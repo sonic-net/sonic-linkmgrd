@@ -903,7 +903,7 @@ private:
 
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
-    std::string mDefaultRouteState = "na";
+    std::string mDefaultRouteState = "ok";
 
     std::bitset<ComponentCount> mComponentInitState = {0};
 };
