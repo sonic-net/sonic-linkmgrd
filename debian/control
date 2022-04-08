@@ -10,8 +10,5 @@ XS-Go-Import-Path: github.com/Azure/sonic-linkmgrd
 Package: sonic-linkmgrd
 Architecture: any
 Built-Using: ${misc:Built-Using}
-Depends: libboost-program-options1.71.0,
-         libboost-thread1.71.0,
-         libboost-date-time1.71.0,
-         libboost-log1.71.0
+Depends: ${shlibs:Depends}
 Description: SONiC LINK ManaGeR Daemon (linkmgrd)
