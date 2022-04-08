@@ -20,7 +20,7 @@ jobs:
     vmImage: 'ubuntu-20.04'
 
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
 
   steps:
   - script: |
@@ -32,27 +32,27 @@ jobs:
       sudo apt-get install -y dotnet-sdk-6.0
     displayName: install .Net
   - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
+      sudo apt-get update 
+      sudo apt-get install -y --fix-broken\
+          libboost-dev \
+          libboost-program-options-dev \
+          libboost-system-dev \
+          libboost-thread-dev \
+          libboost-atomic-dev \
+          libboost-chrono-dev \
+          libboost-container-dev \
+          libboost-context-dev \
+          libboost-contract-dev \
+          libboost-coroutine-dev \
+          libboost-date-time-dev \
+          libboost-fiber-dev \
+          libboost-filesystem-dev \
+          libboost-graph-parallel-dev \
+          libboost-log-dev \
+          libboost-regex-dev \
           googletest \
           libgtest-dev \
           libgmock-dev \
-          libgcc-8-dev \
           libhiredis0.14 \
           libhiredis-dev \
           libnl-3-dev \
@@ -98,30 +98,30 @@ jobs:
   timeoutInMinutes: 180
   pool: sonicbld-arm64
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye-arm64:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-arm64:latest
 
   steps:
   - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
+      sudo apt-get update 
+      sudo apt-get install -y --fix-broken\
+          libboost-dev \
+          libboost-program-options-dev \
+          libboost-system-dev \
+          libboost-thread-dev \
+          libboost-atomic-dev \
+          libboost-chrono-dev \
+          libboost-container-dev \
+          libboost-context-dev \
+          libboost-contract-dev \
+          libboost-coroutine-dev \
+          libboost-date-time-dev \
+          libboost-fiber-dev \
+          libboost-filesystem-dev \
+          libboost-graph-parallel-dev \
+          libboost-log-dev \
+          libboost-regex-dev \
           googletest \
           libgtest-dev \
-          libgcc-8-dev \
           libhiredis0.14 \
           libhiredis-dev \
           libnl-3-dev \
@@ -162,30 +162,31 @@ jobs:
   timeoutInMinutes: 180
   pool: sonicbld-armhf
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye-armhf:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-armhf:latest
 
   steps:
   - script: |
-      sudo apt-get install -y \
-          libboost1.71-dev \
-          libboost-program-options1.71-dev \
-          libboost-system1.71-dev \
-          libboost-thread1.71-dev \
-          libboost-atomic1.71-dev \
-          libboost-chrono1.71-dev \
-          libboost-container1.71-dev \
-          libboost-context1.71-dev \
-          libboost-contract1.71-dev \
-          libboost-coroutine1.71-dev \
-          libboost-date-time1.71-dev \
-          libboost-fiber1.71-dev \
-          libboost-filesystem1.71-dev \
-          libboost-graph-parallel1.71-dev \
-          libboost-log1.71-dev \
-          libboost-regex1.71-dev \
+      sudo apt-get update 
+      sudo apt-get clean 
+      sudo apt-get install -y --fix-broken\
+          libboost-dev \
+          libboost-program-options-dev \
+          libboost-system-dev \
+          libboost-thread-dev \
+          libboost-atomic-dev \
+          libboost-chrono-dev \
+          libboost-container-dev \
+          libboost-context-dev \
+          libboost-contract-dev \
+          libboost-coroutine-dev \
+          libboost-date-time-dev \
+          libboost-fiber-dev \
+          libboost-filesystem-dev \
+          libboost-graph-parallel-dev \
+          libboost-log-dev \
+          libboost-regex-dev \
           googletest \
           libgtest-dev \
-          libgcc-8-dev \
           libhiredis0.14 \
           libhiredis-dev \
           libnl-3-dev \
