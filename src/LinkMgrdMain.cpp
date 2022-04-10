@@ -79,7 +79,7 @@ int main(int argc, const char* argv[])
         ("extra_log_file,e",
          program_options::bool_switch(&extraLogFile)->default_value(false),
          "Store logs in an extra log file")
-         ("measure_switchover_overhead, m",
+         ("measure_switchover_overhead,m",
          program_options::bool_switch(&measureSwitchover)->default_value(false),
          "Decrease link prober interval after switchover to better measure switchover overhead")
     ;
