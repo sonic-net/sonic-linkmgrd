@@ -861,7 +861,7 @@ void ActiveStandbyStateMachine::handleSwitchActiveRequestEvent()
 //
 void ActiveStandbyStateMachine::handleDefaultRouteStateNotification(const DefaultRoute routeState)
 {
-    MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (mDefaultRouteState == DefaultRoute::NA && routeState == DefaultRoute::OK) {
         initLinkProberState(mCompositeState);
@@ -878,7 +878,7 @@ void ActiveStandbyStateMachine::handleDefaultRouteStateNotification(const Defaul
 //
 void ActiveStandbyStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 {
-    MUXLOGWARNING(boost::format("%s: default route state: %s") % mMuxPortConfig.getPortName() % mDefaultRouteState);
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (mComponentInitState.all()) {
         if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == DefaultRoute::NA) {
