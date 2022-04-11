@@ -213,11 +213,11 @@ void LinkManagerStateMachineBase::handleSwitchActiveRequestEvent()
 }
 
 //
-// ---> handleDefaultRouteStateNotification(const std::string &routeState);
+// ---> handleDefaultRouteStateNotification(const DefaultRoute routeState);
 //
 // handle default route state notification from routeorch
 //
-void LinkManagerStateMachineBase::handleDefaultRouteStateNotification(const std::string &routeState)
+void LinkManagerStateMachineBase::handleDefaultRouteStateNotification(const DefaultRoute routeState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
