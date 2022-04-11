@@ -96,6 +96,19 @@ public:
         Count
     };
 
+    /**
+     * @enum DefaultRoute 
+     * 
+     * @brief Default route co
+     */
+    enum class DefaultRoute {
+        Wait,
+        NA,
+        OK,
+
+        Count
+    };
+
     using CompositeState = std::tuple<link_prober::LinkProberState::Label,
                                       mux_state::MuxState::Label,
                                       link_state::LinkState::Label>;
@@ -340,7 +353,7 @@ public:
     virtual void handleSwitchActiveRequestEvent();
 
     /**
-     * @method handleDefaultRouteStateNotification(const std::string &routeState)
+     * @method handleDefaultRouteStateNotification(const DefaultRoute routeState)
      *
      * @brief handle default route state notification from routeorch
      *
@@ -348,7 +361,7 @@ public:
      *
      * @return none
      */
-    virtual void handleDefaultRouteStateNotification(const std::string& routeState);
+    virtual void handleDefaultRouteStateNotification(const DefaultRoute routeState);
 
     /**
      * @method shutdownOrRestartLinkProberOnDefaultRoute()

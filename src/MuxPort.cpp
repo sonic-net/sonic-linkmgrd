@@ -265,11 +265,16 @@ void MuxPort::handleDefaultRouteState(const std::string &routeState)
 {
     MUXLOGDEBUG(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
 
+    link_manager::LinkManagerStateMachineBase::DefaultRoute state = link_manager::LinkManagerStateMachineBase::DefaultRoute::OK;
+    if (routeState == "na") {
+        state = link_manager::LinkManagerStateMachineBase::DefaultRoute::NA;
+    }
+
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleDefaultRouteStateNotification,
         mLinkManagerStateMachinePtr.get(),
-        routeState
+        state
     )));
 }
 
