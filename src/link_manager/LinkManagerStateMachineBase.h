@@ -99,7 +99,7 @@ public:
     /**
      * @enum DefaultRoute 
      * 
-     * @brief Default route co
+     * @brief labels corresponding to each ToR default states
      */
     enum class DefaultRoute {
         Wait,
