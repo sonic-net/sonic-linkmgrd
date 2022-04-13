@@ -518,6 +518,18 @@ private:
      */
     void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
+    /**
+    *@method postMuxStateEvent
+    *
+    *@brief post event to MUX state machine to change state
+    *
+    *@param label (in)      new state label to post event for
+    *
+    *
+    *@return none
+    */
+    void postMuxStateEvent(mux_state::MuxState::Label label);
+
 private:
     static LinkProberEvent mLinkProberEvent;
     static MuxStateEvent mMuxStateEvent;

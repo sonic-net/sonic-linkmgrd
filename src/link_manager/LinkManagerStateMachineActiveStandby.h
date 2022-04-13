@@ -475,18 +475,6 @@ private:
     void initLinkProberState(CompositeState &compositeState);
 
     /**
-    *@method postMuxStateEvent
-    *
-    *@brief post event to MUX state machine to change state
-    *
-    *@param label (in)      new state label to post event for
-    *
-    *
-    *@return none
-    */
-    void postMuxStateEvent(mux_state::MuxState::Label label);
-
-    /**
     *@method LinkProberStandbyMuxActiveLinkUpTransitionFunction
     *
     *@brief transition function when entering {LinkProberStandby, MuxActive, LinkUp} state

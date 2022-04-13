@@ -1021,31 +1021,6 @@ void ActiveStandbyStateMachine::initLinkProberState(CompositeState &compositeSta
 }
 
 //
-// ---> postMuxStateEvent(mux_state::MuxState::Label label)
-//
-// post event to MUX state machine to change state
-//
-void ActiveStandbyStateMachine::postMuxStateEvent(mux_state::MuxState::Label label)
-{
-    switch (label) {
-    case mux_state::MuxState::Label::Active:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getActiveEvent());
-        break;
-    case mux_state::MuxState::Label::Standby:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getStandbyEvent());
-        break;
-    case mux_state::MuxState::Label::Unknown:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getUnknownEvent());
-        break;
-    case mux_state::MuxState::Label::Error:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getErrorEvent());
-        break;
-    default:
-        break;
-    }
-}
-
-//
 // ---> LinkProberStandbyMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
 //
 // transition function when entering {LinkProberStandby, MuxActive, LinkUp} state
