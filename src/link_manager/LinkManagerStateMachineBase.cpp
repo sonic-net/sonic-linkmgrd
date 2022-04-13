@@ -263,13 +263,4 @@ void LinkManagerStateMachineBase::handleResetLinkProberPckLossCount()
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
 
-// ---> LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
-//
-// set component inti state. This method is used for testing
-//
-void LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
-{
-    MUXLOGINFO(mMuxPortConfig.getPortName());
-};
-
 } /* namespace link_manager */

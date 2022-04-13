@@ -86,20 +86,6 @@ public:
         Count
     };
 
-private:
-    /**
-     *@enum anonymous
-     *
-     *@brief used to reference bits corresponding to respective state machine init state
-     */
-    enum {
-        LinkProberComponent,
-        MuxStateComponent,
-        LinkStateComponent,
-
-        ComponentCount
-    };
-
 public:
     /**
     *@method ActiveStandbyStateMachine
@@ -802,17 +788,6 @@ private:
     };
 
     /**
-    *@method setComponentInitState
-    *
-    *@brief set component inti state. This method is used for testing
-    *
-    *@param component (in)  component index
-    *
-    *@return none
-    */
-    void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
-
-    /**
      * @method setShutdownTxFnPtr
      * 
      * @brief set shutdownTxFnPtr. This method is used for testing
@@ -893,8 +868,6 @@ private:
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
-
-    std::bitset<ComponentCount> mComponentInitState = {0};
 };
 
 } /* namespace link_manager */

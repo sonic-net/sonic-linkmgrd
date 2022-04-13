@@ -62,6 +62,11 @@
         ); \
     } while (0)
 
+namespace test {
+class FakeMuxPort;
+class MuxManagerTest;
+}
+
 namespace mux {
 #define ps(compositeState) std::get<0>(compositeState)
 #define ms(compositeState) std::get<1>(compositeState)
@@ -434,17 +439,6 @@ public:
      */
     virtual void handleResetLinkProberPckLossCount();
 
-    /**
-     *@method setComponentInitState
-     *
-     *@brief set component inti state. This method is used for testing
-     *
-     *@param component (in)  component index
-     *
-     *@return none
-     */
-    virtual void setComponentInitState(uint8_t component);
-
 public:
     /**
     *@method getLinkProberStateMachinePtr
@@ -474,6 +468,23 @@ public:
     link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
 
 private:
+    /**
+     *@enum anonymous
+     *
+     *@brief used to reference bits corresponding to respective state machine init state
+     */
+    enum {
+        LinkProberComponent,
+        MuxStateComponent,
+        LinkStateComponent,
+
+        ComponentCount
+    };
+
+private:
+    friend class mux::MuxPort;
+    friend class test::FakeMuxPort;
+    friend class test::MuxManagerTest;
     friend class ActiveStandbyStateMachine;
     friend class ActiveActiveStateMachine;
 
@@ -495,6 +506,17 @@ private:
      * @param nextState reference to CompositeState object
      */
     void noopTransitionFunction(CompositeState& nextState);
+
+    /**
+     *@method setComponentInitState
+     *
+     *@brief set component inti state. This method is used for testing
+     *
+     *@param component (in)  component index
+     *
+     *@return none
+     */
+    void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
 
 private:
     static LinkProberEvent mLinkProberEvent;
@@ -520,6 +542,8 @@ private:
     link_state::LinkStateMachine mLinkStateMachine;
 
     Label mLabel = Label::Uninitialized;
+
+    std::bitset<ComponentCount> mComponentInitState = {0};
 };
 
 } /* namespace link_manager */
