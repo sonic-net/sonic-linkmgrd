@@ -20,7 +20,7 @@ To shutdown heartbeat sending if default route is missing, is a straightforward 
     * keep the ToR in standby if one ToR is missing default route;
     * avoid oscillation if both ToRs are missing defualt route (as eventually both will be `LinkProber:Wait` state).   
 
-Link prober will be capable to receive heartbeat. So if we remove & re-add the default route on both ToRs, a state transition path can be:   
+Link prober will still be able to receive heartbeat. So if we remove & re-add the default route on both ToRs, a state transition path can be:   
 
 ```
          0.init state   ->  1.remove on A   ->  2.remove on B     -> 3.re-add on B      -> 4.re-add on A
@@ -28,13 +28,13 @@ ToR A   active, healthy ->  standby, healthy->  active, unhealthy ->  standby, h
 ToR B   standby, healthy->  active, healthy ->  standby, unhealthy -> active, healthy   -> active, healthy
 ```
 
-In step 3 of the transition path above, if standby side gets default route back first, we want it to switch to active. It can be a bit tricky if we have `LinkProber:Wait` previously, as a `LinkProber:Unknown` event won't be able to trigger a state transition handler. The solution is to reset `LinkProber` state to force match mux state when default route is back to `ok`. Same approach is used we linkmgrd received `Link:Up` event. 
+In step 3 of the transition path above, if standby side gets default route back first, we want it to switch to active. It can be a bit tricky if we have `LinkProber:Wait` previously, as a `LinkProber:Unknown` event won't be able to trigger a state transition handler. The solution is to reset `LinkProber` state to force match mux state when default route is back to `ok`. Same approach is used we linkmgrd receives `Link:Up` event. 
 
 * Cache default route status   
 To meet requirement #5, we want to cache the default route status, and when mux mode is switching between `auto` and `manual`, linkmgrd can determine if it should stop or resume heartbeat sending. 
 
 * Avoid proactive switches  
-It's obviously that, switching a ToR without defualt route to `active` is meaningless. Though eventually, due to suspending of heartbeat, the other ToR will take over the traffic, we will expect 300 ms packet loss in between. Thus, we will explicitly avoid switching to `active` if a ToR is missing default route.   
+It's obvious that, switching a ToR without defualt route to `active` is meaningless. Though eventually, due to suspending of heartbeat, the other ToR will take over the traffic, we will expect 300 ms packet loss in between. Thus, we will explicitly avoid switching to `active` if a ToR is missing default route.   
 The state transition path above will hence be updated at step #2, like below:
 
 ```
@@ -43,9 +43,13 @@ ToR A   active, healthy ->  standby, healthy->  standby, unhealthy-> standby, he
 ToR B   standby, healthy->  active, healthy ->  active, unhealthy -> active, healthy   -> active, healthy
 ```
 
+* Add linkmgrd command line option 
+We will add command line option `--default_route, -d` for linkmgrd process for user to enable this feature by choice.
+
 ### Solution Two 
 
-Intergrate default route status into `LinkManagerStateMachine`. Currently the state transition depends on 3 components (`LinkProber`, `MuxState`, `LinkState`), adding one more dimension (`DefaultRoute`) is quite more effort compared solution one. But the code will be more readable, and easier to maintain. Moving forward to active-active dualToR, we can revisit this part of requirement and take this solution into consideration. 
+Intergrate default route status into `LinkManagerStateMachine`.   
+Currently the state transition depends on 3 components (`LinkProber`, `MuxState`, `LinkState`), adding one more dimension (`DefaultRoute`) is quite more effort compared to solution one. But the code will be more readable, and easier to maintain. Moving forward to active-active dualToR, we can revisit this part of requirement and take this solution into consideration. 
 
 ## Test
 
