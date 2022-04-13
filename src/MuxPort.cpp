@@ -94,6 +94,23 @@ void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
 }
 
 //
+// ---> handleSoCIpv4AddressUpdate(boost::asio::ip::address address);
+//
+// handles SoC IP address update for port in active-active cable type
+//
+void MuxPort::handleSoCIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleSwssSoCIpv4AddressUpdate,
+        mLinkManagerStateMachinePtr.get(),
+        address
+    )));
+}
+
+//
 // ---> handleLinkState(const std::string &linkState);
 //
 // handles link state updates

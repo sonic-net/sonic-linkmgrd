@@ -240,6 +240,18 @@ public:
     void addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address);
 
     /**
+    *@method addOrUpdateMuxPortSoCAddress
+    *
+    *@brief update MUX port SoC IPv4 Address. If port is not found, create new MuxPort object
+    *
+    *@param portName (in)   Mux port name
+    *@param address (in)    SoC IP address
+    *
+    *@return none
+    */
+    void addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address);
+
+    /**
     *@method updateMuxPortConfig
     *
     *@brief update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object

@@ -139,9 +139,36 @@ void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip
     MUXLOGWARNING(boost::format("%s: server IP: %s") % portName % address);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
     if (address.is_v4()) {
-        muxPortPtr->handleBladeIpv4AddressUpdate(address);
+        if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+            // notify server IP address for ports in active-standby cable type
+            muxPortPtr->handleBladeIpv4AddressUpdate(address);
+        }
+
+    } else if (address.is_v6()) {
+        // handle IPv6 probing
+    }
+}
+
+//
+// ---> addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address);
+//
+// update MUX port SoC IPv4 Address. If port is not found, create new MuxPort object
+//
+void MuxManager::addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address)
+{
+    MUXLOGWARNING(boost::format("%s: SoC IP: %s") % portName % address);
+
+    std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
+
+    if (address.is_v4()) {
+        if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+            // notify NiC IP address for ports in active-active cable type
+            muxPortPtr->handleSoCIpv4AddressUpdate(address);
+        }
     } else if (address.is_v6()) {
         // handle IPv6 probing
     }

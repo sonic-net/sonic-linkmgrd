@@ -114,6 +114,17 @@ void LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate(boost::asio::
 }
 
 //
+// ---> handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address);
+//
+// initialize LinkProber component. Note if this is the last component to be initialized,
+// state machine will be activated
+//
+void LinkManagerStateMachineBase::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
 //
 // handle get Server MAC address

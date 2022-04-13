@@ -501,17 +501,6 @@ private:
     void postMuxStateEvent(mux_state::MuxState::Label label);
 
     /**
-    *@method noopTransitionFunction
-    *
-    *@brief No-op transition function
-    *
-    *@param nextState (in, out)     reference to composite
-    *
-    *@return none
-    */
-    void noopTransitionFunction(CompositeState &nextState);
-
-    /**
     *@method LinkProberStandbyMuxActiveLinkUpTransitionFunction
     *
     *@brief transition function when entering {LinkProberStandby, MuxActive, LinkUp} state

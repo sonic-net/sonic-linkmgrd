@@ -49,6 +49,7 @@ namespace mux
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
+using SoCIpPortMap = std::map<boost::asio::ip::address, std::string>;
 
 /**
  *@class DbInterface
@@ -436,6 +437,28 @@ private:
     void getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+    *@method processSoCIpAddress
+    *
+    *@brief process SoC IP address and builds a map of IP to port name
+    *
+    *@param entries   config_db MUX_CABLE entries
+    *
+    *@return none
+    */
+    inline void processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+    *@method getSoCIpAddress
+    *
+    *@brief retrieve SoC IP address and builds a map of IP to port name
+    *
+    *@param configDbConnector   config db connector
+    *
+    *@return none
+    */
+    void getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
     *@method processMuxPortConfigNotifiction
     *
     *@brief process MUX port configuration change notification
@@ -630,6 +653,7 @@ private:
     boost::asio::io_service::strand mStrand;
 
     ServerIpPortMap mServerIpPortMap;
+    SoCIpPortMap mSoCIpPortMap;
 };
 
 } /* namespace common */

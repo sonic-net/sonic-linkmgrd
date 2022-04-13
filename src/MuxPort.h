@@ -212,7 +212,18 @@ public:
     *
     *@return none
     */
-     void handleBladeIpv4AddressUpdate(boost::asio::ip::address addres);
+    void handleBladeIpv4AddressUpdate(boost::asio::ip::address addres);
+
+    /**
+    *@method handleSoCIpv4AddressUpdate
+    *
+    *@brief update SoC IPv4 Address
+    *
+    *@param addres (in)  server/blade IP address
+    *
+    *@return none
+    */
+    void handleSoCIpv4AddressUpdate(boost::asio::ip::address addres);
 
     /**
     *@method handleLinkState

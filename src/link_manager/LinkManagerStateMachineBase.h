@@ -32,6 +32,36 @@
 #include "mux_state/MuxState.h"
 #include "mux_state/MuxStateMachine.h"
 
+#define LOG_MUX_STATE_TRANSITION(level, portName, currentState, nextState) \
+    do { \
+        MUXLOG##level(boost::format("%s: (P: %s, M: %s, L: %s) -> (P: %s, M: %s, L: %s)") % \
+            portName % \
+            mLinkProberStateName[ps(currentState)] % \
+            mMuxStateName[ms(currentState)] % \
+            mLinkStateName[ls(currentState)] % \
+            mLinkProberStateName[ps(nextState)] % \
+            mMuxStateName[ms(nextState)] % \
+            mLinkStateName[ls(nextState)] \
+        ); \
+    } while (0)
+
+#define LOGWARNING_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(WARNING, portName, currentState, nextState)
+
+#define LOGINFO_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(INFO, portName, currentState, nextState)
+
+#define MUXLOGTIMEOUT(portname, msg, currentState) \
+    do { \
+        MUXLOGWARNING(boost::format("%s: %s, current state: (P: %s, M: %s, L: %s)") % \
+            portname % \
+            msg % \
+            mLinkProberStateName[ps(currentState)] % \
+            mMuxStateName[ms(currentState)] % \
+            mLinkStateName[ls(currentState)] \
+        ); \
+    } while (0)
+
 namespace mux {
 #define ps(compositeState) std::get<0>(compositeState)
 #define ms(compositeState) std::get<1>(compositeState)
@@ -42,6 +72,7 @@ class MuxPort;
 
 namespace link_manager {
 class ActiveStandbyStateMachine;
+class ActiveActiveStateMachine;
 
 /**
  *@class LinkProberEvent
@@ -249,6 +280,16 @@ public:
     virtual void handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
 
     /**
+     *@method handleSwssSoCIpv4AddressUpdate
+     *
+     *@brief initialize LinkProber component. Note if this is the last component to be initialized,
+     *       state machine will be activated
+     *
+     *@return none
+     */
+    virtual void handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address);
+
+    /**
      *@method handleGetServerMacNotification
      *
      *@brief handle get Server MAC address
@@ -434,6 +475,7 @@ public:
 
 private:
     friend class ActiveStandbyStateMachine;
+    friend class ActiveActiveStateMachine;
 
 private:
     /**
@@ -450,7 +492,7 @@ private:
      *
      * @brief NO-OP transition function
      *
-     * @param nextState                     reference to CompositeState object
+     * @param nextState reference to CompositeState object
      */
     void noopTransitionFunction(CompositeState& nextState);
 

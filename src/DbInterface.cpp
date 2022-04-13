@@ -626,6 +626,65 @@ void DbInterface::getPortCableType(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
+// ---> processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process SoC addresses and build a map of port name to SoC address
+//
+void DbInterface::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string portName = kfvKey(entry);
+        std::string operation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "soc_ipv4";}
+        );
+        if (cit != fieldValues.cend()) {
+            const std::string f = cit->first;
+            std::string SoCIpAddress = cit->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, %s = %s") % portName % f % SoCIpAddress);
+
+            size_t pos = SoCIpAddress.find("/");
+            if (pos != std::string::npos) {
+                SoCIpAddress.erase(pos);
+            }
+
+            boost::system::error_code errorCode;
+            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(SoCIpAddress, errorCode);
+            if (!errorCode) {
+                mMuxManagerPtr->addOrUpdateMuxPortSoCAddress(portName, ipAddress);
+                mSoCIpPortMap[ipAddress] = portName;
+            } else {
+                MUXLOGFATAL(boost::format("%s: Received invalid SoC IP: %s, error code: %d") %
+                    portName %
+                    SoCIpAddress %
+                    errorCode
+                );
+            }
+        }
+    }
+}
+
+//
+// ---> getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve SoC IP address for port in active-active cable type
+//
+void DbInterface::getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading SoC IP addresses");
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    std::vector<swss::KeyOpFieldsValuesTuple> entries;
+
+    configDbMuxCableTable.getContent(entries);
+    processSoCIpAddress(entries);
+}
+
+//
 // ---> processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
 // process MUX port configuration change notification
@@ -1031,6 +1090,7 @@ void DbInterface::handleSwssNotification()
     getLoopback2InterfaceInfo(configDbPtr);
     getPortCableType(configDbPtr);
     getServerIpAddress(configDbPtr);
+    getSoCIpAddress(configDbPtr);
 
     NetMsgInterface netMsgInterface(*this);
     swss::NetDispatcher::getInstance().registerMessageHandler(RTM_NEWNEIGH, &netMsgInterface);
