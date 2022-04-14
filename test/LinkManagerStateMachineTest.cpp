@@ -1127,4 +1127,33 @@ TEST_F(LinkManagerStateMachineTest, PostPckLossUpdateAndResetEvent)
     EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 0);    
 }
 
+TEST_F(LinkManagerStateMachineTest, EnableDecreaseLinkProberIntervalFeature)
+{
+    setMuxStandby();
+    
+    // feature is disabled by default 
+    EXPECT_FALSE(mMuxConfig.getIfEnableSwitchoverMeasurement());
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDecreaseIntervalCallCount, 0);
+
+    // switch to active 
+    handleMuxConfig("active", 4);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Up); 
+
+    // interval is not decreased   
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDecreaseIntervalCallCount, 0);
+
+    // enable the feature 
+    mMuxConfig.enableSwitchoverMeasurement(true);
+    EXPECT_TRUE(mMuxConfig.getIfEnableSwitchoverMeasurement());
+
+    // switch to standby (fake inconsistency between state db and mux probing)
+    handleProbeMuxState("standby", 3);
+    handleGetMuxState("active", 3);
+
+    // interval is decreased once 
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDecreaseIntervalCallCount, 1);
+}
+
 } /* namespace test */

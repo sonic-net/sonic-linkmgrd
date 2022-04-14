@@ -299,7 +299,7 @@ public:
      * 
      * @return if switch overhead measurement feature is enabled
      */
-    inline bool ifEnableSwitchoverMeasurement() {return mEnableSwitchoverMeasurement;};
+    inline bool ifEnableSwitchoverMeasurement() {return mMuxConfig.getIfEnableSwitchoverMeasurement();};
 
 private:
     MuxConfig &mMuxConfig;
@@ -310,7 +310,6 @@ private:
     Mode mMode = Manual;
     PortCableType mPortCableType;
 
-    bool mEnableSwitchoverMeasurement = false;
 };
 
 } /* namespace common */
