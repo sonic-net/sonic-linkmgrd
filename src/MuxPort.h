@@ -204,6 +204,17 @@ public:
     inline void setServerIpv4Address(const boost::asio::ip::address &address) {mMuxPortConfig.setBladeIpv4Address(address);};
 
     /**
+    *@method setServerMacAddress
+    *
+    *@brief setter for server MAC address
+    *
+    *@param address (in) server MAC address
+    *
+    *@return none
+    */
+    inline void setServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxPortConfig.setBladeMacAddress(address);};
+
+    /**
     *@method handleBladeIpv4AddressUpdate
     *
     *@brief update server/blade IPv4 Address

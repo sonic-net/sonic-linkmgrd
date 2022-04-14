@@ -278,8 +278,10 @@ void MuxManager::processGetServerMacAddress(
 {
     MUXLOGDEBUG(portName);
 
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
     PortMapIterator portMapIterator = mPortMap.find(portName);
-    if (portMapIterator != mPortMap.end()) {
+    // only allow ports in active-standby mode to react to mac address changes
+    if (portMapIterator != mPortMap.end() && portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
         portMapIterator->second->handleGetServerMacAddress(address);
     }
 }
@@ -378,6 +380,11 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
                 mIoService,
                 muxPortCableType
             );
+            if (muxPortCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+                std::array<uint8_t, ETHER_ADDR_LEN> address;
+                generateServerMac(serverId, address);
+                muxPortPtr->setServerMacAddress(address);
+            }
             mPortMap.insert({portName, muxPortPtr});
         }
         else {
@@ -426,6 +433,25 @@ void MuxManager::handleProcessTerminate()
     mDbInterfacePtr->getBarrier().wait();
     mIoService.stop();
     mDbInterfacePtr->getBarrier().wait();
+}
+
+//
+// ---> generateServerMac();
+//
+// generate known MAC address based on server ID
+//
+void generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address)
+{
+    if (serverId >= KNOWN_MAC_COUNT) {
+        throw std::range_error("Out of MAC address range");
+    }
+    int addrIndex = ETHER_ADDR_LEN - 1;
+    uint32_t offset = KNOWN_MAC_START[addrIndex] + serverId;
+    address = KNOWN_MAC_START;
+    while (offset && addrIndex >= 0) {
+        address[addrIndex--] = offset % 0xff;
+        offset /= 0xff;
+    }
 }
 
 } /* namespace mux */

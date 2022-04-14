@@ -47,6 +47,9 @@ using PortMapIterator = PortMap::iterator;
 using PortCableTypeMap = std::map<std::string, common::MuxPortConfig::PortCableType>;
 using PortCableTypeMapIterator = PortCableTypeMap::iterator;
 
+const std::array<uint8_t, ETHER_ADDR_LEN> KNOWN_MAC_START = {0x04, 0x27, 0x28, 0x7a, 0x00, 0x00};
+const size_t KNOWN_MAC_COUNT = 1024;
+
 /**
  *@class MuxManager
  *
@@ -414,6 +417,15 @@ private:
     *@return none
     */
     void handleProcessTerminate();
+
+    /**
+    *@method generateServerMac
+    *
+    *@brief generate Server MAC for port in active-active cable type
+    *
+    *@return none
+    */
+    void generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address);
 
 private:
     friend class test::MuxManagerTest;
