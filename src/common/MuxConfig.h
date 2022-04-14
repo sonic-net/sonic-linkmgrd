@@ -276,6 +276,26 @@ public:
     */
     inline uint32_t getDecreasedTimeoutIpv4_msec() const {return mDecreasedTimeoutIpv4_msec;};
 
+    /**
+     * @method getIfEnableSwitchoverMeasurement
+     * 
+     * @brief check if the feature that decreases link prober interval to measure switch overhead is enabled or not 
+     * 
+     * @return if switch overhead measurement feature is enabled
+     */
+    inline bool getIfEnableSwitchoverMeasurement() {return mEnableSwitchoverMeasurement;};
+
+    /**
+     * enableSwitchoverMeasurement
+     * 
+     * @brief enable or disable the feature that decreases link prober interval to measure switch overhead
+     * 
+     * @param enable_feature (in) enable feature 
+     * 
+     * @return  none
+     */
+    inline void enableSwitchoverMeasurement(bool enable_feature) {mEnableSwitchoverMeasurement = enable_feature;};
+
 private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
@@ -286,6 +306,7 @@ private:
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
 
+    bool mEnableSwitchoverMeasurement = false;
     uint32_t mDecreasedTimeoutIpv4_msec = 10;
 
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;

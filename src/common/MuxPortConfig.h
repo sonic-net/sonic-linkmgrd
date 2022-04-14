@@ -267,7 +267,7 @@ public:
      * 
      * @return if switch overhead measurement feature is enabled
      */
-    inline bool ifEnableSwitchoverMeasurement() {return mEnableSwitchoverMeasurement;};
+    inline bool ifEnableSwitchoverMeasurement() {return mMuxConfig.getIfEnableSwitchoverMeasurement();};
 
 private:
     MuxConfig &mMuxConfig;
@@ -277,7 +277,6 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
 
-    bool mEnableSwitchoverMeasurement = false;
 };
 
 } /* namespace common */
