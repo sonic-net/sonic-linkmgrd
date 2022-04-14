@@ -767,7 +767,9 @@ void LinkManagerStateMachine::handlePeerLinkStateNotification(const link_state::
     if(label == link_state::LinkState::Label::Down && ms(mCompositeState) == mux_state::MuxState::Standby) {
         CompositeState nextState = mCompositeState;
         enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+        if (mDefaultRouteState == DefaultRoute::OK) {
+            switchMuxState(nextState, mux_state::MuxState::Label::Active);
+        }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
@@ -879,15 +881,15 @@ void LinkManagerStateMachine::handleSwitchActiveRequestEvent()
 }
 
 // 
-// ---> handleDefaultRouteStateNotification(const std::string &routeState);
+// ---> handleDefaultRouteStateNotification(const DefaultRoute routeState);
 // 
 // handle default route state notification from routeorch
 //
-void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::string &routeState)
+void LinkManagerStateMachine::handleDefaultRouteStateNotification(const DefaultRoute routeState)
 {
-    MUXLOGWARNING(boost::format("%s: state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    if (mDefaultRouteState == "na" && routeState == "ok") {
+    if (mDefaultRouteState == DefaultRoute::NA && routeState == DefaultRoute::OK) {
         initLinkProberState(mCompositeState);
     }
     mDefaultRouteState = routeState;
@@ -902,10 +904,10 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 //
 void LinkManagerStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 {
-    MUXLOGWARNING(boost::format("%s: default route state: %s") % mMuxPortConfig.getPortName() % mDefaultRouteState);
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (mComponentInitState.all()) {
-        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == "na") {
+        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == DefaultRoute::NA) {
             mShutdownTxFnPtr();
         } else {
             // If mux mode is in manual/standby/active mode, we should restart link prober. 
@@ -1186,7 +1188,9 @@ void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunctio
     enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
 
     // Start switching MUX to active state as we lost HB from active ToR
-    switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    if (mDefaultRouteState == DefaultRoute::OK) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    }
     mDeadlineTimer.cancel();
     mWaitActiveUpCount = 0;
 }

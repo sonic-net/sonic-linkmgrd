@@ -257,13 +257,18 @@ void MuxPort::handleMuxConfig(const std::string &config)
 //
 void MuxPort::handleDefaultRouteState(const std::string &routeState)
 {
-    MUXLOGDEBUG(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+    MUXLOGWARNING(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+
+    link_manager::LinkManagerStateMachine::DefaultRoute state = link_manager::LinkManagerStateMachine::DefaultRoute::OK;
+    if (routeState == "na") {
+        state = link_manager::LinkManagerStateMachine::DefaultRoute::NA;
+    }
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleDefaultRouteStateNotification,
         &mLinkManagerStateMachine,
-        routeState
+        state
     )));
 }
 
