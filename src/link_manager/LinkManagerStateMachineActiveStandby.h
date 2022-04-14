@@ -382,7 +382,7 @@ public:
     void handleSwitchActiveRequestEvent();
 
     /**
-     * @method handleDefaultRouteStateNotification(const std::string &routeState)
+     * @method handleDefaultRouteStateNotification(const DefaultRoute routeState)
      * 
      * @brief handle default route state notification from routeorch
      * 
@@ -390,7 +390,7 @@ public:
      * 
      * @return none
     */
-    void handleDefaultRouteStateNotification(const std::string &routeState);
+    void handleDefaultRouteStateNotification(const DefaultRoute routeState);
 
     /**
      * @method shutdownOrRestartLinkProberOnDefaultRoute()
@@ -903,7 +903,7 @@ private:
 
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
-    std::string mDefaultRouteState = "na";
+    DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
 };
