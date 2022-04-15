@@ -897,7 +897,7 @@ void LinkManagerStateMachine::handleDefaultRouteStateNotification(const std::str
 //
 // shutdown or restart link prober based on default route state
 //
-void ActiveStandbyStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
+void LinkManagerStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 {
     MUXLOGWARNING(boost::format("%s: default route state: %s") % mMuxPortConfig.getPortName() % mDefaultRouteState);
 
