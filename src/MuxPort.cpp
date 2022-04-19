@@ -71,12 +71,23 @@ MuxPort::MuxPort(
     mStrand(ioService)
 {
     assert(dbInterfacePtr != nullptr);
-    if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
-        mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
-            this,
-            mStrand,
-            mMuxPortConfig
-        );
+    switch (portCableType) {
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveActiveStateMachine>(
+                this,
+                mStrand,
+                mMuxPortConfig
+            );
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
+                this,
+                mStrand,
+                mMuxPortConfig
+            );
+            break;
+        default:
+            break;
     }
     assert(mLinkManagerStateMachinePtr.get() != nullptr);
 }

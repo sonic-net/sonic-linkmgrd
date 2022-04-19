@@ -29,6 +29,7 @@
 
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachineBase.h"
+#include "link_manager/LinkManagerStateMachineActiveActive.h"
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
 
 #include "common/MuxPortConfig.h"
