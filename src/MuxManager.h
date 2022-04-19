@@ -362,6 +362,18 @@ public:
     void processProbeMuxState(const std::string &portName, const std::string &muxState);
 
     /**
+    *@method processPeerMuxState
+    *
+    *@brief update peer MUX port state db notification
+    *
+    *@param portName        (in)   Mux port name
+    *@param peerMuxState    (in)   Peer mux port state
+    *
+    *@return none
+    */
+    void processPeerMuxState(const std::string &portName, const std::string &peerMuxState);
+
+    /**
      * @method addOrUpdateDefaultRouteState
      * 
      * @brief update default route state based on state db notification

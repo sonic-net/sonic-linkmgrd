@@ -317,6 +317,21 @@ void MuxManager::processProbeMuxState(const std::string &portName, const std::st
 }
 
 //
+// ---> processPeerMuxState(const std::string &portName, const std::string &peerMuxState);
+//
+// update peer MUX port state db notification
+//
+void MuxManager::processPeerMuxState(const std::string &portName, const std::string &peerMuxState)
+{
+    MUXLOGINFO(boost::format("%s: state db peer mux state: %s") % portName % peerMuxState);
+
+    PortMapIterator portMapIterator = mPortMap.find(portName);
+    if (portMapIterator != mPortMap.end()) {
+        portMapIterator->second->handlePeerMuxState(peerMuxState);
+    }
+}
+
+//
 // ---> addOrUpdateDefaultRouteState(boost::asio::ip::address& address, const std::string &routeState);
 //
 // update default route state based on state db notification
@@ -440,7 +455,7 @@ void MuxManager::handleProcessTerminate()
 //
 // generate known MAC address based on server ID
 //
-void generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address)
+void MuxManager::generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address)
 {
     if (serverId >= KNOWN_MAC_COUNT) {
         throw std::range_error("Out of MAC address range");

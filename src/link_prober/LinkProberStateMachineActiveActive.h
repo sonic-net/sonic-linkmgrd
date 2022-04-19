@@ -107,6 +107,17 @@ public:
      */
     void processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent) override;
 
+    /**
+     *@method processEvent
+     *
+     *@brief process SuspendTimerExpiredEvent
+     *
+     *@param suspendTimerExpiredEvent (in)  reference to the SuspendTimerExpiredEvent event
+     *
+     *@return none
+     */
+    void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent) override;
+
 private:
     /**
      *@method enterPeerState

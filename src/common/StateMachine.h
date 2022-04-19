@@ -33,6 +33,7 @@
 namespace link_manager {
 class LinkManagerStateMachineBase;
 class ActiveStandbyStateMachine;
+class ActiveActiveStateMachine;
 }
 
 namespace link_prober {
@@ -114,6 +115,7 @@ public:
 private:
     friend class link_manager::LinkManagerStateMachineBase;
     friend class link_manager::ActiveStandbyStateMachine;
+    friend class link_manager::ActiveActiveStateMachine;
     friend class link_prober::LinkProberStateMachineActiveStandby;
     friend class link_prober::LinkProberStateMachineBase;
     friend class link_prober::LinkProberStateMachineActiveActive;

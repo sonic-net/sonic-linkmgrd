@@ -183,6 +183,15 @@ void LinkManagerStateMachineBase::handlePeerLinkStateNotification(const link_sta
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
 
+// ---> handlePeerMuxStateNotification(mux_state::MuxState::Label label);
+//
+// handle peer MUX state change notification
+//
+void LinkManagerStateMachineBase::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
 //
 // ---> handleMuxConfigNotification(const common::MuxPortConfig::Mode mode);
 //

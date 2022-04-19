@@ -273,6 +273,32 @@ void MuxPort::handleMuxConfig(const std::string &config)
     )));
 }
 
+//
+// ---> handlePeerMuxState(const std::string &peerMuxState);
+//
+// handles peer MUX state updates
+//
+void MuxPort::handlePeerMuxState(const std::string &peerMuxState)
+{
+    MUXLOGDEBUG(boost::format("port: %s, state db peer mux state: %s") % mMuxPortConfig.getPortName() % peerMuxState);
+
+    mux_state::MuxState::Label label = mux_state::MuxState::Label::Unknown;
+    if (peerMuxState == "active") {
+        label = mux_state::MuxState::Label::Active;
+    } else if (peerMuxState == "standby") {
+        label = mux_state::MuxState::Label::Standby;
+    } else if (peerMuxState == "error") {
+        label = mux_state::MuxState::Label::Error;
+    }
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handlePeerMuxStateNotification,
+        mLinkManagerStateMachinePtr.get(),
+        label
+    )));
+}
+
 // 
 // ---> handleDefaultRouteState(const std::string &routeState);
 // 

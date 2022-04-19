@@ -114,6 +114,17 @@ public:
     inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
 
     /**
+    *@method setPeerMuxState
+    *
+    *@brief set peer MUX state in APP DB for orchagent processing
+    *
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    inline void setPeerMuxState(mux_state::MuxState::Label label) { mDbInterfacePtr->setPeerMuxState(mMuxPortConfig.getPortName(), label); };
+
+    /**
     *@method getMuxState
     *
     *@brief retrieve the current MUX state
@@ -312,6 +323,18 @@ public:
     *@return none
     */
     void handleMuxConfig(const std::string &config);
+
+    /**
+    *@method handlePeerMuxState
+    *
+    *@brief handles peer MUX state updates
+    *
+    *@param peerMuxState (in)           peer MUX state
+    *
+    *@return none
+    */
+    void handlePeerMuxState(const std::string &peerMuxState);
+
 
     /**
      * @method handleDefaultRouteState(const std::string &routeState)

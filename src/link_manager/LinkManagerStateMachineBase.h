@@ -361,6 +361,17 @@ public:
     virtual void handlePeerLinkStateNotification(const link_state::LinkState::Label label);
 
     /**
+     *@method handlePeerMuxStateNotification
+     *
+     *@brief handle peer MUX state notification
+     *
+     *@param label (in)              new peer MuxState label
+     *
+     *@return none
+     */
+    virtual void handlePeerMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
      *@method handleMuxConfigNotification
      *
      *@brief handle MUX configuration change notification

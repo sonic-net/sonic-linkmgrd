@@ -149,6 +149,21 @@ void LinkProberStateMachineActiveActive::processEvent(IcmpPeerUnknownEvent &Icmp
 }
 
 //
+// ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
+//
+// process LinkProberState suspend timer expiry event
+//
+void LinkProberStateMachineActiveActive::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleSuspendTimerExpiry,
+        mLinkManagerStateMachinePtr
+    )));
+}
+
+//
 // ---> postLinkManagerPeerEvent(LinkProberState* linkProberState);
 //
 // post LinkProberState peer change event to LinkManager state machine
