@@ -201,6 +201,8 @@ void MuxManager::updatePortCableType(const std::string &portName, const std::str
     common::MuxPortConfig::PortCableType portCableType;
     if (cableType == "active-standby") {
         portCableType = common::MuxPortConfig::PortCableType::ActiveStandby;
+    } else if (cableType == "active-active") {
+        portCableType = common::MuxPortConfig::PortCableType::ActiveActive;
     } else {
         MUXLOGERROR(
             boost::format(

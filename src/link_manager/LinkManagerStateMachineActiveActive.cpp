@@ -749,16 +749,16 @@ void ActiveActiveStateMachine::initPeerLinkProberState()
 {
     switch (mPeerMuxState) {
         case mux_state::MuxState::Label::Active:
-            enterPeerLinkProberState(compositeState, link_prober::LinkProberState::Label::PeerActive);
+            enterPeerLinkProberState(link_prober::LinkProberState::Label::PeerActive);
             break;
         case mux_state::MuxState::Label::Standby:
-            enterPeerLinkProberState(compositeState, link_prober::LinkProberState::Label::PeerUnknown);
+            enterPeerLinkProberState(link_prober::LinkProberState::Label::PeerUnknown);
             break;
         case mux_state::MuxState::Label::Unknown:
-            enterPeerLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait);
+            enterPeerLinkProberState(link_prober::LinkProberState::Label::Wait);
             break;
         case mux_state::MuxState::Label::Error:
-            enterPeerLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait);
+            enterPeerLinkProberState(link_prober::LinkProberState::Label::Wait);
             break;
         default:
             break;

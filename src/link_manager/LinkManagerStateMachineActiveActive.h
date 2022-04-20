@@ -399,6 +399,11 @@ private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerUnknown;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Unknown;
 
+private: // testing only
+    friend class mux::MuxPort;
+    friend class test::FakeMuxPort;
+    friend class test::MuxManagerTest;
+
 private:
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;
