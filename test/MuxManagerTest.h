@@ -39,6 +39,8 @@ class MuxManager;
 namespace test
 {
 
+const char* PortCableTypeValues[] = {"active-standby", "active-active"};
+
 class MuxManagerTest: public testing::Test
 {
 public:
@@ -46,6 +48,7 @@ public:
     virtual ~MuxManagerTest() = default;
 
     void runIoService(uint32_t count = 1);
+    void pollIoService(uint32_t count = 1);
     common::MuxPortConfig::Mode getMode(std::string port);
     uint32_t getPositiveStateChangeRetryCount(std::string port);
     uint32_t getNegativeStateChangeRetryCount(std::string port);
@@ -60,6 +63,7 @@ public:
     void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     link_manager::LinkManagerStateMachineBase::CompositeState getCompositeStateMachineState(std::string port);
     void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);
+    void processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);
     void processServerMacAddress(std::string port, std::array<char, MAX_ADDR_SIZE + 1> ip, std::array<char, MAX_ADDR_SIZE + 1> mac);
     void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
     void processTorMacAddress(std::string &mac);
@@ -68,7 +72,15 @@ public:
     void updateServerMacAddress(boost::asio::ip::address serverIp, const uint8_t *serverMac);
     void processGetMuxState(const std::string &portName, const std::string &muxState);
     void updatePortCableType(const std::string &port, const std::string &cableType);
-    void createPort(std::string port);
+    void initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachine);
+    void initLinkProberActiveStandby(std::shared_ptr<link_manager::ActiveStandbyStateMachine> linkManagerStateMachine);
+    void generateServerMac(const std::string &portName, std::array<uint8_t, ETHER_ADDR_LEN> &address);
+    void createPort(std::string port, common::MuxPortConfig::PortCableType portCableType = common::MuxPortConfig::PortCableType::ActiveStandby);
+
+public:
+    static const std::string PortName;
+    static const std::string ServerAddress;
+    static const std::string SoCAddress;
 
 public:
     std::shared_ptr<mux::MuxManager> mMuxManagerPtr;
@@ -79,7 +91,7 @@ public:
 };
 
 class MuxResponseTest: public MuxManagerTest,
-                       public testing::WithParamInterface<std::tuple<std::string, uint32_t, mux_state::MuxState::Label>>
+                       public testing::WithParamInterface<std::tuple<std::string, uint32_t, mux_state::MuxState::Label, common::MuxPortConfig::PortCableType>>
 {
 };
 
@@ -89,7 +101,7 @@ class GetMuxStateTest: public MuxManagerTest,
 };
 
 class MuxConfigUpdateTest: public MuxManagerTest,
-                           public testing::WithParamInterface<std::tuple<std::string, common::MuxPortConfig::Mode>>
+                           public testing::WithParamInterface<std::tuple<std::string, common::MuxPortConfig::Mode, common::MuxPortConfig::PortCableType>>
 {
 };
 
