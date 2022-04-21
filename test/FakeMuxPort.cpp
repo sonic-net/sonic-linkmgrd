@@ -35,7 +35,8 @@ FakeMuxPort::FakeMuxPort(
     common::MuxConfig &muxConfig,
     std::string &portName,
     uint16_t serverId,
-    boost::asio::io_service &ioService
+    boost::asio::io_service &ioService,
+    common::MuxPortConfig::PortCableType portCableType
 ) :
     mux::MuxPort(
         dbInterface,
@@ -43,7 +44,7 @@ FakeMuxPort::FakeMuxPort(
         portName,
         serverId,
         ioService,
-        common::MuxPortConfig::PortCableType::ActiveStandby
+        portCableType
     ),
     mActiveStandbyStateMachinePtr(
         std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())
