@@ -404,6 +404,82 @@ private: // testing only
     friend class test::FakeMuxPort;
     friend class test::MuxManagerTest;
 
+    /**
+     * @method setInitializeProberFnPtr
+     *
+     * @brief set new InitializeProberFnPtr for the state machine. This method is used for testing
+     *
+     * @param initializeProberFnPtr (in)  pointer to new InitializeProberFnPtr
+     */
+    void setInitializeProberFnPtr(boost::function<void()> initializeProberFnPtr) { mInitializeProberFnPtr = initializeProberFnPtr; };
+
+    /**
+     * @method setStartProbingFnPtr
+     *
+     * @brief set new StartProbingFnPtr for the state machine. This method is used for testing
+     *
+     * @param startProbingFnPtr (in)  pointer to new StartProbingFnPtr
+     */
+    void setStartProbingFnPtr(boost::function<void()> startProbingFnPtr) { mStartProbingFnPtr = startProbingFnPtr; };
+
+    /**
+     * @method setUpdateEthernetFrameFnPtr
+     *
+     * @brief set new UpdateEthernetFrameFnPtr for the state machine. This method is used for testing
+     *
+     * @param updateEthernetFrameFnPtr (in)  pointer to new UpdateEthernetFrameFnPtr
+     */
+    void setUpdateEthernetFrameFnPtr(boost::function<void()> updateEthernetFrameFnPtr) { mUpdateEthernetFrameFnPtr = updateEthernetFrameFnPtr; };
+
+    /**
+     * @method setProbePeerTorFnPtr
+     *
+     * @brief set new ProbePeerTorFnPtr for the state machine. This method is used for testing
+     *
+     * @param probePeerTorFnPtr (in)  pointer to new ProbePeerTorFnPtr
+     */
+    void setProbePeerTorFnPtr(boost::function<void()> probePeerTorFnPtr) { mProbePeerTorFnPtr = probePeerTorFnPtr; };
+
+    /**
+     * @method setSuspendTxFnPtr
+     *
+     * @brief set new SuspendTXFnPtr for the state machine. This method is used for testing
+     *
+     * @param suspendTxFnPtr (in)  pointer to new  SuspendTxFnPtr
+     */
+    void setSuspendTxFnPtr(boost::function<void(uint32_t suspendTime_msec)> suspendTxFnPtr) { mSuspendTxFnPtr = suspendTxFnPtr; };
+
+    /**
+     * @method setResumeTxFnPtr
+     *
+     * @brief set new ResumeTXFnPtr for the state machine. This method is used for testing
+     *
+     * @param resumeTxFnPtr (in)  pointer to new  ResumeTxFnPtr
+     */
+    void setResumeTxFnPtr(boost::function<void()> resumeTxFnPtr) { mResumeTxFnPtr = resumeTxFnPtr; };
+
+    /**
+     * @method setShutdownTxFnPtr
+     *
+     * @brief set shutdownTxFnPtr. This method is used for testing
+     *
+     * @param shutdownTxFnPtr (in) pointer to new ShutdownTxFnPtr
+     *
+     * @return none
+     */
+    void setShutdownTxFnPtr(boost::function<void()> shutdownTxFnPtr) { mShutdownTxFnPtr = shutdownTxFnPtr; }
+
+    /**
+     * @method setRestartTxFnPtr
+     *
+     * @brief set restartTxFnPtr. This method is used for testing
+     *
+     * @param restartTxFnPtr (in) pointer to new restartTxFnPtr
+     *
+     * @return none
+     */
+    void setRestartTxFnPtr(boost::function<void()> restartTxFnPtr) { mRestartTxFnPtr = restartTxFnPtr; }
+
 private:
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;

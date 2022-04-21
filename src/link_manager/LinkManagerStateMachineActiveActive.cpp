@@ -64,7 +64,6 @@ ActiveActiveStateMachine::ActiveActiveStateMachine(
 void ActiveActiveStateMachine::activateStateMachine()
 {
     if (mComponentInitState.all()) {
-        // TODO: use known mac address
         std::array<uint8_t, ETHER_ADDR_LEN> macAddress = mMuxPortConfig.getBladeMacAddress();
         std::array<char, 3 *ETHER_ADDR_LEN> macAddressStr = {0};
 
