@@ -56,6 +56,11 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
                 this, strand, mMuxPortConfig, ps(mCompositeState)
             );
             break;
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveActive>(
+                this, strand, mMuxPortConfig, ps(mCompositeState)
+            );
+            break;
         default:
             break;
     }
