@@ -280,10 +280,8 @@ void MuxManager::processGetServerMacAddress(
 {
     MUXLOGDEBUG(portName);
 
-    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
     PortMapIterator portMapIterator = mPortMap.find(portName);
-    // only allow ports in active-standby mode to react to mac address changes
-    if (portMapIterator != mPortMap.end() && portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+    if (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleGetServerMacAddress(address);
     }
 }
