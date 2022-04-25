@@ -48,7 +48,8 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
     mUnknownState(*this, muxPortConfig),
     mWaitState(*this, muxPortConfig),
     mPeerActiveState(*this, muxPortConfig),
-    mPeerUnknownState(*this, muxPortConfig)
+    mPeerUnknownState(*this, muxPortConfig),
+    mPeerWaitState(*this, muxPortConfig)
 {
 }
 

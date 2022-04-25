@@ -118,6 +118,15 @@ public:
      */
     void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent) override;
 
+    /**
+     *@method getCurrentPeerState
+     *
+     *@brief getter for current peer state
+     *
+     *@return current peer state of the state machine
+     */
+    LinkProberState *getCurrentPeerState() { return mCurrentPeerState; }
+
 private:
     /**
      *@method enterPeerState
@@ -129,15 +138,6 @@ private:
      *@return none
      */
     void enterPeerState(LinkProberState::Label label);
-
-    /**
-     *@method getCurrentPeerState
-     *
-     *@brief getter for current peer state
-     *
-     *@return current peer state of the state machine
-     */
-    LinkProberState *getCurrentPeerState() { return mCurrentPeerState; }
 
     /**
      *@method setCurrentPeerState

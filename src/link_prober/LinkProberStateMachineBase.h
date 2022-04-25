@@ -20,6 +20,7 @@
 #include "link_prober/ActiveState.h"
 #include "link_prober/PeerActiveState.h"
 #include "link_prober/PeerUnknownState.h"
+#include "link_prober/PeerWaitState.h"
 #include "link_prober/StandbyState.h"
 #include "link_prober/UnknownState.h"
 #include "link_prober/WaitState.h"
@@ -345,6 +346,15 @@ public:
     */
     PeerUnknownState* getPeerUnknownState() {return &mPeerUnknownState;};
 
+    /**
+    *@method getPeerWaitState
+    *
+    *@brief getter for PeerWaitState object
+    *
+    *@return pointer to PeerWaitState object
+    */
+    PeerWaitState* getPeerWaitState() {return &mPeerWaitState;};
+
 public:
     /**
      *@method getIcmpSelfEvent
@@ -452,6 +462,7 @@ private:
     WaitState mWaitState;
     PeerActiveState mPeerActiveState;
     PeerUnknownState mPeerUnknownState;
+    PeerWaitState mPeerWaitState;
 };
 } // namespace link_prober
 

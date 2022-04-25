@@ -54,6 +54,7 @@ public:
         Standby,
         Unknown,
         Wait,
+        PeerWait,
         PeerActive,
         PeerUnknown,
         Count

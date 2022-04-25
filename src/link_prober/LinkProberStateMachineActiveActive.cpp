@@ -42,7 +42,7 @@ LinkProberStateMachineActiveActive::LinkProberStateMachineActiveActive(
     : LinkProberStateMachineBase(linkManagerStateMachinePtr, strand, muxPortConfig)
 {
     enterState(label);
-    enterPeerState(LinkProberState::Label::PeerUnknown);
+    enterPeerState(LinkProberState::Label::PeerWait);
 }
 
 //
@@ -82,6 +82,9 @@ void LinkProberStateMachineActiveActive::enterPeerState(LinkProberState::Label l
             break;
         case LinkProberState::Label::PeerUnknown:
             setCurrentPeerState(dynamic_cast<LinkProberState *>(getPeerUnknownState()));
+            break;
+        case LinkProberState::Label::PeerWait:
+            setCurrentPeerState(dynamic_cast<LinkProberState *>(getPeerWaitState()));
             break;
         default:
             break;
