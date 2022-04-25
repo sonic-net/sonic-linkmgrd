@@ -394,7 +394,7 @@ void ActiveActiveStateMachine::handlePeerStateChange(
 )
 {
     link_prober::LinkProberState *currentPeerState = std::dynamic_pointer_cast<link_prober::LinkProberStateMachineActiveActive>(mLinkProberStateMachinePtr)->getCurrentPeerState();
-    if (currentPeerState->getStateLabel() == state) {
+    if ((dynamic_cast<link_state::LinkState *>(mLinkProberStateMachinePtr->getCurrentPeerState()))->getStateLabel() == state) {
         MUXLOGWARNING(
             boost::format("%s: Received peer link prober event, new state: %s") %
             mMuxPortConfig.getPortName() %
@@ -677,6 +677,7 @@ void ActiveActiveStateMachine::enterPeerMuxState(mux_state::MuxState::Label labe
 //
 void ActiveActiveStateMachine::enterPeerLinkProberState(link_prober::LinkProberState::Label label)
 {
+    mLinkProberStateMachinePtr->enterPeerState(label);
     mPeerLinkProberState = label;
 }
 

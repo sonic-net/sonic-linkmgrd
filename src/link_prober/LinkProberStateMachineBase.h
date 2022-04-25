@@ -292,6 +292,27 @@ public:
     virtual void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
 public:
+    /**
+     *@method getCurrentPeerState
+     *
+     *@brief getter for current peer state
+     *
+     *@return current peer state of the state machine
+     */
+    virtual LinkProberState *getCurrentPeerState();
+
+    /**
+     *@method enterPeerState
+     *
+     *@brief force the state machine to enter a given peer state
+     *
+     *@param label (in)  label of target peer state
+     *
+     *@return none
+     */
+    virtual void enterPeerState(LinkProberState::Label label);
+
+public:
    /**
     *@method getActiveState
     *

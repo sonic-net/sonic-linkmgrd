@@ -231,6 +231,27 @@ void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknown
 }
 
 //
+// ---> getCurrentPeerState();
+//
+// getter for current peer state
+//
+LinkProberState *LinkProberStateMachineBase::getCurrentPeerState()
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+    return nullptr;
+}
+
+//
+// ---> enterPeerState(LinkProberState::Label label);
+//
+// force the state machine to enter a given peer state
+//
+void LinkProberStateMachineBase::enterPeerState(LinkProberState::Label label)
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> postLinkManagerEvent(LinkProberState* linkProberState);
 //
 // post LinkProberState change event to LinkManager state machine

@@ -69,6 +69,16 @@ void LinkProberStateMachineActiveActive::enterState(LinkProberState::Label label
 }
 
 //
+// ---> getCurrentPeerState();
+//
+// getter for current peer state
+//
+LinkProberState *LinkProberStateMachineActiveActive::getCurrentPeerState()
+{
+    return mCurrentPeerState;
+}
+
+//
 // ---> enterPeerState(LinkProberState::Label label);
 //
 // force the state machine to enter a given peer state
