@@ -250,6 +250,24 @@ public: // state transition functions
      */
     void LinkProberActiveMuxErrorLinkUpTransitionFunction(CompositeState &nextState);
 
+    /**
+     * @method LinkProberActiveMuxWaitLinkUpTransitionFunction
+     *
+     * @brief transition function when entering {LinkProberActive, MuxWait, LinkUp} state
+     *
+     * @param nextState             reference to composite state
+     */
+    void LinkProberActiveMuxWaitLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+     * @method LinkProberUnknownMuxWaitLinkUpTransitionFunction
+     *
+     * @brief transition function when entering {LinkProberUnknown, MuxWait, LinkUp} state
+     *
+     * @param nextState             reference to composite state
+     */
+    void LinkProberUnknownMuxWaitLinkUpTransitionFunction(CompositeState &nextState);
+
 private: // utility methods to check/modify state
     /**
      * @method setLabel
@@ -395,10 +413,6 @@ private:
      */
     void handlePeerMuxWaitTimeout(boost::system::error_code errorCode);
 
-private: // peer link prober state and mux state
-    link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerUnknown;
-    mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Unknown;
-
 private: // testing only
     friend class mux::MuxPort;
     friend class test::FakeMuxPort;
@@ -479,6 +493,10 @@ private: // testing only
      * @return none
      */
     void setRestartTxFnPtr(boost::function<void()> restartTxFnPtr) { mRestartTxFnPtr = restartTxFnPtr; }
+
+private: // peer link prober state and mux state
+    link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
+    mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
 
 private:
     boost::asio::deadline_timer mWaitTimer;
