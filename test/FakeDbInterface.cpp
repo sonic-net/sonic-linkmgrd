@@ -40,7 +40,14 @@ FakeDbInterface::FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_se
 
 void FakeDbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
 {
+    mLastSetMuxState = label;
     mSetMuxStateInvokeCount++;
+}
+
+void FakeDbInterface::setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label)
+{
+    mLastSetPeerMuxState = label;
+    mSetPeerMuxStateInvokeCount++;
 }
 
 void FakeDbInterface::getMuxState(const std::string &portName)

@@ -37,6 +37,7 @@ public:
     virtual ~FakeDbInterface() = default;
 
     virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label) override;
+    virtual void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
     virtual void getMuxState(const std::string &portName) override;
     virtual void probeMuxState(const std::string &portName) override;
     virtual void setMuxLinkmgrState(
@@ -67,7 +68,11 @@ public:
 
     uint32_t mMuxStateRequest[mux_state::MuxState::Label::Count] = {0, 0, 0, 0};
 
+    mux_state::MuxState::Label mLastSetMuxState;
+    mux_state::MuxState::Label mLastSetPeerMuxState;
+
     uint32_t mSetMuxStateInvokeCount = 0;
+    uint32_t mSetPeerMuxStateInvokeCount = 0;
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
