@@ -184,10 +184,11 @@ public:
     *@brief initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db
     *
     * @param enable_feature_measurement (in) whether the feature that decreases link prober interval is enabled or not 
+    * @param enable_feature_default_route (in) whether the feature that shutdowns link prober & avoid switching active when defaul route is missing, is enable or not
     * 
     * @return none
     */
-    void initialize(bool enable_feature_measurement);
+    void initialize(bool enable_feature_measurement, bool enable_feature_default_route);
 
     /**
     *@method deinitialize
