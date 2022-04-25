@@ -26,7 +26,7 @@ LinkProberEvent LinkManagerStateMachineBase::mLinkProberEvent;
 MuxStateEvent LinkManagerStateMachineBase::mMuxStateEvent;
 LinkStateEvent LinkManagerStateMachineBase::mLinkStateEvent;
 
-std::vector<std::string> LinkManagerStateMachineBase::mLinkProberStateName = {"Active", "Standby", "Unknown", "Wait"};
+std::vector<std::string> LinkManagerStateMachineBase::mLinkProberStateName = {"Active", "Standby", "Unknown", "Wait", "PeerWait", "PeerActive", "PeerUnknown"};
 std::vector<std::string> LinkManagerStateMachineBase::mMuxStateName = {"Active", "Standby", "Unknown", "Error", "Wait"};
 std::vector<std::string> LinkManagerStateMachineBase::mLinkStateName = {"Up", "Down"};
 std::vector<std::string> LinkManagerStateMachineBase::mLinkHealthName = {"Uninitialized", "Unhealthy", "Healthy"};
