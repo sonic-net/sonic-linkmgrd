@@ -118,6 +118,9 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mStartProbingFnPtr = boost::bind(
                 &link_prober::LinkProber::startProbing, mLinkProberPtr.get()
             );
+            mUpdateEthernetFrameFnPtr = boost::bind(
+                &link_prober::LinkProber::updateEthernetFrame, mLinkProberPtr.get()
+            );
             mProbePeerTorFnPtr = boost::bind(
                 &link_prober::LinkProber::probePeerTor, mLinkProberPtr.get()
             );
