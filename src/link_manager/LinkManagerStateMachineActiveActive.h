@@ -67,9 +67,9 @@ public:
      *
      * @brief Construct a new Active Active State Machine object
      *
-     * @param muxPortPtr            pointer to a MuxPort object
-     * @param strand                boost strand object
-     * @param muxPortConfig         reference to MuxPortConfig object
+     * @param muxPortPtr                    pointer to a MuxPort object
+     * @param strand                        boost strand object
+     * @param muxPortConfig                 reference to MuxPortConfig object
      */
     ActiveActiveStateMachine(
         mux::MuxPort *muxPortPtr,
@@ -99,7 +99,7 @@ public: // db event handlers
      * @brief initialize the link prober component. Note if this is the last component to be initialized,
      *        state machine will be activated
      *
-     * @param address               SoC IPv4 address
+     * @param address                       SoC IPv4 address
      */
     void handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address) override;
 
@@ -108,7 +108,7 @@ public: // db event handlers
      *
      * @brief handle MUX state notification
      *
-     * @param label                 new MuxState label
+     * @param label                         new MuxState label
      */
     void handleMuxStateNotification(mux_state::MuxState::Label label) override;
 
@@ -117,7 +117,7 @@ public: // db event handlers
      *
      * @brief handle link state notification
      *
-     * @param label                 new LinkState label
+     * @param label                         new LinkState label
      */
     void handleSwssLinkStateNotification(const link_state::LinkState::Label label) override;
 
@@ -126,7 +126,7 @@ public: // db event handlers
      *
      * @brief handle MUX configuration change notification
      *
-     * @param mode                  new MUX config mode
+     * @param mode                          new MUX config mode
      */
     void handleMuxConfigNotification(const common::MuxPortConfig::Mode mode) override;
 
@@ -135,7 +135,7 @@ public: // db event handlers
      *
      * @brief handle probe MUX state notification
      *
-     * @param label                 new MuxState label
+     * @param label                         new MuxState label
      */
     void handleProbeMuxStateNotification(mux_state::MuxState::Label label) override;
 
@@ -144,7 +144,7 @@ public: // db event handlers
      *
      * @brief handle peer MUX state notification
      *
-     * @param label                 new peer MuxState label
+     * @param label                         new peer MuxState label
      */
     void handlePeerMuxStateNotification(mux_state::MuxState::Label label) override;
 
@@ -162,8 +162,8 @@ public: // state handlers
      *
      * @brief handles LinkProberEvent
      *
-     * @param event                 LinkProberEvent object
-     * @param state                 new LibProberState label
+     * @param event                         LinkProberEvent object
+     * @param state                         new LibProberState label
      */
     void handleStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state) override;
 
@@ -172,8 +172,8 @@ public: // state handlers
      *
      * @brief handles MuxStateEvent
      *
-     * @param event                 MuxStateEvent object
-     * @param state                 new MuxState label
+     * @param event                         MuxStateEvent object
+     * @param state                         new MuxState label
      */
     void handleStateChange(MuxStateEvent &event, mux_state::MuxState::Label state) override;
 
@@ -182,8 +182,8 @@ public: // state handlers
      *
      * @brief handles LinkStateEvent
      *
-     * @param event                 LinkStateEvent object
-     * @param state                 new LinkState label
+     * @param event                         LinkStateEvent object
+     * @param state                         new LinkState label
      */
     void handleStateChange(LinkStateEvent &event, link_state::LinkState::Label state) override;
 
@@ -192,8 +192,8 @@ public: // state handlers
      *
      * @brief handles peer LinkProberEvent
      *
-     * @param event                 LinkProberEvent object
-     * @param state                 new peer LinkState label
+     * @param event                         LinkProberEvent object
+     * @param state                         new peer LinkState label
      */
     void handlePeerStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state) override;
 
@@ -210,7 +210,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberActive, MuxStandby, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberActiveMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -219,7 +219,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberActive, MuxUnknown, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberActiveMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -228,7 +228,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberUnknown, MuxActive, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -237,7 +237,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberUnknown, MuxUnknown, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberUnknownMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -246,7 +246,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberActive, MuxError, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberActiveMuxErrorLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -255,7 +255,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberActive, MuxWait, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberActiveMuxWaitLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -264,7 +264,7 @@ public: // state transition functions
      *
      * @brief transition function when entering {LinkProberUnknown, MuxWait, LinkUp} state
      *
-     * @param nextState             reference to composite state
+     * @param nextState                     reference to composite state
      */
     void LinkProberUnknownMuxWaitLinkUpTransitionFunction(CompositeState &nextState);
 
@@ -274,7 +274,7 @@ private: // utility methods to check/modify state
      *
      * @brief sets linkmgr State db state
      *
-     * @param label                 new LinkManagerStateMachine label
+     * @param label                         new LinkManagerStateMachine label
      */
     inline void setLabel(Label label) override;
 
@@ -283,8 +283,8 @@ private: // utility methods to check/modify state
      *
      * @brief force LinkProberState to switch state
      *
-     * @param nextState             reference to composite state
-     * @param label                 new LinkProberState label to switch to
+     * @param nextState                     reference to composite state
+     * @param label                         new LinkProberState label to switch to
      */
     inline void enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label);
 
@@ -293,8 +293,8 @@ private: // utility methods to check/modify state
      *
      * @brief force MuxState to switch state
      *
-     * @param nextState             reference to composite state
-     * @param label                 new MuxState label to switch to
+     * @param nextState                     reference to composite state
+     * @param label                         new MuxState label to switch to
      */
     inline void enterMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
 
@@ -303,8 +303,8 @@ private: // utility methods to check/modify state
      *
      * @brief force LinkState to switch state
      *
-     * @param nextState             reference to composite state
-     * @param label                 new LinkState label to switch to
+     * @param nextState                     reference to composite state
+     * @param label                         new LinkState label to switch to
      */
     inline void enterLinkState(CompositeState &nextState, link_state::LinkState::Label label);
 
@@ -313,8 +313,8 @@ private: // utility methods to check/modify state
      *
      * @brief force peer MuxState to switch state
      *
-     * @param nextState             reference to composite state
-     * @param label                 new peer MuxState label to switch to
+     * @param nextState                     reference to composite state
+     * @param label                         new peer MuxState label to switch to
      */
     inline void enterPeerMuxState(mux_state::MuxState::Label label);
 
@@ -323,7 +323,7 @@ private: // utility methods to check/modify state
      *
      * @brief force peer LinkProberState to switch state
      *
-     * @param label                 new peer LinkProberState to switch to
+     * @param label                         new peer LinkProberState to switch to
      */
     inline void enterPeerLinkProberState(link_prober::LinkProberState::Label label);
 
@@ -332,8 +332,8 @@ private: // utility methods to check/modify state
      *
      * @brief switch MUX to the target state
      *
-     * @param nextState             reference to composite state
-     * @param label                 new MuxState label to switch to
+     * @param nextState                     reference to composite state
+     * @param label                         new MuxState label to switch to
      */
     inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
 
@@ -342,7 +342,7 @@ private: // utility methods to check/modify state
      *
      * @brief switch peer MUX to the target state
      *
-     * @param label                 new MuxState label to switch to
+     * @param label                         new MuxState label to switch to
      */
     inline void switchPeerMuxState(mux_state::MuxState::Label label);
 
@@ -365,7 +365,7 @@ private: // utility methods to check/modify state
      *
      * @brief initialize LinkProberState when configuring the composite state machine
      *
-     * @param compositeState        reference to composite state
+     * @param compositeState                reference to composite state
      */
     void initLinkProberState(CompositeState &compositeState);
 
@@ -382,7 +382,7 @@ private:
      *
      * @brief start a timer to wait for mux state notification from xcvrd/orchagent
      *
-     * @param factor                factor used to scale the timeout
+     * @param factor                        factor used to scale the timeout
      */
     inline void startMuxWaitTimer(uint32_t factor = 1);
 
@@ -391,7 +391,7 @@ private:
      *
      * @brief handle when xcrvrd/orchagent has timed out responding mux state
      *
-     * @param errorCode             error code object
+     * @param errorCode                     error code object
      */
     void handleMuxWaitTimeout(boost::system::error_code errorCode);
 
@@ -400,7 +400,7 @@ private:
      *
      * @brief start a timer to wait for peer mux state notification from xcvrd/orchagent
      *
-     * @param factor                factor used to scale the timeout
+     * @param factor                        factor used to scale the timeout
      */
     inline void startPeerMuxWaitTimer(uint32_t factor = 1);
 
@@ -409,7 +409,7 @@ private:
      *
      * @brief handle when xcrvrd/orchagent has timed out responding peer mux state
      *
-     * @param errorCode             error code object
+     * @param errorCode                     error code object
      */
     void handlePeerMuxWaitTimeout(boost::system::error_code errorCode);
 
@@ -423,7 +423,7 @@ private: // testing only
      *
      * @brief set new InitializeProberFnPtr for the state machine. This method is used for testing
      *
-     * @param initializeProberFnPtr (in)  pointer to new InitializeProberFnPtr
+     * @param initializeProberFnPtr (in)    pointer to new InitializeProberFnPtr
      */
     void setInitializeProberFnPtr(boost::function<void()> initializeProberFnPtr) { mInitializeProberFnPtr = initializeProberFnPtr; };
 
@@ -432,7 +432,7 @@ private: // testing only
      *
      * @brief set new StartProbingFnPtr for the state machine. This method is used for testing
      *
-     * @param startProbingFnPtr (in)  pointer to new StartProbingFnPtr
+     * @param startProbingFnPtr (in)        pointer to new StartProbingFnPtr
      */
     void setStartProbingFnPtr(boost::function<void()> startProbingFnPtr) { mStartProbingFnPtr = startProbingFnPtr; };
 
@@ -441,7 +441,7 @@ private: // testing only
      *
      * @brief set new UpdateEthernetFrameFnPtr for the state machine. This method is used for testing
      *
-     * @param updateEthernetFrameFnPtr (in)  pointer to new UpdateEthernetFrameFnPtr
+     * @param updateEthernetFrameFnPtr (in) pointer to new UpdateEthernetFrameFnPtr
      */
     void setUpdateEthernetFrameFnPtr(boost::function<void()> updateEthernetFrameFnPtr) { mUpdateEthernetFrameFnPtr = updateEthernetFrameFnPtr; };
 
@@ -450,7 +450,7 @@ private: // testing only
      *
      * @brief set new ProbePeerTorFnPtr for the state machine. This method is used for testing
      *
-     * @param probePeerTorFnPtr (in)  pointer to new ProbePeerTorFnPtr
+     * @param probePeerTorFnPtr (in)        pointer to new ProbePeerTorFnPtr
      */
     void setProbePeerTorFnPtr(boost::function<void()> probePeerTorFnPtr) { mProbePeerTorFnPtr = probePeerTorFnPtr; };
 
@@ -459,7 +459,7 @@ private: // testing only
      *
      * @brief set new SuspendTXFnPtr for the state machine. This method is used for testing
      *
-     * @param suspendTxFnPtr (in)  pointer to new  SuspendTxFnPtr
+     * @param suspendTxFnPtr (in)           pointer to new  SuspendTxFnPtr
      */
     void setSuspendTxFnPtr(boost::function<void(uint32_t suspendTime_msec)> suspendTxFnPtr) { mSuspendTxFnPtr = suspendTxFnPtr; };
 
@@ -468,7 +468,7 @@ private: // testing only
      *
      * @brief set new ResumeTXFnPtr for the state machine. This method is used for testing
      *
-     * @param resumeTxFnPtr (in)  pointer to new  ResumeTxFnPtr
+     * @param resumeTxFnPtr (in)            pointer to new  ResumeTxFnPtr
      */
     void setResumeTxFnPtr(boost::function<void()> resumeTxFnPtr) { mResumeTxFnPtr = resumeTxFnPtr; };
 
@@ -477,7 +477,7 @@ private: // testing only
      *
      * @brief set shutdownTxFnPtr. This method is used for testing
      *
-     * @param shutdownTxFnPtr (in) pointer to new ShutdownTxFnPtr
+     * @param shutdownTxFnPtr (in)          pointer to new ShutdownTxFnPtr
      *
      * @return none
      */
@@ -488,7 +488,7 @@ private: // testing only
      *
      * @brief set restartTxFnPtr. This method is used for testing
      *
-     * @param restartTxFnPtr (in) pointer to new restartTxFnPtr
+     * @param restartTxFnPtr (in)           pointer to new restartTxFnPtr
      *
      * @return none
      */
