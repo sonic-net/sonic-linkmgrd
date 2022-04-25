@@ -51,7 +51,6 @@ namespace mux
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
-using SoCIpPortMap = std::map<boost::asio::ip::address, std::string>;
 
 /**
  *@class DbInterface
@@ -703,7 +702,6 @@ private:
     boost::asio::io_service::strand mStrand;
 
     ServerIpPortMap mServerIpPortMap;
-    SoCIpPortMap mSoCIpPortMap;
 };
 
 } /* namespace common */

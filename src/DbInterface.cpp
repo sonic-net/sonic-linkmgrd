@@ -696,7 +696,6 @@ void DbInterface::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> 
             boost::asio::ip::address ipAddress = boost::asio::ip::make_address(SoCIpAddress, errorCode);
             if (!errorCode) {
                 mMuxManagerPtr->addOrUpdateMuxPortSoCAddress(portName, ipAddress);
-                mSoCIpPortMap[ipAddress] = portName;
             } else {
                 MUXLOGFATAL(boost::format("%s: Received invalid SoC IP: %s, error code: %d") %
                     portName %
