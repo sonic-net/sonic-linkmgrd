@@ -212,6 +212,9 @@ void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::Ac
     linkManagerStateMachineActiveActive->setUpdateEthernetFrameFnPtr(
         boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
     );
+    linkManagerStateMachineActiveActive->setProbePeerTorFnPtr(
+        boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
+    );
     linkManagerStateMachineActiveActive->setSuspendTxFnPtr(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
     );
