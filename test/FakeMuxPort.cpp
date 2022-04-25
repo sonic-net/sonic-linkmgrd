@@ -37,23 +37,68 @@ FakeMuxPort::FakeMuxPort(
     uint16_t serverId,
     boost::asio::io_service &ioService,
     common::MuxPortConfig::PortCableType portCableType
-) :
-    mux::MuxPort(
-        dbInterface,
-        muxConfig,
-        portName,
-        serverId,
-        ioService,
-        portCableType
-    ),
-    mActiveStandbyStateMachinePtr(
-        std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())
-    ),
-    mFakeLinkProber(
-        std::make_shared<FakeLinkProber> (mActiveStandbyStateMachinePtr->getLinkProberStateMachinePtr().get())
-    )
+)
+    : mux::MuxPort(
+          dbInterface,
+          muxConfig,
+          portName,
+          serverId,
+          ioService,
+          portCableType
+      ),
+      mActiveActiveStateMachinePtr(
+          std::dynamic_pointer_cast<link_manager::ActiveActiveStateMachine>(getLinkManagerStateMachinePtr())
+      ),
+      mActiveStandbyStateMachinePtr(
+          std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(getLinkManagerStateMachinePtr())
+      ),
+      mFakeLinkProber(
+          std::make_shared<FakeLinkProber>(getLinkManagerStateMachinePtr()->getLinkProberStateMachinePtr().get())
+      )
 {
     mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
+    switch (portCableType) {
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            initLinkProberActiveStandby();
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            initLinkProberActiveActive();
+            break;
+        default:
+            break;
+    }
+}
+
+inline void FakeMuxPort::initLinkProberActiveActive()
+{
+    getActiveActiveStateMachinePtr()->setInitializeProberFnPtr(
+        boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setStartProbingFnPtr(
+        boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setUpdateEthernetFrameFnPtr(
+        boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setProbePeerTorFnPtr(
+        boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setSuspendTxFnPtr(
+        boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
+    getActiveActiveStateMachinePtr()->setResumeTxFnPtr(
+        boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setShutdownTxFnPtr(
+        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
+    );
+    getActiveActiveStateMachinePtr()->setRestartTxFnPtr(
+        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
+}
+
+inline void FakeMuxPort::initLinkProberActiveStandby()
+{
     getActiveStandbyStateMachinePtr()->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
     );

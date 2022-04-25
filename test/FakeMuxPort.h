@@ -47,6 +47,7 @@ public:
 
     void activateStateMachine();
 
+    std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }
     const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };
     link_prober::LinkProberStateMachineBase* getLinkProberStateMachinePtr() { return getLinkManagerStateMachinePtr()->getLinkProberStateMachinePtr().get(); };
@@ -55,6 +56,12 @@ public:
 
     bool getPendingMuxModeChange() { return getActiveStandbyStateMachinePtr()->mPendingMuxModeChange; };
     common::MuxPortConfig::Mode getTargetMuxMode() { return getActiveStandbyStateMachinePtr()->mTargetMuxMode; };
+
+    link_prober::LinkProberState::Label getPeerLinkProberState() { return getActiveActiveStateMachinePtr()->mPeerLinkProberState; };
+    mux_state::MuxState::Label getPeerMuxState() { return getActiveActiveStateMachinePtr()->mPeerMuxState; };
+
+    inline void initLinkProberActiveActive();
+    inline void initLinkProberActiveStandby();
 
     std::shared_ptr<link_manager::ActiveActiveStateMachine> mActiveActiveStateMachinePtr;
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> mActiveStandbyStateMachinePtr;
