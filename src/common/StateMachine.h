@@ -112,6 +112,15 @@ public:
     */
     boost::asio::io_service::strand& getStrand() {return mStrand;};
 
+    /**
+    *@method getMuxPortConfig
+    *
+    *@brief getter MuxPortConfig object
+    *
+    *@return reference to MuxPortConfig object
+    */
+    const MuxPortConfig& getMuxPortConfig() const {return mMuxPortConfig;};
+
 private:
     friend class link_manager::LinkManagerStateMachineBase;
     friend class link_manager::ActiveStandbyStateMachine;
@@ -142,15 +151,6 @@ private:
     *@return current state of the state machine
     */
     State* getCurrentState() {return mCurrentState;};
-
-    /**
-    *@method getMuxPortConfig
-    *
-    *@brief getter MuxPortConfig object
-    *
-    *@return reference to MuxPortConfig object
-    */
-    const MuxPortConfig& getMuxPortConfig() const {return mMuxPortConfig;};
 
 private:
     boost::asio::io_service::strand mStrand;

@@ -130,6 +130,7 @@ public:
 private:
     uint8_t mSelfEventCount = 0;
     uint8_t mPeerEventCount = 0;
+    uint8_t mUnknownEventCount = 0;
 };
 
 } /* namespace link_prober */

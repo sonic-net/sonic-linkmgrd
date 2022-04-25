@@ -60,6 +60,9 @@ void LinkProberStateMachineActiveActive::enterState(LinkProberState::Label label
         case LinkProberState::Label::Unknown:
             setCurrentState(dynamic_cast<LinkProberState *>(getUnknownState()));
             break;
+        case LinkProberState::Label::Wait:
+            setCurrentState(dynamic_cast<LinkProberState *>(getWaitState()));
+            break;
         default:
             break;
     }
