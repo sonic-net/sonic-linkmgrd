@@ -42,12 +42,11 @@ void FakeLinkProber::postLinkProberEvent(E &e)
 {
     boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
     boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_prober::LinkProberStateMachineBase::*) (decltype(e))>
-            (&link_prober::LinkProberStateMachineBase::processEvent<decltype(e)>),
-        mLinkProberStateMachine,
-        e
-    )));
+    ioService.post(
+        strand.wrap(
+            [this, &e]() { mLinkProberStateMachine->processEvent(e); }
+        )
+    );
 }
 
 template
@@ -58,6 +57,12 @@ void FakeLinkProber::postLinkProberEvent<link_prober::IcmpPeerEvent&>(link_probe
 
 template
 void FakeLinkProber::postLinkProberEvent<link_prober::IcmpUnknownEvent&>(link_prober::IcmpUnknownEvent &event);
+
+template
+void FakeLinkProber::postLinkProberEvent<link_prober::IcmpPeerActiveEvent&>(link_prober::IcmpPeerActiveEvent &event);
+
+template
+void FakeLinkProber::postLinkProberEvent<link_prober::IcmpPeerUnknownEvent&>(link_prober::IcmpPeerUnknownEvent &event);
 
 void FakeLinkProber::postSuspendTimerExpiredEvent()
 {
