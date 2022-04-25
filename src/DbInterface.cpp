@@ -1193,6 +1193,7 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&stateDbPortTable);
     swssSelect.addSelectable(&stateDbRouteTable);
     swssSelect.addSelectable(&stateDbMuxInfoTable);
+    swssSelect.addSelectable(&stateDbPeerMuxResponseTable);
     swssSelect.addSelectable(&netlinkNeighbor);
 
     while (mPollSwssNotifcation) {
