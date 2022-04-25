@@ -4,6 +4,7 @@ CPP_SRCS += \
     ./test/FakeLinkProber.cpp \
     ./test/FakeMuxPort.cpp \
     ./test/LinkManagerStateMachineTest.cpp \
+    ./test/LinkManagerStateMachineActiveActiveTest.cpp \
     ./test/LinkProberTest.cpp \
     ./test/MuxManagerTest.cpp \
     ./test/MockLinkManagerStateMachine.cpp \
@@ -15,6 +16,7 @@ OBJS_LINKMGRD_TEST += \
     ./test/FakeLinkProber.o \
     ./test/FakeMuxPort.o \
     ./test/LinkManagerStateMachineTest.o \
+    ./test/LinkManagerStateMachineActiveActiveTest.o \
     ./test/LinkProberTest.o \
     ./test/MuxManagerTest.o \
     ./test/MockLinkManagerStateMachine.o \
@@ -26,6 +28,7 @@ CPP_DEPS += \
     ./test/FakeLinkProber.d \
     ./test/FakeMuxPort.d \
     ./test/LinkManagerStateMachineTest.d \
+    ./test/LinkManagerStateMachineActiveActiveTest.d \
     ./test/LinkProberTest.d \
     ./test/MuxManagerTest.d \
     ./test/MockLinkManagerStateMachine.d \
