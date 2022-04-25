@@ -212,14 +212,13 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
 {
     if (mComponentInitState.all()) {
         CompositeState nextState = mCompositeState;
-        if (mode == common::MuxPortConfig::Mode::Active &&
-            ms(mCompositeState) != mux_state::MuxState::Label::Active) {
+        if (mode == common::MuxPortConfig::Mode::Active && ms(mCompositeState) != mux_state::MuxState::Label::Active) {
             switchMuxState(nextState, mux_state::MuxState::Label::Active);
         } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby);
         } else {
+            // enforce link prober state to match mux state to trigger possible transitions
             initLinkProberState(nextState);
-            mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
             probeMuxState();
         }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
@@ -396,8 +395,7 @@ void ActiveActiveStateMachine::handlePeerStateChange(
     link_prober::LinkProberState::Label state
 )
 {
-    link_prober::LinkProberState *currentPeerState = std::dynamic_pointer_cast<link_prober::LinkProberStateMachineActiveActive>(mLinkProberStateMachinePtr)->getCurrentPeerState();
-    if ((dynamic_cast<link_state::LinkState *>(mLinkProberStateMachinePtr->getCurrentPeerState()))->getStateLabel() == state) {
+    if ((dynamic_cast<link_prober::LinkProberState *>(mLinkProberStateMachinePtr->getCurrentPeerState()))->getStateLabel() == state) {
         MUXLOGWARNING(
             boost::format("%s: Received peer link prober event, new state: %s") %
             mMuxPortConfig.getPortName() %
@@ -521,16 +519,6 @@ void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunctio
     switchMuxState(nextState, mux_state::MuxState::Label::Active);
 }
 
-// void ActiveActiveStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunction(CompositeState &nextState)
-// {
-//     MUXLOGINFO(mMuxPortConfig.getPortName());
-//     if (ps(mCompositeState) != link_prober::LinkProberState::Active) {
-//         switchMuxState(nextState, mux_state::MuxState::Label::Active);
-//     } else {
-//         probeMuxState();
-//     }
-// }
-
 //
 // ---> LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
 //
@@ -550,7 +538,11 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunctio
 void ActiveActiveStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    probeMuxState();
+    if (ps(mCompositeState) != link_prober::LinkProberState::Active) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    } else {
+        probeMuxState();
+    }
 }
 
 //
@@ -561,7 +553,11 @@ void ActiveActiveStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunctio
 void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    probeMuxState();
+    if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+    } else {
+        probeMuxState();
+    }
 }
 
 //
@@ -776,6 +772,9 @@ void ActiveActiveStateMachine::initLinkProberState(CompositeState &compositeStat
         case mux_state::MuxState::Label::Error:
             enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait);
             break;
+        case mux_state::MuxState::Label::Wait:
+            enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait);
+            break;
         default:
             break;
     }
@@ -799,6 +798,9 @@ void ActiveActiveStateMachine::initPeerLinkProberState()
             enterPeerLinkProberState(link_prober::LinkProberState::Label::PeerWait);
             break;
         case mux_state::MuxState::Label::Error:
+            enterPeerLinkProberState(link_prober::LinkProberState::Label::PeerWait);
+            break;
+        case mux_state::MuxState::Label::Wait:
             enterPeerLinkProberState(link_prober::LinkProberState::Label::PeerWait);
             break;
         default:
