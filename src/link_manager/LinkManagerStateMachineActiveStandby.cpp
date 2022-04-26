@@ -1283,7 +1283,7 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxStandbyLinkUpTransitionFunction
 //
 void ActiveStandbyStateMachine::LinkProberWaitMuxUnknownLinkUpTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer(mMuxUnknownBackoffFactor);
     mMuxUnknownBackoffFactor <<= 1;
@@ -1321,7 +1321,7 @@ void ActiveStandbyStateMachine::LinkProberUnknownMuxStandbyLinkDownTransitionFun
 //
 void ActiveStandbyStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer(mMuxUnknownBackoffFactor);
     mMuxUnknownBackoffFactor <<= 1;
@@ -1359,7 +1359,7 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxStandbyLinkDownTransitionFuncti
 //
 void ActiveStandbyStateMachine::LinkProberWaitMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer(mMuxUnknownBackoffFactor);
     mMuxUnknownBackoffFactor <<= 1;
