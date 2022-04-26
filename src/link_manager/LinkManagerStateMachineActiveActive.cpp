@@ -48,6 +48,7 @@ ActiveActiveStateMachine::ActiveActiveStateMachine(
            mux_state::MuxState::Label::Wait,
            link_state::LinkState::Label::Down}
       ),
+      mDeadlineTimer(strand.context()),
       mWaitTimer(strand.context()),
       mPeerWaitTimer(strand.context())
 {
@@ -239,6 +240,10 @@ void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxSta
     MUXLOGWARNING(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mWaitTimer.cancel();
+    if (label == mux_state::MuxState::Label::Active || label == mux_state::MuxState::Label::Standby) {
+        mMuxProbeBackoffFactor = 1;
+        mDeadlineTimer.cancel();
+    }
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::DriverUpdate) {
@@ -541,7 +546,7 @@ void ActiveActiveStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunctio
     if (ps(mCompositeState) != link_prober::LinkProberState::Active) {
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
     } else {
-        probeMuxState();
+        startMuxProbeTimer();
     }
 }
 
@@ -556,7 +561,7 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFuncti
     if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
         switchMuxState(nextState, mux_state::MuxState::Label::Standby);
     } else {
-        probeMuxState();
+        startMuxProbeTimer();
     }
 }
 
@@ -568,7 +573,7 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFuncti
 void ActiveActiveStateMachine::LinkProberActiveMuxErrorLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    probeMuxState();
+    startMuxProbeTimer();
 }
 
 //
@@ -703,6 +708,7 @@ void ActiveActiveStateMachine::switchMuxState(
         enterMuxState(nextState, label);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->setMuxState(label);
+        mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
         probeMuxState();
@@ -805,6 +811,45 @@ void ActiveActiveStateMachine::initPeerLinkProberState()
             break;
         default:
             break;
+    }
+}
+
+//
+// ---> startMuxProbeTimer();
+//
+// start a mux probe and wait for mux probe notification(active or standby) from xcvrd
+//
+void ActiveActiveStateMachine::startMuxProbeTimer()
+{
+    probeMuxState();
+    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(
+        mMuxProbeBackoffFactor * mMuxPortConfig.getNegativeStateChangeRetryCount() * mMuxPortConfig.getTimeoutIpv4_msec()
+    ));
+    mDeadlineTimer.async_wait(getStrand().wrap(boost::bind(
+        &ActiveActiveStateMachine::handleMuxProbeTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
+}
+
+//
+// ---> handleMuxProbeTimeout(boost::system::error_code errorCode);
+//
+// handles when xcvrd has timeout responding mux probe
+//
+void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    if (errorCode == boost::system::errc::success) {
+        if (ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
+            ms(mCompositeState) == mux_state::MuxState::Label::Error ||
+            ms(mCompositeState) == mux_state::MuxState::Label::Wait) {
+            mMuxProbeBackoffFactor <<= 1;
+            mMuxProbeBackoffFactor = mMuxProbeBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxProbeBackoffFactor;
+            startMuxProbeTimer();
+        } else {
+            mMuxProbeBackoffFactor = 1;
+        }
     }
 }
 

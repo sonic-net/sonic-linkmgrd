@@ -378,6 +378,18 @@ private: // utility methods to check/modify state
 
 private:
     /**
+     * @brief start a mux probe and wait for mux probe notification(active or standby) from xcvrd
+     */
+    inline void startMuxProbeTimer();
+
+    /**
+     * @brief handles when xcvrd has timeout responding mux probe
+     *
+     * @param errorCode                     error code object
+     */
+    void handleMuxProbeTimeout(boost::system::error_code errorCode);
+
+    /**
      * @method startMuxWaitTimer
      *
      * @brief start a timer to wait for mux state notification from xcvrd/orchagent
@@ -499,6 +511,9 @@ private: // peer link prober state and mux state
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
 
 private:
+    uint32_t mMuxProbeBackoffFactor = 1;
+
+    boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;
 
