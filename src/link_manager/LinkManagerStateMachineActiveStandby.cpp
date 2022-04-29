@@ -333,6 +333,13 @@ void ActiveStandbyStateMachine::switchMuxState(
             mMuxPortConfig.getPortName() %
             mMuxStateName[label]
         );
+
+        // mWaitActiveUpCount is introduced to address asymmetric link drop issue. 
+        // Resetting the count to avoid unnecessary HB suspends. 
+        if(label == mux_state::MuxState::Label::Active) {
+            mWaitActiveUpCount = 0;
+        }
+
         enterMuxState(nextState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
