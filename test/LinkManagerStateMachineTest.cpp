@@ -187,6 +187,7 @@ void LinkManagerStateMachineTest::handleMuxConfig(std::string config, uint32_t c
 void LinkManagerStateMachineTest::activateStateMachine()
 {
     mFakeMuxPort.activateStateMachine();
+    mFakeMuxPort.handleDefaultRouteState("ok");
 }
 
 void LinkManagerStateMachineTest::setMuxActive()
@@ -1060,17 +1061,13 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
     setMuxActive();
 
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
+
     postDefaultRouteEvent("na", 3);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
-}
 
-TEST_F(LinkManagerStateMachineTest, MuxStandbyDefaultRouteStateOK) 
-{
-    setMuxStandby();
-
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,0);
     postDefaultRouteEvent("ok", 3);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
