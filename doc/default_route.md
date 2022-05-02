@@ -18,7 +18,7 @@ For now we only care about IPv4, but state db notification handler should be pro
 * Stop sending heartbeat   
 To shutdown heartbeat sending if default route is missing, is a straightforward way to fake an unhealthy status. A faked unhealthy status will help linkmgrd:
     * keep the ToR in standby if one ToR is missing default route;
-    * avoid oscillation if both ToRs are missing defualt route (as eventually both will be `LinkProber:Wait` state).   
+    * avoid oscillation if both ToRs are missing default route (as eventually both will be `LinkProber:Wait` state).   
 
 Link prober will still be able to receive heartbeat. So if we remove & re-add the default route on both ToRs, a state transition path can be:   
 
@@ -34,7 +34,7 @@ In step 3 of the transition path above, if standby side gets default route back 
 To meet requirement #5, we want to cache the default route status, and when mux mode is switching between `auto` and `manual`, linkmgrd can determine if it should stop or resume heartbeat sending. 
 
 * Avoid proactive switches  
-It's obvious that, switching a ToR without defualt route to `active` is meaningless. Though eventually, due to suspending of heartbeat, the other ToR will take over the traffic, we will expect 300 ms packet loss in between. Thus, we will explicitly avoid switching to `active` if a ToR is missing default route.   
+It's obvious that, switching a ToR without default route to `active` is meaningless. Though eventually, due to suspending of heartbeat, the other ToR will take over the traffic, we will expect 300 ms packet loss in between. Thus, we will explicitly avoid switching to `active` if a ToR is missing default route.   
 The state transition path above will hence be updated at step #2, like below:
 
 ```
