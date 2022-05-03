@@ -296,6 +296,26 @@ public:
      */
     inline void enableSwitchoverMeasurement(bool enable_feature) {mEnableSwitchoverMeasurement = enable_feature;};
 
+    /**
+     * @method enableDefaultRouteFeature
+     * 
+     * @brief enable or disable the feature that shutdowns link prober & avoid switching active when defaul route is missing
+     * 
+     * @param enable_feature (in) enable feature
+     * 
+     * @return none 
+     */
+    inline void enableDefaultRouteFeature(bool enable_feature) {mEnableDefaultRouteFeature = enable_feature;};
+
+    /**
+     * @method getIfEnableDefaultRouteFeature
+     * 
+     * @brief check if default route related feature is enabled or not 
+     * 
+     * @return if default route related feature is enabled or not
+     */
+    inline bool getIfEnableDefaultRouteFeature() {return mEnableDefaultRouteFeature;};
+
 private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
@@ -308,6 +328,8 @@ private:
 
     bool mEnableSwitchoverMeasurement = false;
     uint32_t mDecreasedTimeoutIpv4_msec = 10;
+
+    bool mEnableDefaultRouteFeature = false;
 
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");

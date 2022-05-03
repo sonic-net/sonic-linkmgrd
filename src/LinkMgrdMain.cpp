@@ -65,6 +65,7 @@ int main(int argc, const char* argv[])
     //
     boost::log::trivial::severity_level level;
     bool measureSwitchover = false;
+    bool defaultRoute = false;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
@@ -77,6 +78,10 @@ int main(int argc, const char* argv[])
          ("measure_switchover_overhead,m",
          program_options::bool_switch(&measureSwitchover)->default_value(false),
          "Decrease link prober interval after switchover to better measure switchover overhead")
+         ("default_route,d",
+         program_options::bool_switch(&defaultRoute)->default_value(false),
+         "Disable heartbeat sending and avoid switching to active when default route is missing"
+         )
     ;
 
     //
@@ -115,7 +120,7 @@ int main(int argc, const char* argv[])
         link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
 
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
-        muxManagerPtr->initialize(measureSwitchover);
+        muxManagerPtr->initialize(measureSwitchover, defaultRoute);
         muxManagerPtr->run();
         muxManagerPtr->deinitialize();
     }

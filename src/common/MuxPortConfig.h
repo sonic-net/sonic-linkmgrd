@@ -269,6 +269,15 @@ public:
      */
     inline bool ifEnableSwitchoverMeasurement() {return mMuxConfig.getIfEnableSwitchoverMeasurement();};
 
+    /**
+     * @method ifEnableDefaultRouteFeature
+     * 
+     * @brief check if the default route related feature is enabled or not 
+     * 
+     * @return if the feature is enabled
+     */
+    inline bool ifEnableDefaultRouteFeature() {return mMuxConfig.getIfEnableDefaultRouteFeature();};
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;

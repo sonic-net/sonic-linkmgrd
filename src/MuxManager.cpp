@@ -59,7 +59,7 @@ MuxManager::MuxManager() :
 //
 // initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db
 //
-void MuxManager::initialize(bool enable_feature_measurement)
+void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature_default_route)
 {
     for (uint8_t i = 0; (mMuxConfig.getNumberOfThreads() > 2) &&
                         (i < mMuxConfig.getNumberOfThreads() - 2); i++) {
@@ -71,6 +71,7 @@ void MuxManager::initialize(bool enable_feature_measurement)
     mDbInterfacePtr->initialize();
 
     mMuxConfig.enableSwitchoverMeasurement(enable_feature_measurement);
+    mMuxConfig.enableDefaultRouteFeature(enable_feature_default_route);
 }
 
 //
@@ -289,7 +290,7 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
     while (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleDefaultRouteState(nextState);
         portMapIterator ++;
-    }
+    }                                                                                                                               
 }
 
 //
