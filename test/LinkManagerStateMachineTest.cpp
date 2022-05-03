@@ -1060,14 +1060,22 @@ TEST_F(LinkManagerStateMachineTest, MuxActivDefaultRouteStateNA)
 {
     setMuxActive();
 
+    EXPECT_FALSE(mMuxConfig.getIfEnableDefaultRouteFeature());
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
 
     postDefaultRouteEvent("na", 3);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    postDefaultRouteEvent("na", 3);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
 
     postDefaultRouteEvent("ok", 3);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,3);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
