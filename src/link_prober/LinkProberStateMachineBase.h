@@ -20,6 +20,7 @@
 #include "link_prober/ActiveState.h"
 #include "link_prober/PeerActiveState.h"
 #include "link_prober/PeerUnknownState.h"
+#include "link_prober/PeerWaitState.h"
 #include "link_prober/StandbyState.h"
 #include "link_prober/UnknownState.h"
 #include "link_prober/WaitState.h"
@@ -291,6 +292,27 @@ public:
     virtual void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
 
 public:
+    /**
+     *@method getCurrentPeerState
+     *
+     *@brief getter for current peer state
+     *
+     *@return current peer state of the state machine
+     */
+    virtual LinkProberState *getCurrentPeerState();
+
+    /**
+     *@method enterPeerState
+     *
+     *@brief force the state machine to enter a given peer state
+     *
+     *@param label (in)  label of target peer state
+     *
+     *@return none
+     */
+    virtual void enterPeerState(LinkProberState::Label label);
+
+public:
    /**
     *@method getActiveState
     *
@@ -344,6 +366,15 @@ public:
     *@return pointer to PeerUnknownState object
     */
     PeerUnknownState* getPeerUnknownState() {return &mPeerUnknownState;};
+
+    /**
+    *@method getPeerWaitState
+    *
+    *@brief getter for PeerWaitState object
+    *
+    *@return pointer to PeerWaitState object
+    */
+    PeerWaitState* getPeerWaitState() {return &mPeerWaitState;};
 
 public:
     /**
@@ -452,6 +483,7 @@ private:
     WaitState mWaitState;
     PeerActiveState mPeerActiveState;
     PeerUnknownState mPeerUnknownState;
+    PeerWaitState mPeerWaitState;
 };
 } // namespace link_prober
 

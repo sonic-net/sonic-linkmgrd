@@ -47,6 +47,9 @@ using PortMapIterator = PortMap::iterator;
 using PortCableTypeMap = std::map<std::string, common::MuxPortConfig::PortCableType>;
 using PortCableTypeMapIterator = PortCableTypeMap::iterator;
 
+const std::array<uint8_t, ETHER_ADDR_LEN> KNOWN_MAC_START = {0x04, 0x27, 0x28, 0x7a, 0x00, 0x00};
+const size_t KNOWN_MAC_COUNT = 1024;
+
 /**
  *@class MuxManager
  *
@@ -241,6 +244,18 @@ public:
     void addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address);
 
     /**
+    *@method addOrUpdateMuxPortSoCAddress
+    *
+    *@brief update MUX port SoC IPv4 Address. If port is not found, create new MuxPort object
+    *
+    *@param portName (in)   Mux port name
+    *@param address (in)    SoC IP address
+    *
+    *@return none
+    */
+    void addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address);
+
+    /**
     *@method updateMuxPortConfig
     *
     *@brief update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
@@ -348,6 +363,18 @@ public:
     void processProbeMuxState(const std::string &portName, const std::string &muxState);
 
     /**
+    *@method processPeerMuxState
+    *
+    *@brief update peer MUX port state db notification
+    *
+    *@param portName        (in)   Mux port name
+    *@param peerMuxState    (in)   Peer mux port state
+    *
+    *@return none
+    */
+    void processPeerMuxState(const std::string &portName, const std::string &peerMuxState);
+
+    /**
      * @method addOrUpdateDefaultRouteState
      * 
      * @brief update default route state based on state db notification
@@ -403,6 +430,15 @@ private:
     *@return none
     */
     void handleProcessTerminate();
+
+    /**
+    *@method generateServerMac
+    *
+    *@brief generate Server MAC for port in active-active cable type
+    *
+    *@return none
+    */
+    void generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address);
 
 private:
     friend class test::MuxManagerTest;

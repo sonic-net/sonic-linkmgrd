@@ -32,6 +32,41 @@
 #include "mux_state/MuxState.h"
 #include "mux_state/MuxStateMachine.h"
 
+#define LOG_MUX_STATE_TRANSITION(level, portName, currentState, nextState) \
+    do { \
+        MUXLOG##level(boost::format("%s: (P: %s, M: %s, L: %s) -> (P: %s, M: %s, L: %s)") % \
+            portName % \
+            mLinkProberStateName[ps(currentState)] % \
+            mMuxStateName[ms(currentState)] % \
+            mLinkStateName[ls(currentState)] % \
+            mLinkProberStateName[ps(nextState)] % \
+            mMuxStateName[ms(nextState)] % \
+            mLinkStateName[ls(nextState)] \
+        ); \
+    } while (0)
+
+#define LOGWARNING_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(WARNING, portName, currentState, nextState)
+
+#define LOGINFO_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(INFO, portName, currentState, nextState)
+
+#define MUXLOGTIMEOUT(portname, msg, currentState) \
+    do { \
+        MUXLOGWARNING(boost::format("%s: %s, current state: (P: %s, M: %s, L: %s)") % \
+            portname % \
+            msg % \
+            mLinkProberStateName[ps(currentState)] % \
+            mMuxStateName[ms(currentState)] % \
+            mLinkStateName[ls(currentState)] \
+        ); \
+    } while (0)
+
+namespace test {
+class FakeMuxPort;
+class MuxManagerTest;
+}
+
 namespace mux {
 #define ps(compositeState) std::get<0>(compositeState)
 #define ms(compositeState) std::get<1>(compositeState)
@@ -42,6 +77,7 @@ class MuxPort;
 
 namespace link_manager {
 class ActiveStandbyStateMachine;
+class ActiveActiveStateMachine;
 
 /**
  *@class LinkProberEvent
@@ -249,6 +285,16 @@ public:
     virtual void handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
 
     /**
+     *@method handleSwssSoCIpv4AddressUpdate
+     *
+     *@brief initialize LinkProber component. Note if this is the last component to be initialized,
+     *       state machine will be activated
+     *
+     *@return none
+     */
+    virtual void handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address);
+
+    /**
      *@method handleGetServerMacNotification
      *
      *@brief handle get Server MAC address
@@ -313,6 +359,17 @@ public:
      * @return none
      */
     virtual void handlePeerLinkStateNotification(const link_state::LinkState::Label label);
+
+    /**
+     *@method handlePeerMuxStateNotification
+     *
+     *@brief handle peer MUX state notification
+     *
+     *@param label (in)              new peer MuxState label
+     *
+     *@return none
+     */
+    virtual void handlePeerMuxStateNotification(mux_state::MuxState::Label label);
 
     /**
      *@method handleMuxConfigNotification
@@ -393,17 +450,6 @@ public:
      */
     virtual void handleResetLinkProberPckLossCount();
 
-    /**
-     *@method setComponentInitState
-     *
-     *@brief set component inti state. This method is used for testing
-     *
-     *@param component (in)  component index
-     *
-     *@return none
-     */
-    virtual void setComponentInitState(uint8_t component);
-
 public:
     /**
     *@method getLinkProberStateMachinePtr
@@ -433,7 +479,25 @@ public:
     link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
 
 private:
+    /**
+     *@enum anonymous
+     *
+     *@brief used to reference bits corresponding to respective state machine init state
+     */
+    enum {
+        LinkProberComponent,
+        MuxStateComponent,
+        LinkStateComponent,
+
+        ComponentCount
+    };
+
+private:
+    friend class mux::MuxPort;
+    friend class test::FakeMuxPort;
+    friend class test::MuxManagerTest;
     friend class ActiveStandbyStateMachine;
+    friend class ActiveActiveStateMachine;
 
 private:
     /**
@@ -450,9 +514,32 @@ private:
      *
      * @brief NO-OP transition function
      *
-     * @param nextState                     reference to CompositeState object
+     * @param nextState reference to CompositeState object
      */
     void noopTransitionFunction(CompositeState& nextState);
+
+    /**
+     *@method setComponentInitState
+     *
+     *@brief set component inti state. This method is used for testing
+     *
+     *@param component (in)  component index
+     *
+     *@return none
+     */
+    void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
+
+    /**
+    *@method postMuxStateEvent
+    *
+    *@brief post event to MUX state machine to change state
+    *
+    *@param label (in)      new state label to post event for
+    *
+    *
+    *@return none
+    */
+    void postMuxStateEvent(mux_state::MuxState::Label label);
 
 private:
     static LinkProberEvent mLinkProberEvent;
@@ -478,6 +565,8 @@ private:
     link_state::LinkStateMachine mLinkStateMachine;
 
     Label mLabel = Label::Uninitialized;
+
+    std::bitset<ComponentCount> mComponentInitState = {0};
 };
 
 } /* namespace link_manager */

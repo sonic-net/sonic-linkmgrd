@@ -41,20 +41,29 @@ public:
         common::MuxConfig& muxConfig,
         std::string& portName,
         uint16_t serverId,
-        boost::asio::io_service& ioService);
+        boost::asio::io_service& ioService,
+        common::MuxPortConfig::PortCableType portCableType = common::MuxPortConfig::PortCableType::ActiveStandby);
     virtual ~FakeMuxPort() = default;
 
     void activateStateMachine();
 
+    std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }
-    const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() { return getActiveStandbyStateMachinePtr()->getCompositeState(); };
-    link_prober::LinkProberStateMachineBase* getLinkProberStateMachinePtr() { return getActiveStandbyStateMachinePtr()->getLinkProberStateMachinePtr().get(); };
-    mux_state::MuxStateMachine& getMuxStateMachine() { return getActiveStandbyStateMachinePtr()->getMuxStateMachine(); };
-    link_state::LinkStateMachine& getLinkStateMachine() { return getActiveStandbyStateMachinePtr()->getLinkStateMachine(); };
+    const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };
+    link_prober::LinkProberStateMachineBase* getLinkProberStateMachinePtr() { return getLinkManagerStateMachinePtr()->getLinkProberStateMachinePtr().get(); };
+    mux_state::MuxStateMachine& getMuxStateMachine() { return getLinkManagerStateMachinePtr()->getMuxStateMachine(); };
+    link_state::LinkStateMachine& getLinkStateMachine() { return getLinkManagerStateMachinePtr()->getLinkStateMachine(); };
 
     bool getPendingMuxModeChange() { return getActiveStandbyStateMachinePtr()->mPendingMuxModeChange; };
     common::MuxPortConfig::Mode getTargetMuxMode() { return getActiveStandbyStateMachinePtr()->mTargetMuxMode; };
 
+    link_prober::LinkProberState::Label getPeerLinkProberState() { return getActiveActiveStateMachinePtr()->mPeerLinkProberState; };
+    mux_state::MuxState::Label getPeerMuxState() { return getActiveActiveStateMachinePtr()->mPeerMuxState; };
+
+    inline void initLinkProberActiveActive();
+    inline void initLinkProberActiveStandby();
+
+    std::shared_ptr<link_manager::ActiveActiveStateMachine> mActiveActiveStateMachinePtr;
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> mActiveStandbyStateMachinePtr;
     std::shared_ptr<FakeLinkProber> mFakeLinkProber;
 };

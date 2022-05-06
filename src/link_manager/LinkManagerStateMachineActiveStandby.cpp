@@ -28,36 +28,6 @@
 #include "common/MuxException.h"
 #include "MuxPort.h"
 
-#define LOG_MUX_STATE_TRANSITION(level, portName, currentState, nextState) \
-    do { \
-        MUXLOG##level(boost::format("%s: (P: %s, M: %s, L: %s) -> (P: %s, M: %s, L: %s)") % \
-            portName % \
-            mLinkProberStateName[ps(currentState)] % \
-            mMuxStateName[ms(currentState)] % \
-            mLinkStateName[ls(currentState)] % \
-            mLinkProberStateName[ps(nextState)] % \
-            mMuxStateName[ms(nextState)] % \
-            mLinkStateName[ls(nextState)] \
-        ); \
-    } while (0)
-
-#define LOGWARNING_MUX_STATE_TRANSITION(portName, currentState, nextState) \
-    LOG_MUX_STATE_TRANSITION(WARNING, portName, currentState, nextState)
-
-#define LOGINFO_MUX_STATE_TRANSITION(portName, currentState, nextState) \
-    LOG_MUX_STATE_TRANSITION(INFO, portName, currentState, nextState)
-
-#define MUXLOGTIMEOUT(portname, msg, currentState) \
-    do { \
-        MUXLOGWARNING(boost::format("%s: %s, current state: (P: %s, M: %s, L: %s)") % \
-            portname % \
-            msg % \
-            mLinkProberStateName[ps(currentState)] % \
-            mMuxStateName[ms(currentState)] % \
-            mLinkStateName[ls(currentState)] \
-        ); \
-    } while (0)
-
 namespace link_manager
 {
 
@@ -1055,41 +1025,6 @@ void ActiveStandbyStateMachine::initLinkProberState(CompositeState &compositeSta
     default:
         break;
     }
-}
-
-//
-// ---> postMuxStateEvent(mux_state::MuxState::Label label)
-//
-// post event to MUX state machine to change state
-//
-void ActiveStandbyStateMachine::postMuxStateEvent(mux_state::MuxState::Label label)
-{
-    switch (label) {
-    case mux_state::MuxState::Label::Active:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getActiveEvent());
-        break;
-    case mux_state::MuxState::Label::Standby:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getStandbyEvent());
-        break;
-    case mux_state::MuxState::Label::Unknown:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getUnknownEvent());
-        break;
-    case mux_state::MuxState::Label::Error:
-        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getErrorEvent());
-        break;
-    default:
-        break;
-    }
-}
-
-//
-// ---> noopTransitionFunction(CompositeState &nextState);
-//
-// No-op transition function
-//
-void ActiveStandbyStateMachine::noopTransitionFunction(CompositeState &nextState)
-{
-    MUXLOGINFO(mMuxPortConfig.getPortName());
 }
 
 //

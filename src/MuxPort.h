@@ -29,6 +29,7 @@
 
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachineBase.h"
+#include "link_manager/LinkManagerStateMachineActiveActive.h"
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
 
 #include "common/MuxPortConfig.h"
@@ -112,6 +113,17 @@ public:
     *@return none
     */
     inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
+
+    /**
+    *@method setPeerMuxState
+    *
+    *@brief set peer MUX state in APP DB for orchagent processing
+    *
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    inline void setPeerMuxState(mux_state::MuxState::Label label) { mDbInterfacePtr->setPeerMuxState(mMuxPortConfig.getPortName(), label); };
 
     /**
     *@method getMuxState
@@ -204,6 +216,17 @@ public:
     inline void setServerIpv4Address(const boost::asio::ip::address &address) {mMuxPortConfig.setBladeIpv4Address(address);};
 
     /**
+    *@method setServerMacAddress
+    *
+    *@brief setter for server MAC address
+    *
+    *@param address (in) server MAC address
+    *
+    *@return none
+    */
+    inline void setServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxPortConfig.setBladeMacAddress(address);};
+
+    /**
     *@method handleBladeIpv4AddressUpdate
     *
     *@brief update server/blade IPv4 Address
@@ -212,7 +235,18 @@ public:
     *
     *@return none
     */
-     void handleBladeIpv4AddressUpdate(boost::asio::ip::address addres);
+    void handleBladeIpv4AddressUpdate(boost::asio::ip::address addres);
+
+    /**
+    *@method handleSoCIpv4AddressUpdate
+    *
+    *@brief update SoC IPv4 Address
+    *
+    *@param addres (in)  server/blade IP address
+    *
+    *@return none
+    */
+    void handleSoCIpv4AddressUpdate(boost::asio::ip::address addres);
 
     /**
     *@method handleLinkState
@@ -290,6 +324,18 @@ public:
     *@return none
     */
     void handleMuxConfig(const std::string &config);
+
+    /**
+    *@method handlePeerMuxState
+    *
+    *@brief handles peer MUX state updates
+    *
+    *@param peerMuxState (in)           peer MUX state
+    *
+    *@return none
+    */
+    void handlePeerMuxState(const std::string &peerMuxState);
+
 
     /**
      * @method handleDefaultRouteState(const std::string &routeState)

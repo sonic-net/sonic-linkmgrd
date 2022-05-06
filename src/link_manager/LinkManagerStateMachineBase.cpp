@@ -26,7 +26,7 @@ LinkProberEvent LinkManagerStateMachineBase::mLinkProberEvent;
 MuxStateEvent LinkManagerStateMachineBase::mMuxStateEvent;
 LinkStateEvent LinkManagerStateMachineBase::mLinkStateEvent;
 
-std::vector<std::string> LinkManagerStateMachineBase::mLinkProberStateName = {"Active", "Standby", "Unknown", "Wait"};
+std::vector<std::string> LinkManagerStateMachineBase::mLinkProberStateName = {"Active", "Standby", "Unknown", "Wait", "PeerWait", "PeerActive", "PeerUnknown"};
 std::vector<std::string> LinkManagerStateMachineBase::mMuxStateName = {"Active", "Standby", "Unknown", "Error", "Wait"};
 std::vector<std::string> LinkManagerStateMachineBase::mLinkStateName = {"Up", "Down"};
 std::vector<std::string> LinkManagerStateMachineBase::mLinkHealthName = {"Uninitialized", "Unhealthy", "Healthy"};
@@ -53,6 +53,11 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
     switch (mMuxPortConfig.getPortCableType()) {
         case common::MuxPortConfig::PortCableType::ActiveStandby:
             mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveStandby>(
+                this, strand, mMuxPortConfig, ps(mCompositeState)
+            );
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveActive>(
                 this, strand, mMuxPortConfig, ps(mCompositeState)
             );
             break;
@@ -114,6 +119,17 @@ void LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate(boost::asio::
 }
 
 //
+// ---> handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address);
+//
+// initialize LinkProber component. Note if this is the last component to be initialized,
+// state machine will be activated
+//
+void LinkManagerStateMachineBase::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
 //
 // handle get Server MAC address
@@ -168,6 +184,15 @@ void LinkManagerStateMachineBase::handleSwssLinkStateNotification(const link_sta
 // handle peer link state change notification
 //
 void LinkManagerStateMachineBase::handlePeerLinkStateNotification(const link_state::LinkState::Label label)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+// ---> handlePeerMuxStateNotification(mux_state::MuxState::Label label);
+//
+// handle peer MUX state change notification
+//
+void LinkManagerStateMachineBase::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
@@ -252,13 +277,29 @@ void LinkManagerStateMachineBase::handleResetLinkProberPckLossCount()
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
 
-// ---> LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
 //
-// set component inti state. This method is used for testing
+// ---> postMuxStateEvent(mux_state::MuxState::Label label)
 //
-void LinkManagerStateMachineBase::setComponentInitState(uint8_t component)
+// post event to MUX state machine to change state
+//
+void LinkManagerStateMachineBase::postMuxStateEvent(mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
-};
+    switch (label) {
+    case mux_state::MuxState::Label::Active:
+        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getActiveEvent());
+        break;
+    case mux_state::MuxState::Label::Standby:
+        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getStandbyEvent());
+        break;
+    case mux_state::MuxState::Label::Unknown:
+        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getUnknownEvent());
+        break;
+    case mux_state::MuxState::Label::Error:
+        mMuxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getErrorEvent());
+        break;
+    default:
+        break;
+    }
+}
 
 } /* namespace link_manager */

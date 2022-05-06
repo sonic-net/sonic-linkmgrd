@@ -42,7 +42,7 @@ LinkProberStateMachineActiveActive::LinkProberStateMachineActiveActive(
     : LinkProberStateMachineBase(linkManagerStateMachinePtr, strand, muxPortConfig)
 {
     enterState(label);
-    enterPeerState(LinkProberState::Label::PeerUnknown);
+    enterPeerState(LinkProberState::Label::PeerWait);
 }
 
 //
@@ -60,9 +60,22 @@ void LinkProberStateMachineActiveActive::enterState(LinkProberState::Label label
         case LinkProberState::Label::Unknown:
             setCurrentState(dynamic_cast<LinkProberState *>(getUnknownState()));
             break;
+        case LinkProberState::Label::Wait:
+            setCurrentState(dynamic_cast<LinkProberState *>(getWaitState()));
+            break;
         default:
             break;
     }
+}
+
+//
+// ---> getCurrentPeerState();
+//
+// getter for current peer state
+//
+LinkProberState *LinkProberStateMachineActiveActive::getCurrentPeerState()
+{
+    return mCurrentPeerState;
 }
 
 //
@@ -79,6 +92,9 @@ void LinkProberStateMachineActiveActive::enterPeerState(LinkProberState::Label l
             break;
         case LinkProberState::Label::PeerUnknown:
             setCurrentPeerState(dynamic_cast<LinkProberState *>(getPeerUnknownState()));
+            break;
+        case LinkProberState::Label::PeerWait:
+            setCurrentPeerState(dynamic_cast<LinkProberState *>(getPeerWaitState()));
             break;
         default:
             break;
@@ -146,6 +162,21 @@ void LinkProberStateMachineActiveActive::processEvent(IcmpPeerUnknownEvent &Icmp
         }
         setCurrentPeerState(nextPeerState);
     }
+}
+
+//
+// ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
+//
+// process LinkProberState suspend timer expiry event
+//
+void LinkProberStateMachineActiveActive::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleSuspendTimerExpiry,
+        mLinkManagerStateMachinePtr
+    )));
 }
 
 //

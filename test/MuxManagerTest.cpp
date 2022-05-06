@@ -30,6 +30,10 @@
 namespace test
 {
 
+const std::string MuxManagerTest::PortName = "Ethernet0";
+const std::string MuxManagerTest::ServerAddress = "192.168.0.1";
+const std::string MuxManagerTest::SoCAddress = "192.168.0.2";
+
 MuxManagerTest::MuxManagerTest() :
     mMuxManagerPtr(std::make_shared<mux::MuxManager> ()),
     mDbInterfacePtr(std::make_shared<FakeDbInterface> (mMuxManagerPtr.get(), &mMuxManagerPtr->getIoService())),
@@ -44,6 +48,14 @@ void MuxManagerTest::runIoService(uint32_t count)
 {
     for (uint32_t i = 0; i < count; i++) {
         mMuxManagerPtr->getIoService().run_one();
+        mMuxManagerPtr->getIoService().reset();
+    }
+}
+
+void MuxManagerTest::pollIoService(uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        mMuxManagerPtr->getIoService().poll_one();
         mMuxManagerPtr->getIoService().reset();
     }
 }
@@ -131,14 +143,17 @@ link_manager::LinkManagerStateMachineBase::CompositeState MuxManagerTest::getCom
 
 common::MuxPortConfig::PortCableType MuxManagerTest::getPortCableType(const std::string &port)
 {
-    return mMuxManagerPtr->mPortCableTypeMap.at(port);
+    return mMuxManagerPtr->getMuxPortCableType(port);
 }
 
 void MuxManagerTest::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers)
 {
     mDbInterfacePtr->processServerIpAddress(servers);
+}
 
-    EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
+void MuxManagerTest::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers)
+{
+    mDbInterfacePtr->processSoCIpAddress(servers);
 }
 
 void MuxManagerTest::processServerMacAddress(
@@ -185,12 +200,83 @@ void MuxManagerTest::updatePortCableType(const std::string &port, const std::str
     mMuxManagerPtr->updatePortCableType(port, cableType);
 }
 
-void MuxManagerTest::createPort(std::string port)
+void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachineActiveActive)
+{
+    mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachineActiveActive->getLinkProberStateMachinePtr().get());
+    linkManagerStateMachineActiveActive->setInitializeProberFnPtr(
+        boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setStartProbingFnPtr(
+        boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setUpdateEthernetFrameFnPtr(
+        boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setProbePeerTorFnPtr(
+        boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setSuspendTxFnPtr(
+        boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
+    linkManagerStateMachineActiveActive->setResumeTxFnPtr(
+        boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setShutdownTxFnPtr(
+        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setRestartTxFnPtr(
+        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
+
+    linkManagerStateMachineActiveActive->mComponentInitState.set(0);
+}
+
+void MuxManagerTest::initLinkProberActiveStandby(std::shared_ptr<link_manager::ActiveStandbyStateMachine> linkManagerStateMachineActiveStandby)
+{
+    mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachineActiveStandby->getLinkProberStateMachinePtr().get());
+    linkManagerStateMachineActiveStandby->setInitializeProberFnPtr(
+        boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setStartProbingFnPtr(
+        boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setUpdateEthernetFrameFnPtr(
+        boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setSuspendTxFnPtr(
+        boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
+    linkManagerStateMachineActiveStandby->setShutdownTxFnPtr(
+        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setRestartTxFnPtr(
+        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setDecreaseIntervalFnPtr(
+        boost::bind(&FakeLinkProber::decreaseProbeIntervalAfterSwitch, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
+    linkManagerStateMachineActiveStandby->setRevertIntervalFnPtr(
+        boost::bind(&FakeLinkProber::revertProbeIntervalAfterSwitchComplete, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveStandby->setSendPeerSwitchCommandFnPtr(
+        boost::bind(&FakeLinkProber::sendPeerSwitchCommand, mFakeLinkProber.get())
+    );
+
+    linkManagerStateMachineActiveStandby->mComponentInitState.set(0);
+}
+
+void MuxManagerTest::generateServerMac(const std::string &port, std::array<uint8_t, ETHER_ADDR_LEN> &address)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+    mMuxManagerPtr->generateServerMac(muxPortPtr->mMuxPortConfig.getServerId(), address);
+}
+
+void MuxManagerTest::createPort(std::string port, common::MuxPortConfig::PortCableType portCableType)
 {
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 0);
     EXPECT_TRUE(mMuxManagerPtr->mPortCableTypeMap.size() == 0);
 
-    updatePortCableType(port, "active-standby");
+    updatePortCableType(port, PortCableTypeValues[portCableType]);
     EXPECT_TRUE(mMuxManagerPtr->mPortCableTypeMap.size() == 1);
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
@@ -198,57 +284,53 @@ void MuxManagerTest::createPort(std::string port)
     };
 
     mDbInterfacePtr->processLinkStateNotifiction(entries);
-    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap["Ethernet0"];
-    std::shared_ptr<link_manager::ActiveStandbyStateMachine> linkManagerStateMachine = std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine> (
-        muxPortPtr->getLinkManagerStateMachinePtr()
-    );
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+    std::shared_ptr<link_manager::LinkManagerStateMachineBase> linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachinePtr();
 
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 0);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachineBase::LinkStateComponent) == 0);
 
     runIoService();
 
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::LinkStateComponent) == 1);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachineBase::LinkStateComponent) == 1);
 
     // Initialize a FakeLinkProber
-    mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachine->getLinkProberStateMachinePtr().get());
-    linkManagerStateMachine->setInitializeProberFnPtr(
-        boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
-    );
-    linkManagerStateMachine->setStartProbingFnPtr(
-        boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
-    );
-    linkManagerStateMachine->setUpdateEthernetFrameFnPtr(
-        boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
-    );
-    linkManagerStateMachine->setSuspendTxFnPtr(
-        boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
-    );
-    linkManagerStateMachine->setShutdownTxFnPtr(
-        boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
-    );
-    linkManagerStateMachine->setRestartTxFnPtr(
-        boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
-    );
-    linkManagerStateMachine->setDecreaseIntervalFnPtr(
-        boost::bind(&FakeLinkProber::decreaseProbeIntervalAfterSwitch, mFakeLinkProber.get(), boost::placeholders::_1)
-    );
-    linkManagerStateMachine->setRevertIntervalFnPtr(
-        boost::bind(&FakeLinkProber::revertProbeIntervalAfterSwitchComplete, mFakeLinkProber.get())
-    );
+    switch (portCableType) {
+        case common::MuxPortConfig::PortCableType::ActiveActive: {
+            initLinkProberActiveActive(std::dynamic_pointer_cast<link_manager::ActiveActiveStateMachine>(linkManagerStateMachine));
+            break;
+        }
+        case common::MuxPortConfig::PortCableType::ActiveStandby: {
+            initLinkProberActiveStandby(std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(linkManagerStateMachine));
+            break;
+        }
+        default:
+            break;
+    }
 
-    linkManagerStateMachine->mComponentInitState.set(0);
-
-    std::string ipAddress = "192.168.0.1";
+    std::string ipAddress = ServerAddress;
+    std::string iPAddressSoC = SoCAddress;
     std::vector<swss::KeyOpFieldsValuesTuple> servers;
-    servers = {
-        {port, "SET", {{"server_ipv4", ipAddress + "/32"}, {"server_ipv6", "2603:10e1:100:f::1/128"}}},
-        {"Ethernet1234", "SET", {{"server_ipv4", "250.260.270.280/32"}}},
-    };
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+        servers = {
+            {port, "SET", {{"server_ipv4", ipAddress + "/32"}, {"server_ipv6", "2603:10e1:100:f::1/128"}, {"soc_ipv4", iPAddressSoC + "/32"}, {"cable_type", "active-active"}}},
+            {"Ethernet1234", "SET", {{"server_ipv4", "250.260.270.280/32"}}},
+        };
+
+    } else if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+        servers = {
+            {port, "SET", {{"server_ipv4", ipAddress + "/32"}, {"server_ipv6", "2603:10e1:100:f::1/128"}}},
+            {"Ethernet1234", "SET", {{"server_ipv4", "250.260.270.280/32"}}},
+        };
+    }
 
     processServerIpAddress(servers);
+    pollIoService();
+    EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
+    processSoCIpAddress(servers);
+    pollIoService();
+    EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
 
-    runIoService();
 
     entries.clear();
     entries = {
@@ -257,31 +339,31 @@ void MuxManagerTest::createPort(std::string port)
 
     mDbInterfacePtr->processMuxStateNotifiction(entries);
     EXPECT_TRUE(mMuxManagerPtr->mPortMap.size() == 1);
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::MuxStateComponent) == 0);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachineBase::MuxStateComponent) == 0);
 
     runIoService();
 
-    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::ActiveStandbyStateMachine::MuxStateComponent) == 1);
+    EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachineBase::MuxStateComponent) == 1);
 }
 
 TEST_F(MuxManagerTest, UpdatePortCableTypeActiveStandby)
 {
-    std::string port = "Ethernet0";
+    std::string port = MuxManagerTest::PortName;
     updatePortCableType(port, "active-standby");
     EXPECT_TRUE(getPortCableType(port) == common::MuxPortConfig::PortCableType::ActiveStandby);
 }
 
 TEST_F(MuxManagerTest, UpdatePortCableTypeUnsupported)
 {
-    std::string port = "Ethernet0";
+    std::string port = MuxManagerTest::PortName;
     updatePortCableType(port, "active-standby-active");
     EXPECT_TRUE(getPortCableType(port) == common::MuxPortConfig::PortCableType::ActiveStandby);
 }
 
 TEST_F(MuxManagerTest, AddPort)
 {
-    std::string port = "Ethernet0";
-    std::string ipAddress = "192.168.0.1";
+    std::string port = MuxManagerTest::PortName;
+    std::string ipAddress = MuxManagerTest::ServerAddress;
 
     createPort(port);
 
@@ -296,6 +378,29 @@ TEST_F(MuxManagerTest, AddPort)
 
     EXPECT_TRUE(bladeMacAddress == serverMac);
     EXPECT_TRUE(getBladeIpv4Address(port).to_string() == ipAddress);
+}
+
+TEST_F(MuxManagerTest, AddPortActiveActive)
+{
+    std::string port = MuxManagerTest::PortName;
+    std::string ipAddress = MuxManagerTest::ServerAddress;
+    std::string ipAddressSoC = MuxManagerTest::ServerAddress;
+
+    createPort(port, common::MuxPortConfig::ActiveActive);
+
+    std::array<uint8_t, ETHER_ADDR_LEN> serverMac = {0, 'b', 2, 'd', 4, 'f'};
+    boost::asio::ip::address serverAddress = boost::asio::ip::address::from_string(ipAddress);
+
+    updateServerMacAddress(serverAddress, serverMac.data());
+
+    runIoService();
+
+    std::array<uint8_t, ETHER_ADDR_LEN> bladeMacAddress = getBladeMacAddress(port);
+    EXPECT_TRUE(bladeMacAddress != serverMac);
+
+    std::array<uint8_t, ETHER_ADDR_LEN> knownMac;
+    generateServerMac(port, knownMac);
+    EXPECT_TRUE(bladeMacAddress == knownMac);
 }
 
 TEST_F(MuxManagerTest, Loopback2Address)
@@ -442,7 +547,7 @@ TEST_P(MuxResponseTest, MuxResponse)
 {
     std::string port = "Ethernet0";
 
-    createPort(port);
+    createPort(port, std::get<3> (GetParam()));
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {port, "SET", {{"response", std::get<0> (GetParam())}}},
@@ -458,10 +563,14 @@ INSTANTIATE_TEST_CASE_P(
     MuxState,
     MuxResponseTest,
     ::testing::Values(
-        std::make_tuple("active", 1, mux_state::MuxState::Label::Active),
-        std::make_tuple("standby", 3, mux_state::MuxState::Label::Standby),
-        std::make_tuple("unknown", 3, mux_state::MuxState::Label::Wait),
-        std::make_tuple("error", 3, mux_state::MuxState::Label::Wait)
+        std::make_tuple("active", 1, mux_state::MuxState::Label::Active, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("standby", 3, mux_state::MuxState::Label::Standby, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("unknown", 3, mux_state::MuxState::Label::Wait, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("error", 3, mux_state::MuxState::Label::Wait, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("active", 1, mux_state::MuxState::Label::Active, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("standby", 3, mux_state::MuxState::Label::Standby, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("unknown", 3, mux_state::MuxState::Label::Unknown, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("error", 3, mux_state::MuxState::Label::Unknown, common::MuxPortConfig::PortCableType::ActiveActive)
     )
 );
 
@@ -495,7 +604,7 @@ TEST_P(MuxConfigUpdateTest, MuxPortConfigUpdate)
 {
     std::string port = "Ethernet0";
 
-    createPort("Ethernet0");
+    createPort("Ethernet0", std::get<2> (GetParam()));
 
     std::string state = std::get<0> (GetParam());
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
@@ -511,9 +620,14 @@ INSTANTIATE_TEST_CASE_P(
     AutoActiveManual,
     MuxConfigUpdateTest,
     ::testing::Values(
-        std::make_tuple("auto", common::MuxPortConfig::Mode::Auto),
-        std::make_tuple("active", common::MuxPortConfig::Mode::Active),
-        std::make_tuple("manual", common::MuxPortConfig::Mode::Manual)
+        std::make_tuple("auto", common::MuxPortConfig::Mode::Auto, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("active", common::MuxPortConfig::Mode::Active, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("standby", common::MuxPortConfig::Mode::Standby, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("manual", common::MuxPortConfig::Mode::Manual, common::MuxPortConfig::PortCableType::ActiveStandby),
+        std::make_tuple("auto", common::MuxPortConfig::Mode::Auto, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("active", common::MuxPortConfig::Mode::Active, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("standby", common::MuxPortConfig::Mode::Standby, common::MuxPortConfig::PortCableType::ActiveActive),
+        std::make_tuple("manual", common::MuxPortConfig::Mode::Manual, common::MuxPortConfig::PortCableType::ActiveActive)
     )
 );
 

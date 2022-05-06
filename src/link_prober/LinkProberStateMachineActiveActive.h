@@ -107,7 +107,26 @@ public:
      */
     void processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent) override;
 
-private:
+    /**
+     *@method processEvent
+     *
+     *@brief process SuspendTimerExpiredEvent
+     *
+     *@param suspendTimerExpiredEvent (in)  reference to the SuspendTimerExpiredEvent event
+     *
+     *@return none
+     */
+    void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent) override;
+
+    /**
+     *@method getCurrentPeerState
+     *
+     *@brief getter for current peer state
+     *
+     *@return current peer state of the state machine
+     */
+    LinkProberState *getCurrentPeerState() override;
+
     /**
      *@method enterPeerState
      *
@@ -117,17 +136,9 @@ private:
      *
      *@return none
      */
-    void enterPeerState(LinkProberState::Label label);
+    void enterPeerState(LinkProberState::Label label) override;
 
-    /**
-     *@method getCurrentPeerState
-     *
-     *@brief getter for current peer state
-     *
-     *@return current peer state of the state machine
-     */
-    LinkProberState *getCurrentPeerState() { return mCurrentPeerState; }
-
+private:
     /**
      *@method setCurrentPeerState
      *

@@ -140,9 +140,36 @@ void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip
     MUXLOGWARNING(boost::format("%s: server IP: %s") % portName % address);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
     if (address.is_v4()) {
-        muxPortPtr->handleBladeIpv4AddressUpdate(address);
+        if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+            // notify server IP address for ports in active-standby cable type
+            muxPortPtr->handleBladeIpv4AddressUpdate(address);
+        }
+
+    } else if (address.is_v6()) {
+        // handle IPv6 probing
+    }
+}
+
+//
+// ---> addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address);
+//
+// update MUX port SoC IPv4 Address. If port is not found, create new MuxPort object
+//
+void MuxManager::addOrUpdateMuxPortSoCAddress(const std::string &portName, boost::asio::ip::address address)
+{
+    MUXLOGWARNING(boost::format("%s: SoC IP: %s") % portName % address);
+
+    std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
+
+    if (address.is_v4()) {
+        if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+            // notify NiC IP address for ports in active-active cable type
+            muxPortPtr->handleSoCIpv4AddressUpdate(address);
+        }
     } else if (address.is_v6()) {
         // handle IPv6 probing
     }
@@ -175,6 +202,8 @@ void MuxManager::updatePortCableType(const std::string &portName, const std::str
     common::MuxPortConfig::PortCableType portCableType;
     if (cableType == "active-standby") {
         portCableType = common::MuxPortConfig::PortCableType::ActiveStandby;
+    } else if (cableType == "active-active") {
+        portCableType = common::MuxPortConfig::PortCableType::ActiveActive;
     } else {
         MUXLOGERROR(
             boost::format(
@@ -289,6 +318,21 @@ void MuxManager::processProbeMuxState(const std::string &portName, const std::st
 }
 
 //
+// ---> processPeerMuxState(const std::string &portName, const std::string &peerMuxState);
+//
+// update peer MUX port state db notification
+//
+void MuxManager::processPeerMuxState(const std::string &portName, const std::string &peerMuxState)
+{
+    MUXLOGINFO(boost::format("%s: state db peer mux state: %s") % portName % peerMuxState);
+
+    PortMapIterator portMapIterator = mPortMap.find(portName);
+    if (portMapIterator != mPortMap.end()) {
+        portMapIterator->second->handlePeerMuxState(peerMuxState);
+    }
+}
+
+//
 // ---> addOrUpdateDefaultRouteState(boost::asio::ip::address& address, const std::string &routeState);
 //
 // update default route state based on state db notification
@@ -352,6 +396,11 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
                 mIoService,
                 muxPortCableType
             );
+            if (muxPortCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+                std::array<uint8_t, ETHER_ADDR_LEN> address;
+                generateServerMac(serverId, address);
+                muxPortPtr->setServerMacAddress(address);
+            }
             mPortMap.insert({portName, muxPortPtr});
         }
         else {
@@ -400,6 +449,25 @@ void MuxManager::handleProcessTerminate()
     mDbInterfacePtr->getBarrier().wait();
     mIoService.stop();
     mDbInterfacePtr->getBarrier().wait();
+}
+
+//
+// ---> generateServerMac();
+//
+// generate known MAC address based on server ID
+//
+void MuxManager::generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_ADDR_LEN> &address)
+{
+    if (serverId >= KNOWN_MAC_COUNT) {
+        throw std::range_error("Out of MAC address range");
+    }
+    int addrIndex = ETHER_ADDR_LEN - 1;
+    uint32_t offset = KNOWN_MAC_START[addrIndex] + serverId;
+    address = KNOWN_MAC_START;
+    while (offset && addrIndex >= 0) {
+        address[addrIndex--] = offset % 0xff;
+        offset /= 0xff;
+    }
 }
 
 } /* namespace mux */

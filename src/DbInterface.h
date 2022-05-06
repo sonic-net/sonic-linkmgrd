@@ -45,7 +45,9 @@ class MuxManagerTest;
 namespace mux
 {
 #define MUX_CABLE_INFO_TABLE  "MUX_CABLE_INFO"
-#define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS" 
+#define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS"
+#define PEER_FORWARDING_STATE_COMMAND_TABLE "HW_FORWARDING_STATE_PEER"
+#define PEER_FORWARDING_STATE_RESPONSE_TABLE "HW_MUX_CABLE_TABLE_PEER"
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
@@ -132,6 +134,18 @@ public:
     *@return none
     */
     virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+
+    /**
+    *@method setPeerMuxState
+    *
+    *@brief set peer MUX state in APP DB for orchagent processing
+    *
+    *@param portName (in)   MUX/port name
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    virtual void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
 
     /**
     *@method probeMuxState
@@ -270,6 +284,18 @@ private:
     *@return none
     */
     void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
+
+    /**
+    *@method handleSetPeerMuxState
+    *
+    *@brief set peer MUX state in APP DB for orchagent processing
+    *
+    *@param portName (in)   MUX/port name
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label);
 
     /**
     *@method handleProbeMuxState
@@ -436,6 +462,28 @@ private:
     void getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+    *@method processSoCIpAddress
+    *
+    *@brief process SoC IP address and builds a map of IP to port name
+    *
+    *@param entries   config_db MUX_CABLE entries
+    *
+    *@return none
+    */
+    inline void processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+    *@method getSoCIpAddress
+    *
+    *@brief retrieve SoC IP address and builds a map of IP to port name
+    *
+    *@param configDbConnector   config db connector
+    *
+    *@return none
+    */
+    void getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
     *@method processMuxPortConfigNotifiction
     *
     *@brief process MUX port configuration change notification
@@ -546,6 +594,28 @@ private:
     void handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
 
     /**
+    *@method processPeerMuxResponseNotification
+    *
+    *@brief process peer MUX response (from xcvrd) notification
+    *
+    *@param entries (in) reference to app db peer mux response table entries
+    *
+    *@return none
+    */
+    inline void processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+    *@method handlePeerMuxResponseNotification
+    *
+    *@brief handles peer MUX response (from xcvrd) notification
+    *
+    *@param appdbPortTable (in) reference to app db peer mux response table
+    *
+    *@return none
+    */
+    void handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable);
+
+    /**
     *@method processMuxStateNotifiction
     *
     *@brief processes MUX state (from orchagent) notification
@@ -616,6 +686,8 @@ private:
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;
     // for communicating with the driver (probing the mux)
     std::shared_ptr<swss::Table> mAppDbMuxCommandTablePtr;
+    // for communicating with xcvrd to set peer mux state
+    std::shared_ptr<swss::Table> mAppDbPeerMuxCommandTablePtr;
     // for writing the current mux linkmgr health
     std::shared_ptr<swss::Table> mStateDbMuxLinkmgrTablePtr;
     // for writing mux metrics

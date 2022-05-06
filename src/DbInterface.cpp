@@ -97,6 +97,25 @@ void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::
 }
 
 //
+// ---> setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
+//
+// set MUX state in APP DB for orchagent processing
+//
+void DbInterface::setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label)
+{
+    MUXLOGDEBUG(boost::format("%s: setting peer mux to %s") % portName % mMuxState[label]);
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handleSetPeerMuxState,
+        this,
+        portName,
+        label
+    )));
+}
+
+
+//
 // ---> probeMuxState(const std::string &portName)
 //
 // trigger xcvrd to read MUX state using i2c
@@ -235,6 +254,9 @@ void DbInterface::initialize()
         mAppDbMuxCommandTablePtr = std::make_shared<swss::Table> (
             mAppDbPtr.get(), APP_MUX_CABLE_COMMAND_TABLE_NAME
         );
+        mAppDbPeerMuxCommandTablePtr = std::make_shared<swss::Table> (
+            mAppDbPtr.get(), PEER_FORWARDING_STATE_COMMAND_TABLE
+        );
         mStateDbMuxLinkmgrTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_LINKMGR_TABLE_NAME
         );
@@ -314,6 +336,23 @@ void DbInterface::handleSetMuxState(const std::string portName, mux_state::MuxSt
             {"state", mMuxState[label]},
         };
         mAppDbMuxTablePtr->set(portName, values);
+    }
+}
+
+//
+// ---> handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label);
+//
+// set MUX state in APP DB for orchagent processing
+//
+void DbInterface::handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label)
+{
+    MUXLOGDEBUG(boost::format("%s: setting peer mux state to %s") % portName % mMuxState[label]);
+
+    if (label <= mux_state::MuxState::Label::Unknown) {
+        std::vector<swss::FieldValueTuple> values = {
+            {"state", mMuxState[label]},
+        };
+        mAppDbPeerMuxCommandTablePtr->set(portName, values);
     }
 }
 
@@ -626,6 +665,64 @@ void DbInterface::getPortCableType(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
+// ---> processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process SoC addresses and build a map of port name to SoC address
+//
+void DbInterface::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string portName = kfvKey(entry);
+        std::string operation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "soc_ipv4";}
+        );
+        if (cit != fieldValues.cend()) {
+            const std::string f = cit->first;
+            std::string SoCIpAddress = cit->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, %s = %s") % portName % f % SoCIpAddress);
+
+            size_t pos = SoCIpAddress.find("/");
+            if (pos != std::string::npos) {
+                SoCIpAddress.erase(pos);
+            }
+
+            boost::system::error_code errorCode;
+            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(SoCIpAddress, errorCode);
+            if (!errorCode) {
+                mMuxManagerPtr->addOrUpdateMuxPortSoCAddress(portName, ipAddress);
+            } else {
+                MUXLOGFATAL(boost::format("%s: Received invalid SoC IP: %s, error code: %d") %
+                    portName %
+                    SoCIpAddress %
+                    errorCode
+                );
+            }
+        }
+    }
+}
+
+//
+// ---> getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve SoC IP address for port in active-active cable type
+//
+void DbInterface::getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading SoC IP addresses");
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    std::vector<swss::KeyOpFieldsValuesTuple> entries;
+
+    configDbMuxCableTable.getContent(entries);
+    processSoCIpAddress(entries);
+}
+
+//
 // ---> processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
 // process MUX port configuration change notification
@@ -903,6 +1000,51 @@ void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdb
 }
 
 //
+// ---> processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process peer MUX response (from xcvrd) notification
+//
+void DbInterface::processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string port = kfvKey(entry);
+        std::string oprtation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "state";}
+        );
+        if (cit != fieldValues.cend()) {
+            const std::string f = cit->first;
+            const std::string v = cit->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+                port %
+                oprtation %
+                f %
+                v
+            );
+            mMuxManagerPtr->processPeerMuxState(port, v);
+        }
+    }
+}
+
+//
+// ---> handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable);
+//
+// handles peer MUX response (from xcvrd) notification
+//
+void DbInterface::handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    stateDbPeerMuxResponseTable.pops(entries);
+    processPeerMuxResponseNotification(entries);
+}
+
+//
 // ---> processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
 // processes MUX state (from orchagent) notification
@@ -1026,11 +1168,14 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbRouteTable(stateDbPtr.get(), STATE_ROUTE_TABLE_NAME);
     // for getting peer's link status
     swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
+    // for getting peer's admin forwarding state
+    swss::SubscriberStateTable stateDbPeerMuxResponseTable(stateDbPtr.get(), PEER_FORWARDING_STATE_RESPONSE_TABLE);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
     getPortCableType(configDbPtr);
     getServerIpAddress(configDbPtr);
+    getSoCIpAddress(configDbPtr);
 
     NetMsgInterface netMsgInterface(*this);
     swss::NetDispatcher::getInstance().registerMessageHandler(RTM_NEWNEIGH, &netMsgInterface);
@@ -1048,6 +1193,7 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&stateDbPortTable);
     swssSelect.addSelectable(&stateDbRouteTable);
     swssSelect.addSelectable(&stateDbMuxInfoTable);
+    swssSelect.addSelectable(&stateDbPeerMuxResponseTable);
     swssSelect.addSelectable(&netlinkNeighbor);
 
     while (mPollSwssNotifcation) {
@@ -1078,6 +1224,8 @@ void DbInterface::handleSwssNotification()
             handleDefaultRouteStateNotification(stateDbRouteTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbMuxInfoTable)) {
             handlePeerLinkStateNotification(stateDbMuxInfoTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbPeerMuxResponseTable)) {
+            handlePeerMuxResponseNotification(stateDbPeerMuxResponseTable);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

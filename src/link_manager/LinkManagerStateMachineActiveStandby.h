@@ -86,20 +86,6 @@ public:
         Count
     };
 
-private:
-    /**
-     *@enum anonymous
-     *
-     *@brief used to reference bits corresponding to respective state machine init state
-     */
-    enum {
-        LinkProberComponent,
-        MuxStateComponent,
-        LinkStateComponent,
-
-        ComponentCount
-    };
-
 public:
     /**
     *@method ActiveStandbyStateMachine
@@ -489,29 +475,6 @@ private:
     void initLinkProberState(CompositeState &compositeState);
 
     /**
-    *@method postMuxStateEvent
-    *
-    *@brief post event to MUX state machine to change state
-    *
-    *@param label (in)      new state label to post event for
-    *
-    *
-    *@return none
-    */
-    void postMuxStateEvent(mux_state::MuxState::Label label);
-
-    /**
-    *@method noopTransitionFunction
-    *
-    *@brief No-op transition function
-    *
-    *@param nextState (in, out)     reference to composite
-    *
-    *@return none
-    */
-    void noopTransitionFunction(CompositeState &nextState);
-
-    /**
     *@method LinkProberStandbyMuxActiveLinkUpTransitionFunction
     *
     *@brief transition function when entering {LinkProberStandby, MuxActive, LinkUp} state
@@ -813,17 +776,6 @@ private:
     };
 
     /**
-    *@method setComponentInitState
-    *
-    *@brief set component inti state. This method is used for testing
-    *
-    *@param component (in)  component index
-    *
-    *@return none
-    */
-    void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
-
-    /**
      * @method setShutdownTxFnPtr
      * 
      * @brief set shutdownTxFnPtr. This method is used for testing
@@ -904,8 +856,6 @@ private:
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
-
-    std::bitset<ComponentCount> mComponentInitState = {0};
 };
 
 } /* namespace link_manager */

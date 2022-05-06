@@ -71,12 +71,23 @@ MuxPort::MuxPort(
     mStrand(ioService)
 {
     assert(dbInterfacePtr != nullptr);
-    if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
-        mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
-            this,
-            mStrand,
-            mMuxPortConfig
-        );
+    switch (portCableType) {
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveActiveStateMachine>(
+                this,
+                mStrand,
+                mMuxPortConfig
+            );
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            mLinkManagerStateMachinePtr = std::make_shared<link_manager::ActiveStandbyStateMachine>(
+                this,
+                mStrand,
+                mMuxPortConfig
+            );
+            break;
+        default:
+            break;
     }
     assert(mLinkManagerStateMachinePtr.get() != nullptr);
 }
@@ -88,6 +99,23 @@ void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate,
+        mLinkManagerStateMachinePtr.get(),
+        address
+    )));
+}
+
+//
+// ---> handleSoCIpv4AddressUpdate(boost::asio::ip::address address);
+//
+// handles SoC IP address update for port in active-active cable type
+//
+void MuxPort::handleSoCIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleSwssSoCIpv4AddressUpdate,
         mLinkManagerStateMachinePtr.get(),
         address
     )));
@@ -253,6 +281,32 @@ void MuxPort::handleMuxConfig(const std::string &config)
         &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
         mLinkManagerStateMachinePtr.get(),
         mode
+    )));
+}
+
+//
+// ---> handlePeerMuxState(const std::string &peerMuxState);
+//
+// handles peer MUX state updates
+//
+void MuxPort::handlePeerMuxState(const std::string &peerMuxState)
+{
+    MUXLOGDEBUG(boost::format("port: %s, state db peer mux state: %s") % mMuxPortConfig.getPortName() % peerMuxState);
+
+    mux_state::MuxState::Label label = mux_state::MuxState::Label::Unknown;
+    if (peerMuxState == "active") {
+        label = mux_state::MuxState::Label::Active;
+    } else if (peerMuxState == "standby") {
+        label = mux_state::MuxState::Label::Standby;
+    } else if (peerMuxState == "error") {
+        label = mux_state::MuxState::Label::Error;
+    }
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handlePeerMuxStateNotification,
+        mLinkManagerStateMachinePtr.get(),
+        label
     )));
 }
 

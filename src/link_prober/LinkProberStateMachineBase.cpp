@@ -48,7 +48,8 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
     mUnknownState(*this, muxPortConfig),
     mWaitState(*this, muxPortConfig),
     mPeerActiveState(*this, muxPortConfig),
-    mPeerUnknownState(*this, muxPortConfig)
+    mPeerUnknownState(*this, muxPortConfig),
+    mPeerWaitState(*this, muxPortConfig)
 {
 }
 
@@ -225,6 +226,27 @@ void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_
 // post pck loss ratio update to link manager
 //
 void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> getCurrentPeerState();
+//
+// getter for current peer state
+//
+LinkProberState *LinkProberStateMachineBase::getCurrentPeerState()
+{
+    MUXLOGERROR(mMuxPortConfig.getPortName());
+    return nullptr;
+}
+
+//
+// ---> enterPeerState(LinkProberState::Label label);
+//
+// force the state machine to enter a given peer state
+//
+void LinkProberStateMachineBase::enterPeerState(LinkProberState::Label label)
 {
     MUXLOGERROR(mMuxPortConfig.getPortName());
 }

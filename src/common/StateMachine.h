@@ -33,6 +33,7 @@
 namespace link_manager {
 class LinkManagerStateMachineBase;
 class ActiveStandbyStateMachine;
+class ActiveActiveStateMachine;
 }
 
 namespace link_prober {
@@ -111,9 +112,19 @@ public:
     */
     boost::asio::io_service::strand& getStrand() {return mStrand;};
 
+    /**
+    *@method getMuxPortConfig
+    *
+    *@brief getter MuxPortConfig object
+    *
+    *@return reference to MuxPortConfig object
+    */
+    const MuxPortConfig& getMuxPortConfig() const {return mMuxPortConfig;};
+
 private:
     friend class link_manager::LinkManagerStateMachineBase;
     friend class link_manager::ActiveStandbyStateMachine;
+    friend class link_manager::ActiveActiveStateMachine;
     friend class link_prober::LinkProberStateMachineActiveStandby;
     friend class link_prober::LinkProberStateMachineBase;
     friend class link_prober::LinkProberStateMachineActiveActive;
@@ -140,15 +151,6 @@ private:
     *@return current state of the state machine
     */
     State* getCurrentState() {return mCurrentState;};
-
-    /**
-    *@method getMuxPortConfig
-    *
-    *@brief getter MuxPortConfig object
-    *
-    *@return reference to MuxPortConfig object
-    */
-    const MuxPortConfig& getMuxPortConfig() const {return mMuxPortConfig;};
 
 private:
     boost::asio::io_service::strand mStrand;
