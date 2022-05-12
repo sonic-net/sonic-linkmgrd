@@ -148,6 +148,17 @@ public: // db event handlers
      */
     void handlePeerMuxStateNotification(mux_state::MuxState::Label label) override;
 
+    /**
+     *@method handleGetServerMacNotification
+     *
+     *@brief handle get Server MAC address
+     *
+     *@param address (in)    Server MAC address
+     *
+     *@return none
+     */
+    void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address) override;
+
 public: // link prober event handlers
     /**
      * @method handleSuspendTimerExpiry

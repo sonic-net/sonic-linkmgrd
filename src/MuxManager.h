@@ -181,6 +181,18 @@ public:
     */
     inline void setLoopbackIpv4Address(boost::asio::ip::address& address) {mMuxConfig.setLoopbackIpv4Address(address);};
 
+
+    /**
+    *@method setUseKnownMacActiveActive
+    *
+    *@brief setter to set if use known mac to probe for active-active ports
+    *
+    *@param useKnownMac (in)  true to use known mac to probe
+    *
+    *@return none
+    */
+    inline void setUseKnownMacActiveActive(bool useKnownMac) { mMuxConfig.setUseKnownMacActiveActive(useKnownMac); };
+
     /**
     *@method initialize
     *

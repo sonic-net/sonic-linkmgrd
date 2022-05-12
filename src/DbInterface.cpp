@@ -814,6 +814,8 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                         mMuxManagerPtr->setNegativeStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
                     } else if (f == "suspend_timer") {
                         mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "use_known_mac") {
+                        mMuxManagerPtr->setUseKnownMacActiveActive(v == "enable");
                     }
 
                     MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %

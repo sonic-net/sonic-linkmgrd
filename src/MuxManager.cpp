@@ -357,7 +357,7 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
     while (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleDefaultRouteState(nextState);
         portMapIterator ++;
-    }                                                                                                                               
+    }
 }
 
 //
