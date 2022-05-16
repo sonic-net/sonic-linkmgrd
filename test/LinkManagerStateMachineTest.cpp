@@ -1095,6 +1095,21 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDownPeerLinkDown)
+{
+    setMuxStandby();
+
+    handleLinkState("down", 3);
+    VALIDATE_STATE(Standby, Standby, Down);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    postPeerLinkStateEvent("down", 3);
+
+    VALIDATE_STATE(Standby, Standby, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+}
+
+
 TEST_F(LinkManagerStateMachineTest, MuxActivePeerLinkStateUp)
 {
     setMuxActive();
@@ -1104,6 +1119,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActivePeerLinkStateUp)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Active, Active, Up);
 }
+
 TEST_F(LinkManagerStateMachineTest, PostPckLossMetricsEvent) 
 {
     setMuxStandby();
