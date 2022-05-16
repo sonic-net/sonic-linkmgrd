@@ -715,7 +715,9 @@ void ActiveStandbyStateMachine::handlePeerLinkStateNotification(const link_state
     MUXLOGINFO(boost::format("%s: state db peer link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
 
     mPeerLinkState = label;
-    if(label == link_state::LinkState::Label::Down && ms(mCompositeState) == mux_state::MuxState::Standby) {
+    if(label == link_state::LinkState::Label::Down && 
+        ls(mCompositeState) == link_state::LinkState::Label::Up &&
+        ms(mCompositeState) == mux_state::MuxState::Standby) {
         CompositeState nextState = mCompositeState;
         enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
         if (mDefaultRouteState == DefaultRoute::OK) {
