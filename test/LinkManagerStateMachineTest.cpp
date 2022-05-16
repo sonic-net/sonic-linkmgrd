@@ -1109,7 +1109,6 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDownPeerLinkDown)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
 }
 
-
 TEST_F(LinkManagerStateMachineTest, MuxActivePeerLinkStateUp)
 {
     setMuxActive();
