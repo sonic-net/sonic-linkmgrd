@@ -722,14 +722,16 @@ void ActiveActiveStateMachine::switchMuxState(
 //
 void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label label)
 {
-    MUXLOGWARNING(
-        boost::format("%s: Switching peer MUX state to '%s'") %
-        mMuxPortConfig.getPortName() %
-        mMuxStateName[label]
-    );
-    enterPeerMuxState(label);
-    mMuxPortPtr->setPeerMuxState(label);
-    startPeerMuxWaitTimer();
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
+        MUXLOGWARNING(
+            boost::format("%s: Switching peer MUX state to '%s'") %
+            mMuxPortConfig.getPortName() %
+            mMuxStateName[label]
+        );
+        enterPeerMuxState(label);
+        mMuxPortPtr->setPeerMuxState(label);
+        startPeerMuxWaitTimer();
+    }
 }
 
 //
