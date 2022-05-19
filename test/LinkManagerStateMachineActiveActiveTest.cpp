@@ -252,6 +252,12 @@ void LinkManagerStateMachineActiveActiveTest::setMuxStandby()
     VALIDATE_STATE(Unknown, Standby, Up);
 }
 
+void LinkManagerStateMachineActiveActiveTest::postDefaultRouteEvent(std::string routeState, uint32_t count)
+{
+    mFakeMuxPort.handleDefaultRouteState(routeState);
+    runIoService(count);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActive)
 {
     setMuxActive();
@@ -395,4 +401,26 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyLinkProberPeerUnknown)
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState) 
+{
+    setMuxActive();
+
+    postDefaultRouteEvent("ok", 1);
+    EXPECT_FALSE(mMuxConfig.getIfEnableDefaultRouteFeature());
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
+
+    postDefaultRouteEvent("na", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    postDefaultRouteEvent("na", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+
+    postDefaultRouteEvent("ok", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,3);
+}
 } /* namespace test */
