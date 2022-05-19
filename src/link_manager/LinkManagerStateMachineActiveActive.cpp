@@ -228,6 +228,7 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
     }
 
     mMuxPortConfig.setMode(mode);
+    shutdownOrRestartLinkProberOnDefaultRoute();
 }
 
 //
@@ -995,6 +996,40 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
         startPeerMuxWaitTimer(mPeerMuxWaitBackoffFactor);
     } else {
         mPeerMuxWaitBackoffFactor = 1;
+    }
+}
+
+// 
+// ---> handleDefaultRouteStateNotification(const DefaultRoute routeState);
+// 
+// handle default route state notification from routeorch
+//
+void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const DefaultRoute routeState)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mDefaultRouteState = routeState;
+    shutdownOrRestartLinkProberOnDefaultRoute();
+}
+
+//
+//
+// ---> shutdownOrRestartLinkProberOnDefaultRoute();
+//
+// shutdown or restart link prober based on default route state
+//
+void ActiveActiveStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (mComponentInitState.all()) {
+        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == DefaultRoute::NA) {
+            mShutdownTxFnPtr();
+        } else {
+            // If mux mode is in manual/standby/active mode, we should restart link prober. 
+            // If default route state is "ok", we should retart link prober.
+            mRestartTxFnPtr();
+        }
     }
 }
 

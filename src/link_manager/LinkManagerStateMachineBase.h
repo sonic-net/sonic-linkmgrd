@@ -430,15 +430,6 @@ public:
     virtual void handleDefaultRouteStateNotification(const DefaultRoute routeState);
 
     /**
-     * @method shutdownOrRestartLinkProberOnDefaultRoute()
-     * 
-     * @brief  shutdown or restart link prober based on default route state
-     * 
-     * @return none
-     */
-    virtual void shutdownOrRestartLinkProberOnDefaultRoute();
-
-    /**
      * @method handlePostPckLossRatioNotification
      *
      * @brief handle get post pck loss ratio
@@ -549,6 +540,15 @@ private:
     *@return none
     */
     void postMuxStateEvent(mux_state::MuxState::Label label);
+
+    /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    virtual void shutdownOrRestartLinkProberOnDefaultRoute();
 
 private:
     static LinkProberEvent mLinkProberEvent;

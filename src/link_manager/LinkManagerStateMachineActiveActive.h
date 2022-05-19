@@ -149,6 +149,17 @@ public: // db event handlers
     void handlePeerMuxStateNotification(mux_state::MuxState::Label label) override;
 
     /**
+     * @method handleDefaultRouteStateNotification(const DefaultRoute routeState)
+     * 
+     * @brief handle default route state notification from routeorch
+     * 
+     * @param routeState
+     * 
+     * @return none
+    */
+    void handleDefaultRouteStateNotification(const DefaultRoute routeState) override;
+    
+    /**
      *@method handleGetServerMacNotification
      *
      *@brief handle get Server MAC address
@@ -445,6 +456,15 @@ private:
      */
     void handlePeerMuxWaitTimeout(boost::system::error_code errorCode);
 
+    /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    void shutdownOrRestartLinkProberOnDefaultRoute() override;
+
 private: // testing only
     friend class mux::MuxPort;
     friend class test::FakeMuxPort;
@@ -547,6 +567,8 @@ private:
     boost::function<void()> mResumeTxFnPtr;
     boost::function<void()> mShutdownTxFnPtr;
     boost::function<void()> mRestartTxFnPtr;
+
+    DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
 };
 
 } /* namespace link_manager */

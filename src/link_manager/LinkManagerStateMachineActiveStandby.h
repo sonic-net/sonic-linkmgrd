@@ -209,6 +209,15 @@ private:
     */
     inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
+    /**
+     * @method shutdownOrRestartLinkProberOnDefaultRoute()
+     * 
+     * @brief  shutdown or restart link prober based on default route state
+     * 
+     * @return none
+     */
+    void shutdownOrRestartLinkProberOnDefaultRoute();
+
 public:
     /**
     *@method handleSwssBladeIpv4AddressUpdate
@@ -377,15 +386,6 @@ public:
      * @return none
     */
     void handleDefaultRouteStateNotification(const DefaultRoute routeState);
-
-    /**
-     * @method shutdownOrRestartLinkProberOnDefaultRoute()
-     * 
-     * @brief  shutdown or restart link prober based on default route state
-     * 
-     * @return none
-     */
-    void shutdownOrRestartLinkProberOnDefaultRoute();
 
     /**
      * @method handlePostPckLossRatioNotification
