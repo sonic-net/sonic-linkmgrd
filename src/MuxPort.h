@@ -227,6 +227,17 @@ public:
     inline void setServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxPortConfig.setBladeMacAddress(address);};
 
     /**
+    *@method setKnownMacAddress
+    *
+    *@brief setter for server known MAC address
+    *
+    *@param address (in) server known MAC address
+    *
+    *@return none
+    */
+    inline void setKnownMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxPortConfig.setKnownMacAddress(address);};
+
+    /**
     *@method handleBladeIpv4AddressUpdate
     *
     *@brief update server/blade IPv4 Address
@@ -280,6 +291,15 @@ public:
     *@return none
     */
     void handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
+
+    /**
+    *@method handleUseKnownMacAddress
+    *
+    *@brief handles use known MAC address
+    *
+    *@return none
+    */
+    void handleUseKnownMacAddress();
 
     /**
     *@method handleGetMuxState

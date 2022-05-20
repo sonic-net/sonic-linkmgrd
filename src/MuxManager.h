@@ -191,7 +191,7 @@ public:
     *
     *@return none
     */
-    inline void setUseKnownMacActiveActive(bool useKnownMac) { mMuxConfig.setUseKnownMacActiveActive(useKnownMac); };
+    void setUseKnownMacActiveActive(bool useKnownMac);
 
     /**
     *@method initialize

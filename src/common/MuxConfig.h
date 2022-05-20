@@ -317,13 +317,13 @@ public:
     inline bool getIfEnableDefaultRouteFeature() {return mEnableDefaultRouteFeature;};
 
     /**
-     * @method getUseKnownMacActiveActive
+     * @method getIfUseKnownMacActiveActive
      * 
      * @brief check if use known mac to probe for active-active ports
      * 
      * @return true to use known mac to probe for active-active ports
      */
-    inline bool getUseKnownMacActiveActive() { return mUseKnownMacActiveActive; };
+    inline bool getIfUseKnownMacActiveActive() { return mUseKnownMacActiveActive; };
 
     /**
      * @method setUseKnownMacActiveActive

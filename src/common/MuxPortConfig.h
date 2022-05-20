@@ -311,19 +311,61 @@ public:
     inline bool ifEnableDefaultRouteFeature() {return mMuxConfig.getIfEnableDefaultRouteFeature();};
 
     /**
-     * @method getUseKnownMacActiveActive
+     * @method getIfUseKnownMacActiveActive
      * 
      * @brief check if use known mac to probe for active-active ports
      * 
      * @return true to use known mac to probe for active-active ports
      */
-    inline bool getUseKnownMacActiveActive() { return mMuxConfig.getUseKnownMacActiveActive(); }
+    inline bool getIfUseKnownMacActiveActive() { return mMuxConfig.getIfUseKnownMacActiveActive(); }
+
+    /**
+    *@method getKnownMacAddress
+    *
+    *@brief getter for server known MAC address
+    *
+    *@return MAC address
+    */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getKnownMacAddress() const {return mKnownMacAddress;};
+
+    /**
+    *@method setKnownMacAddress
+    *
+    *@brief setter for server known MAC address
+    *
+    *@param address (in) server known MAC address
+    *
+    *@return none
+    */
+    inline void setKnownMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mKnownMacAddress = address;};
+
+    /**
+    *@method getLastUpdatedMacAddress
+    *
+    *@brief getter for last server MAC address update
+    *
+    *@return MAC address
+    */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getLastUpdatedMacAddress() const {return mLastUpdatedMacAddress;};
+
+    /**
+    *@method setLastUpdatedMacAddress
+    *
+    *@brief setter for last server MAC address update
+    *
+    *@param address (in) server known MAC address
+    *
+    *@return none
+    */
+    inline void setLastUpdatedMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mLastUpdatedMacAddress = address;};
 
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
     boost::asio::ip::address mBladeIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
+    std::array<uint8_t, ETHER_ADDR_LEN> mKnownMacAddress = {0, 0, 0, 0, 0, 0};
+    std::array<uint8_t, ETHER_ADDR_LEN> mLastUpdatedMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;

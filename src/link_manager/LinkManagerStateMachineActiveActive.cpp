@@ -292,7 +292,8 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    if (!mMuxPortConfig.getUseKnownMacActiveActive() && address != mMuxPortConfig.getBladeMacAddress()) {
+    mMuxPortConfig.setLastUpdatedMacAddress(address);
+    if (!mMuxPortConfig.getIfUseKnownMacActiveActive() && address != mMuxPortConfig.getBladeMacAddress()) {
         mMuxPortConfig.setBladeMacAddress(address);
         if (mUpdateEthernetFrameFnPtr) {
             mUpdateEthernetFrameFnPtr();
@@ -310,6 +311,41 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
                 mComponentInitState.test(LinkProberComponent)
             );
         }
+    }
+}
+
+//
+// ---> handleUseKnownMacAddressNotification();
+//
+// handle get Server MAC address
+//
+void ActiveActiveStateMachine::handleUseKnownMacAddressNotification()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+
+    std::array<uint8_t, ETHER_ADDR_LEN> address;
+    if (mMuxPortConfig.getIfUseKnownMacActiveActive()) {
+        address = mMuxPortConfig.getKnownMacAddress();
+    } else {
+        address = mMuxPortConfig.getLastUpdatedMacAddress();
+    }
+    mMuxPortConfig.setBladeMacAddress(address);
+
+    if (mUpdateEthernetFrameFnPtr) {
+        mUpdateEthernetFrameFnPtr();
+    } else {
+        std::array<char, 3 *ETHER_ADDR_LEN> addressStr = {0};
+        snprintf(
+            addressStr.data(), addressStr.size(), "%02x:%02x:%02x:%02x:%02x:%02x",
+            address[0], address[1], address[2], address[3], address[4], address[5]
+        );
+
+        MUXLOGERROR(
+            boost::format("%s: failed to update Ethernet frame with mac '%s', link prober init state: %d") %
+            mMuxPortConfig.getPortName() %
+            addressStr.data() %
+            mComponentInitState.test(LinkProberComponent)
+        );
     }
 }
 
