@@ -355,6 +355,20 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProberPeerUnknown)
+{
+    setMuxActive();
+   
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive);
+    VALIDATE_PEER_STATE(PeerActive, Active);
+
+    handleMuxConfig("detach", 1);
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
+
+    VALIDATE_PEER_STATE(PeerUnknown, Active);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandby)
 {
     setMuxStandby();

@@ -274,6 +274,8 @@ void MuxPort::handleMuxConfig(const std::string &config)
         mode = common::MuxPortConfig::Manual;
     } else if (config == "standby") {
         mode = common::MuxPortConfig::Standby;
+    } else if (config == "detach") {
+        mode = common::MuxPortConfig::Detached;
     }
 
     boost::asio::io_service &ioService = mStrand.context();
