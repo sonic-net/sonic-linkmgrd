@@ -101,11 +101,11 @@ uint32_t MuxManagerTest::getLinkWaitTimeout_msec(std::string port)
     return muxPortPtr->mMuxPortConfig.getLinkWaitTimeout_msec();
 }
 
-bool MuxManagerTest::getUseKnownMac(std::string port)
+bool MuxManagerTest::getIfUseKnownMac(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
-    return muxPortPtr->mMuxPortConfig.getUseKnownMacActiveActive();
+    return muxPortPtr->mMuxPortConfig.getIfUseKnownMacActiveActive();
 }
 
 boost::asio::ip::address MuxManagerTest::getBladeIpv4Address(std::string port)
@@ -598,7 +598,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == negativeSignalCount);
     EXPECT_TRUE(getLinkWaitTimeout_msec(port) == (negativeSignalCount + 1) * v4PorbeInterval);
     EXPECT_TRUE(common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::warning);
-    EXPECT_TRUE(getUseKnownMac(port) == useKnownMac);
+    EXPECT_TRUE(getIfUseKnownMac(port) == useKnownMac);
 }
 
 TEST_P(MuxResponseTest, MuxResponse)

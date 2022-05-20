@@ -55,7 +55,7 @@ public:
     uint32_t getTimeoutIpv4_msec(std::string port);
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
-    bool getUseKnownMac(std::string port);
+    bool getIfUseKnownMac(std::string port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
