@@ -160,13 +160,13 @@ public: // db event handlers
     void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address) override;
 
     /**
-     *@method handleUseKnownMacAddressNotification
+     *@method handleUseWellKnownMacAddressNotification
      *
-     *@brief handle use known Server MAC address
+     *@brief handle use well known Server MAC address
      *
      *@return none
      */
-    void handleUseKnownMacAddressNotification() override;
+    void handleUseWellKnownMacAddressNotification() override;
 
 public: // link prober event handlers
     /**

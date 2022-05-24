@@ -317,22 +317,22 @@ public:
     inline bool getIfEnableDefaultRouteFeature() {return mEnableDefaultRouteFeature;};
 
     /**
-     * @method getIfUseKnownMacActiveActive
+     * @method getIfUseWellKnownMacActiveActive
      * 
-     * @brief check if use known mac to probe for active-active ports
+     * @brief check if use well known mac to probe for active-active ports
      * 
-     * @return true to use known mac to probe for active-active ports
+     * @return true to use well known mac to probe for active-active ports
      */
-    inline bool getIfUseKnownMacActiveActive() { return mUseKnownMacActiveActive; };
+    inline bool getIfUseWellKnownMacActiveActive() { return mUseWellKnownMacActiveActive; };
 
     /**
-     * @method setUseKnownMacActiveActive
+     * @method setUseWellKnownMacActiveActive
      * 
-     * @brief setter to set if use known mac to probe for active-active ports
+     * @brief setter to set if use well known mac to probe for active-active ports
      * 
      * @return none
      */
-    inline void setUseKnownMacActiveActive(bool useKnownMacActiveActive) { mUseKnownMacActiveActive = useKnownMacActiveActive; };
+    inline void setUseWellKnownMacActiveActive(bool useWellKnownMacActiveActive) { mUseWellKnownMacActiveActive = useWellKnownMacActiveActive; };
 
 private:
     uint8_t mNumberOfThreads = 5;
@@ -348,7 +348,7 @@ private:
     uint32_t mDecreasedTimeoutIpv4_msec = 10;
 
     bool mEnableDefaultRouteFeature = false;
-    bool mUseKnownMacActiveActive = true;
+    bool mUseWellKnownMacActiveActive = true;
 
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");

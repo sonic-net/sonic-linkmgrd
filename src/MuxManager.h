@@ -183,15 +183,15 @@ public:
 
 
     /**
-    *@method setUseKnownMacActiveActive
+    *@method setUseWellKnownMacActiveActive
     *
-    *@brief setter to set if use known mac to probe for active-active ports
+    *@brief setter to set if use well known mac to probe for active-active ports
     *
-    *@param useKnownMac (in)  true to use known mac to probe
+    *@param useWellKnownMac (in)  true to use known mac to probe
     *
     *@return none
     */
-    void setUseKnownMacActiveActive(bool useKnownMac);
+    void setUseWellKnownMacActiveActive(bool useWellKnownMac);
 
     /**
     *@method initialize

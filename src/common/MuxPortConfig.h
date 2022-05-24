@@ -311,33 +311,33 @@ public:
     inline bool ifEnableDefaultRouteFeature() {return mMuxConfig.getIfEnableDefaultRouteFeature();};
 
     /**
-     * @method getIfUseKnownMacActiveActive
+     * @method getIfUseWellKnownMacActiveActive
      * 
-     * @brief check if use known mac to probe for active-active ports
+     * @brief check if use well known mac to probe for active-active ports
      * 
-     * @return true to use known mac to probe for active-active ports
+     * @return true to use well known mac to probe for active-active ports
      */
-    inline bool getIfUseKnownMacActiveActive() { return mMuxConfig.getIfUseKnownMacActiveActive(); }
+    inline bool getIfUseWellKnownMacActiveActive() { return mMuxConfig.getIfUseWellKnownMacActiveActive(); }
 
     /**
-    *@method getKnownMacAddress
+    *@method getWellKnownMacAddress
     *
-    *@brief getter for server known MAC address
+    *@brief getter for server well known MAC address
     *
     *@return MAC address
     */
-    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getKnownMacAddress() const {return mKnownMacAddress;};
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getWellKnownMacAddress() const {return mWellKnownMacAddress;};
 
     /**
-    *@method setKnownMacAddress
+    *@method setWellKnownMacAddress
     *
-    *@brief setter for server known MAC address
+    *@brief setter for server well known MAC address
     *
-    *@param address (in) server known MAC address
+    *@param address (in) server well known MAC address
     *
     *@return none
     */
-    inline void setKnownMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mKnownMacAddress = address;};
+    inline void setWellKnownMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mWellKnownMacAddress = address;};
 
     /**
     *@method getLastUpdatedMacAddress
@@ -364,7 +364,7 @@ private:
     std::string mPortName;
     boost::asio::ip::address mBladeIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
-    std::array<uint8_t, ETHER_ADDR_LEN> mKnownMacAddress = {0, 0, 0, 0, 0, 0};
+    std::array<uint8_t, ETHER_ADDR_LEN> mWellKnownMacAddress = {0, 0, 0, 0, 0, 0};
     std::array<uint8_t, ETHER_ADDR_LEN> mLastUpdatedMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
     Mode mMode = Manual;

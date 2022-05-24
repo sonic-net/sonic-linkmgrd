@@ -55,16 +55,16 @@ MuxManager::MuxManager() :
 }
 
 //
-// ---> setUseKnownMacActiveActive(bool useKnownMac);
+// ---> setUseWellKnownMacActiveActive(bool UseWellKnownMac);
 //
 //  set to use known mac for all ports in active-active cable type
 //
-void MuxManager::setUseKnownMacActiveActive(bool useKnownMac)
+void MuxManager::setUseWellKnownMacActiveActive(bool useWellKnownMac)
 {
-    mMuxConfig.setUseKnownMacActiveActive(useKnownMac);
+    mMuxConfig.setUseWellKnownMacActiveActive(useWellKnownMac);
 
     for (const auto & [portName, muxPort] : mPortMap) {
-        muxPort->handleUseKnownMacAddress();
+        muxPort->handleUseWellKnownMacAddress();
     }
 }
 
@@ -414,8 +414,8 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
             if (muxPortCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
                 std::array<uint8_t, ETHER_ADDR_LEN> address;
                 generateServerMac(serverId, address);
-                muxPortPtr->setKnownMacAddress(address);
-                if (mMuxConfig.getIfUseKnownMacActiveActive()) {
+                muxPortPtr->setWellKnownMacAddress(address);
+                if (mMuxConfig.getIfUseWellKnownMacActiveActive()) {
                     muxPortPtr->setServerMacAddress(address);
                 }
             }

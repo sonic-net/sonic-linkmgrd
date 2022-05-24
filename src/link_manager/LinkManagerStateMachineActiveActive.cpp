@@ -293,7 +293,7 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
     mMuxPortConfig.setLastUpdatedMacAddress(address);
-    if (!mMuxPortConfig.getIfUseKnownMacActiveActive() && address != mMuxPortConfig.getBladeMacAddress()) {
+    if (!mMuxPortConfig.getIfUseWellKnownMacActiveActive() && address != mMuxPortConfig.getBladeMacAddress()) {
         mMuxPortConfig.setBladeMacAddress(address);
         if (mUpdateEthernetFrameFnPtr) {
             mUpdateEthernetFrameFnPtr();
@@ -315,17 +315,17 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
 }
 
 //
-// ---> handleUseKnownMacAddressNotification();
+// ---> handleUseWellKnownMacAddressNotification();
 //
-// handle get Server MAC address
+// handle use well known mac address
 //
-void ActiveActiveStateMachine::handleUseKnownMacAddressNotification()
+void ActiveActiveStateMachine::handleUseWellKnownMacAddressNotification()
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
     std::array<uint8_t, ETHER_ADDR_LEN> address;
-    if (mMuxPortConfig.getIfUseKnownMacActiveActive()) {
-        address = mMuxPortConfig.getKnownMacAddress();
+    if (mMuxPortConfig.getIfUseWellKnownMacActiveActive()) {
+        address = mMuxPortConfig.getWellKnownMacAddress();
     } else {
         address = mMuxPortConfig.getLastUpdatedMacAddress();
     }
