@@ -616,7 +616,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     uint32_t positiveSignalCount = 2;
     uint32_t negativeSignalCount = 3;
     uint32_t suspendTimer = 5;
-    bool useWellKnownMac = false;
+    bool useWellKnownMac = true;
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {"LINK_PROBER", "SET", {{"interval_v4", boost::lexical_cast<std::string> (v4PorbeInterval)}}},
         {"LINK_PROBER", "SET", {{"interval_v6", boost::lexical_cast<std::string> (v6ProveInterval)}}},
