@@ -55,9 +55,11 @@ public:
     uint32_t getTimeoutIpv4_msec(std::string port);
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
-    bool getIfUseKnownMac(std::string port);
+    bool getIfUseWellKnownMac(std::string port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
+    std::array<uint8_t, ETHER_ADDR_LEN> getLastUpdatedMacAddress(std::string port);
+    std::array<uint8_t, ETHER_ADDR_LEN> getWellKnownMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getTorMacAddress(std::string port);
     common::MuxPortConfig::PortCableType getPortCableType(const std::string &port);

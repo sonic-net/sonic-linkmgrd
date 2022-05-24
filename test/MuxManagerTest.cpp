@@ -101,11 +101,11 @@ uint32_t MuxManagerTest::getLinkWaitTimeout_msec(std::string port)
     return muxPortPtr->mMuxPortConfig.getLinkWaitTimeout_msec();
 }
 
-bool MuxManagerTest::getIfUseKnownMac(std::string port)
+bool MuxManagerTest::getIfUseWellKnownMac(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
-    return muxPortPtr->mMuxPortConfig.getIfUseKnownMacActiveActive();
+    return muxPortPtr->mMuxPortConfig.getIfUseWellKnownMacActiveActive();
 }
 
 boost::asio::ip::address MuxManagerTest::getBladeIpv4Address(std::string port)
@@ -120,6 +120,20 @@ std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getBladeMacAddress(std::stri
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
     return muxPortPtr->mMuxPortConfig.getBladeMacAddress();
+}
+
+std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getLastUpdatedMacAddress(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getLastUpdatedMacAddress();
+}
+
+std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getWellKnownMacAddress(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getWellKnownMacAddress();
 }
 
 boost::asio::ip::address MuxManagerTest::getLoopbackIpv4Address(std::string port)
@@ -405,9 +419,9 @@ TEST_F(MuxManagerTest, AddPortActiveActive)
     std::array<uint8_t, ETHER_ADDR_LEN> bladeMacAddress = getBladeMacAddress(port);
     EXPECT_TRUE(bladeMacAddress != serverMac);
 
-    std::array<uint8_t, ETHER_ADDR_LEN> knownMac;
-    generateServerMac(port, knownMac);
-    EXPECT_TRUE(bladeMacAddress == knownMac);
+    std::array<uint8_t, ETHER_ADDR_LEN> wellKnownMac;
+    generateServerMac(port, wellKnownMac);
+    EXPECT_TRUE(bladeMacAddress == wellKnownMac);
 }
 
 TEST_F(MuxManagerTest, Loopback2Address)
@@ -534,38 +548,61 @@ TEST_F(MuxManagerTest, ServerMacActiveActive)
     boost::asio::ip::address serverAddress = boost::asio::ip::address::from_string(ipAddress);
     updateServerMacAddress(serverAddress, serverMac.data());
 
-    runIoService();
+    runIoService(1);
 
     std::array<uint8_t, ETHER_ADDR_LEN> bladeMacAddress = getBladeMacAddress(port);
+    std::array<uint8_t, ETHER_ADDR_LEN> lastUpdatedMacAddress;
     EXPECT_TRUE(bladeMacAddress != serverMac);
 
-    std::array<uint8_t, ETHER_ADDR_LEN> knownMac;
-    generateServerMac(port, knownMac);
+    std::array<uint8_t, ETHER_ADDR_LEN> wellKnownMac;
+    generateServerMac(port, wellKnownMac);
     EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore);
-    EXPECT_TRUE(bladeMacAddress == knownMac);
+    EXPECT_TRUE(bladeMacAddress == wellKnownMac);
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
-        {port, "SET", {{"use_known_mac", "enable"}}},
+        {"LINK_PROBER", "SET", {{"use_well_known_mac", "enable"}}}
     };
     processMuxLinkmgrConfigNotifiction(entries);
     updateServerMacAddress(serverAddress, serverMac.data());
-    runIoService();
+    runIoService(2);
 
     bladeMacAddress = getBladeMacAddress(port);
-    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore);
-    EXPECT_TRUE(bladeMacAddress == knownMac);
+    lastUpdatedMacAddress = getLastUpdatedMacAddress(port);
+    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 1);
+    EXPECT_TRUE(bladeMacAddress == wellKnownMac);
+    EXPECT_TRUE(lastUpdatedMacAddress == serverMac);
 
     entries = {
-        {"LINK_PROBER", "SET", {{"use_known_mac", "disable"}}},
+        {"LINK_PROBER", "SET", {{"use_well_known_mac", "disable"}}}
     };
     processMuxLinkmgrConfigNotifiction(entries);
-
-    updateServerMacAddress(serverAddress, serverMac.data());
-    runIoService();
+    runIoService(1);
 
     bladeMacAddress = getBladeMacAddress(port);
-    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 1);
-    EXPECT_TRUE(bladeMacAddress == serverMac);
+    lastUpdatedMacAddress = getLastUpdatedMacAddress(port);
+    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 2);
+    EXPECT_TRUE(bladeMacAddress == lastUpdatedMacAddress);
+    EXPECT_TRUE(lastUpdatedMacAddress == serverMac);
+
+    serverMac = {0, 'b', 2, 'd', 4, 'a'};
+    updateServerMacAddress(serverAddress, serverMac.data());
+    runIoService(1);
+
+    bladeMacAddress = getBladeMacAddress(port);
+    lastUpdatedMacAddress = getLastUpdatedMacAddress(port);
+    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 3);
+    EXPECT_TRUE(bladeMacAddress == lastUpdatedMacAddress);
+    EXPECT_TRUE(lastUpdatedMacAddress == serverMac);
+
+    entries = {
+        {"LINK_PROBER", "SET", {{"use_well_known_mac", "enable"}}}
+    };
+    processMuxLinkmgrConfigNotifiction(entries);
+    runIoService(1);
+
+    bladeMacAddress = getBladeMacAddress(port);
+    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 4);
+    EXPECT_TRUE(bladeMacAddress == wellKnownMac);
 }
 
 TEST_F(MuxManagerTest, LinkmgrdConfig)
@@ -579,14 +616,14 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     uint32_t positiveSignalCount = 2;
     uint32_t negativeSignalCount = 3;
     uint32_t suspendTimer = 5;
-    bool useKnownMac = false;
+    bool useWellKnownMac = false;
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {"LINK_PROBER", "SET", {{"interval_v4", boost::lexical_cast<std::string> (v4PorbeInterval)}}},
         {"LINK_PROBER", "SET", {{"interval_v6", boost::lexical_cast<std::string> (v6ProveInterval)}}},
         {"LINK_PROBER", "SET", {{"positive_signal_count", boost::lexical_cast<std::string> (positiveSignalCount)}}},
         {"LINK_PROBER", "SET", {{"negative_signal_count", boost::lexical_cast<std::string> (negativeSignalCount)}}},
         {"LINK_PROBER", "SET", {{"suspend_timer", boost::lexical_cast<std::string> (suspendTimer)}}},
-        {"LINK_PROBER", "SET", {{"use_known_mac", "disable"}}},
+        {"LINK_PROBER", "SET", {{"use_well_known_mac", "enable"}}},
         {"LINK_PROBER", "SET", {{"interval_v4", "abc"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
@@ -598,7 +635,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == negativeSignalCount);
     EXPECT_TRUE(getLinkWaitTimeout_msec(port) == (negativeSignalCount + 1) * v4PorbeInterval);
     EXPECT_TRUE(common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::warning);
-    EXPECT_TRUE(getIfUseKnownMac(port) == useKnownMac);
+    EXPECT_TRUE(getIfUseWellKnownMac(port) == useWellKnownMac);
 }
 
 TEST_P(MuxResponseTest, MuxResponse)
