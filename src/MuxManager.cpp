@@ -55,6 +55,21 @@ MuxManager::MuxManager() :
 }
 
 //
+// ---> setUseWellKnownMacActiveActive(bool UseWellKnownMac);
+//
+//  set to use known mac for all ports in active-active cable type
+//
+void MuxManager::setUseWellKnownMacActiveActive(bool useWellKnownMac)
+{
+    mMuxConfig.setUseWellKnownMacActiveActive(useWellKnownMac);
+
+    for (const auto & [portName, muxPort] : mPortMap) {
+        muxPort->handleUseWellKnownMacAddress();
+    }
+}
+
+
+//
 // ---> initialize();
 //
 // initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db
@@ -357,7 +372,7 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
     while (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleDefaultRouteState(nextState);
         portMapIterator ++;
-    }                                                                                                                               
+    }
 }
 
 //
@@ -399,7 +414,10 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
             if (muxPortCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
                 std::array<uint8_t, ETHER_ADDR_LEN> address;
                 generateServerMac(serverId, address);
-                muxPortPtr->setServerMacAddress(address);
+                muxPortPtr->setWellKnownMacAddress(address);
+                if (mMuxConfig.getIfUseWellKnownMacActiveActive()) {
+                    muxPortPtr->setServerMacAddress(address);
+                }
             }
             mPortMap.insert({portName, muxPortPtr});
         }

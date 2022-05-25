@@ -183,6 +183,22 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
 }
 
 //
+// ---> handleUseWellKnownMacAddress()
+//
+// handles use well known mac
+//
+void MuxPort::handleUseWellKnownMacAddress()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleUseWellKnownMacAddressNotification,
+        mLinkManagerStateMachinePtr.get()
+    )));
+}
+
+//
 // ---> handleGetMuxState(const std::string &muxState);
 //
 // handles MUX state updates

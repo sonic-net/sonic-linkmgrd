@@ -140,6 +140,16 @@ void LinkManagerStateMachineBase::handleGetServerMacAddressNotification(std::arr
 }
 
 //
+// ---> handleUseWellKnownMacAddressNotification();
+//
+// handle use well known Server MAC address
+//
+void LinkManagerStateMachineBase::handleUseWellKnownMacAddressNotification()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+//
 // ---> handleGetMuxStateNotification(mux_state::MuxState::Label label);
 //
 // handle get MUX state notification
