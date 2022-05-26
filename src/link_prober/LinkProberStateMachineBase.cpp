@@ -167,7 +167,7 @@ void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEven
 //
 void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -177,7 +177,7 @@ void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendT
 //
 void LinkProberStateMachineBase::processEvent(IcmpPeerActiveEvent &icmpPeerActiveEvent)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -187,7 +187,7 @@ void LinkProberStateMachineBase::processEvent(IcmpPeerActiveEvent &icmpPeerActiv
 //
 void LinkProberStateMachineBase::processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -197,7 +197,7 @@ void LinkProberStateMachineBase::processEvent(IcmpPeerUnknownEvent &icmpPeerUnkn
 //
 void LinkProberStateMachineBase::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -207,7 +207,7 @@ void LinkProberStateMachineBase::processEvent(SwitchActiveCommandCompleteEvent &
 //
 void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -217,7 +217,7 @@ void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchAc
 //
 void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -227,7 +227,7 @@ void LinkProberStateMachineBase::handleMackAddressUpdate(const std::array<uint8_
 //
 void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
@@ -237,7 +237,7 @@ void LinkProberStateMachineBase::handlePckLossRatioUpdate(const uint64_t unknown
 //
 LinkProberState *LinkProberStateMachineBase::getCurrentPeerState()
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     return nullptr;
 }
 
@@ -248,7 +248,7 @@ LinkProberState *LinkProberStateMachineBase::getCurrentPeerState()
 //
 void LinkProberStateMachineBase::enterPeerState(LinkProberState::Label label)
 {
-    MUXLOGERROR(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
 
 //
