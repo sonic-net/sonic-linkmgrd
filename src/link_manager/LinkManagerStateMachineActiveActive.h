@@ -532,6 +532,8 @@ private: // peer link prober state and mux state
 
 private:
     uint32_t mMuxProbeBackoffFactor = 1;
+    uint32_t mMuxWaitBackoffFactor = 1;
+    uint32_t mPeerMuxWaitBackoffFactor = 1;
 
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;

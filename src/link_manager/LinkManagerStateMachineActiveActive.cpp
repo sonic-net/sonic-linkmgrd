@@ -951,7 +951,11 @@ void ActiveActiveStateMachine::handleMuxWaitTimeout(boost::system::error_code er
         } else {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "Unknown timeout reason!!!", mCompositeState);
         }
-        startMuxWaitTimer(MAX_BACKOFF_FACTOR);
+        mMuxWaitBackoffFactor <<= 1;
+        mMuxWaitBackoffFactor = mMuxWaitBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxWaitBackoffFactor;
+        startMuxWaitTimer(mMuxWaitBackoffFactor);
+    } else {
+        mMuxWaitBackoffFactor = 1;
     }
 }
 
@@ -986,15 +990,12 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
             "xcvrd timed out responding to linkmgrd peer mux state" %
             mMuxStateName[mPeerMuxState]
         );
+        mPeerMuxWaitBackoffFactor <<= 1;
+        mPeerMuxWaitBackoffFactor = mPeerMuxWaitBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxWaitBackoffFactor;
+        startPeerMuxWaitTimer(mPeerMuxWaitBackoffFactor);
     } else {
-        MUXLOGWARNING(
-            boost::format("%s: %s, current peer mux state: %s") %
-            mMuxPortConfig.getPortName() %
-            "Unknown timeout reason!!!" %
-            mMuxStateName[mPeerMuxState]
-        );
+        mPeerMuxWaitBackoffFactor = 1;
     }
-    startPeerMuxWaitTimer(MAX_BACKOFF_FACTOR);
 }
 
 } /* namespace link_manager */
