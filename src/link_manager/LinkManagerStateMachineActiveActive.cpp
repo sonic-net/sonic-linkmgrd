@@ -991,7 +991,7 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
             mMuxStateName[mPeerMuxState]
         );
         mPeerMuxWaitBackoffFactor <<= 1;
-        mPeerMuxWaitBackoffFactor = mPeerMuxWaitBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxWaitBackoffFactor;
+        mPeerMuxWaitBackoffFactor = mPeerMuxWaitBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mPeerMuxWaitBackoffFactor;
         startPeerMuxWaitTimer(mPeerMuxWaitBackoffFactor);
     } else {
         mPeerMuxWaitBackoffFactor = 1;
