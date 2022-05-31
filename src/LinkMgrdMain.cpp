@@ -42,12 +42,12 @@ namespace {
 
     static auto DEFAULT_LOGGING_FILTER_LEVEL = boost::log::trivial::debug;
 
-    void InitializeLogger(std::string execName, boost::log::trivial::severity_level level)
+    void InitializeLogger(std::string execName, boost::log::trivial::severity_level level, bool extraLogFile)
     {
         std::string progName = execName.substr(execName.find_last_of('/') + 1);
         std::string logFile = "/var/log/mux/" + progName + ".log";
 
-        common::MuxLogger::getInstance()->initialize(progName, logFile, level);
+        common::MuxLogger::getInstance()->initialize(progName, logFile, level, extraLogFile);
     }
 
 } // end namespace
@@ -66,6 +66,7 @@ int main(int argc, const char* argv[])
     boost::log::trivial::severity_level level;
     bool measureSwitchover = false;
     bool defaultRoute = false;
+    bool extraLogFile = false;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
@@ -75,13 +76,16 @@ int main(int argc, const char* argv[])
          program_options::value<boost::log::trivial::severity_level>(&level)->value_name("<severity_level>")->
          default_value(DEFAULT_LOGGING_FILTER_LEVEL),
          "Logging verbosity level.")
-         ("measure_switchover_overhead,m",
-         program_options::bool_switch(&measureSwitchover)->default_value(false),
-         "Decrease link prober interval after switchover to better measure switchover overhead")
-         ("default_route,d",
-         program_options::bool_switch(&defaultRoute)->default_value(false),
-         "Disable heartbeat sending and avoid switching to active when default route is missing"
-         )
+        ("measure_switchover_overhead,m",
+        program_options::bool_switch(&measureSwitchover)->default_value(false),
+        "Decrease link prober interval after switchover to better measure switchover overhead")
+        ("default_route,d",
+        program_options::bool_switch(&defaultRoute)->default_value(false),
+        "Disable heartbeat sending and avoid switching to active when default route is missing"
+        )
+        ("extra_log_file,e",
+         program_options::bool_switch(&extraLogFile)->default_value(false),
+         "Store logs in an extra log file")
     ;
 
     //
@@ -110,7 +114,7 @@ int main(int argc, const char* argv[])
     }
 
     if (retValue == EXIT_SUCCESS) {
-        InitializeLogger(argv[0], level);
+        InitializeLogger(argv[0], level, extraLogFile);
         std::stringstream ss;
         ss << "level: " << level;
         MUXLOGINFO(ss.str());
