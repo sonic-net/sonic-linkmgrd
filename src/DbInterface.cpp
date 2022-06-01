@@ -363,7 +363,7 @@ void DbInterface::handleSetPeerMuxState(const std::string portName, mux_state::M
 //
 void DbInterface::handleProbeMuxState(const std::string portName)
 {
-    MUXLOGWARNING(boost::format("%s: trigger xcvrd to read Mux State using i2c. ") % portName);
+    MUXLOGDEBUG(portName);
 
     mAppDbMuxCommandTablePtr->hset(portName, "command", "probe");
 }
