@@ -145,7 +145,7 @@ public:
     *
     *@return label of MUX state
     */
-    inline void probeMuxState();
+    void probeMuxState();
 
     /**
     *@method setMuxLinkmgrState
