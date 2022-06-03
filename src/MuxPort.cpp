@@ -364,4 +364,23 @@ void MuxPort::resetPckLossCount()
     )));
 }
 
+//
+// ---> probeMuxState()
+//
+// trigger xcvrd to read MUX state using i2c
+//
+void MuxPort::probeMuxState()
+{
+    switch (mMuxPortConfig.getPortCableType()) {
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            mDbInterfacePtr->probeForwardingState(mMuxPortConfig.getPortName());
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            mDbInterfacePtr->probeMuxState(mMuxPortConfig.getPortName());
+            break;
+        default:
+            break;
+    }
+}
+
 } /* namespace mux */
