@@ -60,6 +60,11 @@ void FakeDbInterface::probeMuxState(const std::string &portName)
     mProbeMuxStateInvokeCount++;
 }
 
+void FakeDbInterface::probeForwardingState(const std::string &portName)
+{
+    mProbeForwardingStateInvokeCount++;
+}
+
 void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label)
 {
     mSetMuxLinkmgrStateInvokeCount++;
