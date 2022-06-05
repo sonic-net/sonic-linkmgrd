@@ -40,6 +40,7 @@ public:
     virtual void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label) override;
     virtual void getMuxState(const std::string &portName) override;
     virtual void probeMuxState(const std::string &portName) override;
+    virtual void probeForwardingState(const std::string &portName) override;
     virtual void setMuxLinkmgrState(
         const std::string &portName,
         link_manager::ActiveStandbyStateMachine::Label label
@@ -75,6 +76,7 @@ public:
     uint32_t mSetPeerMuxStateInvokeCount = 0;
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
+    uint32_t mProbeForwardingStateInvokeCount = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
     uint32_t mPostMetricsInvokeCount = 0;
     uint32_t mPostLinkProberMetricsInvokeCount = 0;

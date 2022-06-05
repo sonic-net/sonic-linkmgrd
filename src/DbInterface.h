@@ -46,8 +46,12 @@ namespace mux
 {
 #define MUX_CABLE_INFO_TABLE  "MUX_CABLE_INFO"
 #define LINK_PROBE_STATS_TABLE_NAME "LINK_PROBE_STATS"
-#define PEER_FORWARDING_STATE_COMMAND_TABLE "HW_FORWARDING_STATE_PEER"
-#define PEER_FORWARDING_STATE_RESPONSE_TABLE "HW_MUX_CABLE_TABLE_PEER"
+
+#define APP_FORWARDING_STATE_COMMAND_TABLE_NAME  "FORWARDING_STATE_COMMAND"
+#define APP_FORWARDING_STATE_RESPONSE_TABLE_NAME "FORWARDING_STATE_RESPONSE"
+
+#define APP_PEER_HW_FORWARDING_STATE_TABLE_NAME    "HW_FORWARDING_STATE_PEER"
+#define STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME   "HW_MUX_CABLE_TABLE_PEER"
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
@@ -157,6 +161,17 @@ public:
     *@return label of MUX state
     */
     virtual void probeMuxState(const std::string &portName);
+
+    /**
+     * @method probeForwardingState
+     * 
+     * @brief  trigger tranceiver daemon to read Fowarding state using gRPC
+     * 
+     * @param portName (in) MUX/port name 
+     * 
+     * @return none
+     */
+    virtual void probeForwardingState(const std::string &portName);
 
     /**
     *@method setMuxLinkmgrState
@@ -307,6 +322,17 @@ private:
     *@return label of MUX state
     */
     void handleProbeMuxState(const std::string portName);
+
+    /**
+     * @method handleProbeForwardingState
+     * 
+     * @brief trigger xcvrd to read forwarding state using gRPC
+     * 
+     * @param portName (in) MUX/port name
+     * 
+     * @return none
+     */
+    void handleProbeForwardingState(const std::string portName);
 
     /**
     *@method handleSetMuxLinkmgrState
@@ -583,6 +609,17 @@ private:
     inline void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
+     * @method processForwardingResponseNotification
+     * 
+     * @brief process forwarding response (from xcvrd probing) notification
+     * 
+     * @param entries (in) reference to app db entries
+     * 
+     * @return none
+     */
+    inline void processForwardingResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
     *@method handleMuxResponseNotifiction
     *
     *@brief handles MUX response (from xcvrd) notification
@@ -594,26 +631,33 @@ private:
     void handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
 
     /**
-    *@method processPeerMuxResponseNotification
-    *
-    *@brief process peer MUX response (from xcvrd) notification
-    *
-    *@param entries (in) reference to app db peer mux response table entries
-    *
-    *@return none
-    */
-    inline void processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+     * @method handleForwardingResponseNotification
+     * 
+     * @brief handle forwarding state response (from xcvrd probing) notification
+     */
+    void handleForwardingResponseNotification(swss::SubscriberStateTable &appdbForwardingResponseTable);
 
     /**
-    *@method handlePeerMuxResponseNotification
+    *@method processPeerMuxNotification
     *
-    *@brief handles peer MUX response (from xcvrd) notification
+    *@brief process peer MUX state (from xcvrd) notification
     *
-    *@param appdbPortTable (in) reference to app db peer mux response table
+    *@param entries (in) reference to state db peer mux table entries
     *
     *@return none
     */
-    void handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable);
+    inline void processPeerMuxNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+    *@method handlePeerMuxStateNotification
+    *
+    *@brief handles peer MUX notification (from xcvrd) 
+    *
+    *@param stateDbPeerMuxTable (in) reference to state db peer hw forwarding table 
+    *
+    *@return none
+    */
+    void handlePeerMuxStateNotification(swss::SubscriberStateTable &stateDbPeerMuxTable);
 
     /**
     *@method processMuxStateNotifiction
@@ -684,10 +728,12 @@ private:
 
     // for communicating with orchagent
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;
+    // for communication with driver (setting peer's forwarding state)
+    std::shared_ptr<swss::ProducerStateTable> mAppDbPeerMuxTablePtr;
     // for communicating with the driver (probing the mux)
     std::shared_ptr<swss::Table> mAppDbMuxCommandTablePtr;
-    // for communicating with xcvrd to set peer mux state
-    std::shared_ptr<swss::Table> mAppDbPeerMuxCommandTablePtr;
+    // for communication with the driver (probing forwarding state)
+    std::shared_ptr<swss::Table> mAppDbForwardingCommandTablePtr;
     // for writing the current mux linkmgr health
     std::shared_ptr<swss::Table> mStateDbMuxLinkmgrTablePtr;
     // for writing mux metrics

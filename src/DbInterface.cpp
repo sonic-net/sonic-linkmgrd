@@ -133,6 +133,23 @@ void DbInterface::probeMuxState(const std::string &portName)
 }
 
 //
+// ---> probeForwardingState(const std::string &portName)
+//
+// trigger tranceiver daemon to read Fowarding state using gRPC
+//
+void DbInterface::probeForwardingState(const std::string &portName)
+{
+    MUXLOGDEBUG(portName);
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handleProbeForwardingState,
+        this,
+        portName
+    )));
+}
+
+//
 // ---> setMuxLinkmgrState(const std::string &portName, link_manager::ActiveStandbyStateMachine::Label label);
 //
 // set MUX LinkMgr state in State DB for cli processing
@@ -251,11 +268,14 @@ void DbInterface::initialize()
         mAppDbMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
             mAppDbPtr.get(), APP_MUX_CABLE_TABLE_NAME
         );
+        mAppDbPeerMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
+            mAppDbPtr.get(), APP_PEER_HW_FORWARDING_STATE_TABLE_NAME
+        );
         mAppDbMuxCommandTablePtr = std::make_shared<swss::Table> (
             mAppDbPtr.get(), APP_MUX_CABLE_COMMAND_TABLE_NAME
         );
-        mAppDbPeerMuxCommandTablePtr = std::make_shared<swss::Table> (
-            mAppDbPtr.get(), PEER_FORWARDING_STATE_COMMAND_TABLE
+        mAppDbForwardingCommandTablePtr = std::make_shared<swss::Table> (
+            mAppDbPtr.get(), APP_FORWARDING_STATE_COMMAND_TABLE_NAME
         );
         mStateDbMuxLinkmgrTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_LINKMGR_TABLE_NAME
@@ -352,7 +372,7 @@ void DbInterface::handleSetPeerMuxState(const std::string portName, mux_state::M
         std::vector<swss::FieldValueTuple> values = {
             {"state", mMuxState[label]},
         };
-        mAppDbPeerMuxCommandTablePtr->set(portName, values);
+        mAppDbPeerMuxTablePtr->set(portName, values);
     }
 }
 
@@ -366,6 +386,18 @@ void DbInterface::handleProbeMuxState(const std::string portName)
     MUXLOGDEBUG(portName);
 
     mAppDbMuxCommandTablePtr->hset(portName, "command", "probe");
+}
+
+//
+// ---> handleProbeForwardingState(const std::string portName)
+//
+// trigger xcvrd to read forwarding state using gRPC
+//
+void DbInterface::handleProbeForwardingState(const std::string portName)
+{
+    MUXLOGDEBUG(portName);
+
+    mAppDbForwardingCommandTablePtr->hset(portName, "command", "probe");
 }
 
 //
@@ -989,6 +1021,56 @@ void DbInterface::processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValu
 }
 
 //
+// ---> processForwardingResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process forwarding response (from xcvrd probing) notification
+//
+void DbInterface::processForwardingResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string port = kfvKey(entry);
+        std::string oprtation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit_self = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "response";}
+        );
+        if (cit_self != fieldValues.cend()) {
+            const std::string f = cit_self->first;
+            const std::string v = cit_self->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+                port %
+                oprtation %
+                f %
+                v
+            );
+            mMuxManagerPtr->processProbeMuxState(port, v);
+        }
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit_peer = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "response_peer";}
+        );
+        if (cit_peer != fieldValues.cend()) {
+            const std::string f = cit_peer->first;
+            const std::string v = cit_peer->second;
+
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+                port %
+                oprtation %
+                f %
+                v
+            );
+            mMuxManagerPtr->processPeerMuxState(port, v);
+        }
+    }
+}
+
+//
 // ---> handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
 //
 // handles MUX response (from xcvrd) notification
@@ -1002,11 +1084,25 @@ void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdb
 }
 
 //
+// ---> handleForwardingResponseNotification(swss::SubscriberStateTable &appdbForwardingResponseTable)
+//
+// handle fowarding response (from xcvrd) notification
+//
+void DbInterface::handleForwardingResponseNotification(swss::SubscriberStateTable &appdbForwardingResponseTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    appdbForwardingResponseTable.pops(entries);
+    processForwardingResponseNotification(entries);
+}
+
+
+//
 // ---> processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 //
-// process peer MUX response (from xcvrd) notification
+// process peer MUX state (from xcvrd) notification
 //
-void DbInterface::processPeerMuxResponseNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+void DbInterface::processPeerMuxNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
 {
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
@@ -1034,16 +1130,16 @@ void DbInterface::processPeerMuxResponseNotification(std::deque<swss::KeyOpField
 }
 
 //
-// ---> handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable);
+// ---> handlePeerMuxStateNotification(swss::SubscriberStateTable &stateDbPeerMuxTable);
 //
-// handles peer MUX response (from xcvrd) notification
+// handles peer MUX notification (from xcvrd) 
 //
-void DbInterface::handlePeerMuxResponseNotification(swss::SubscriberStateTable &stateDbPeerMuxResponseTable)
+void DbInterface::handlePeerMuxStateNotification(swss::SubscriberStateTable &stateDbPeerMuxTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
-    stateDbPeerMuxResponseTable.pops(entries);
-    processPeerMuxResponseNotification(entries);
+    stateDbPeerMuxTable.pops(entries);
+    processPeerMuxNotification(entries);
 }
 
 //
@@ -1164,6 +1260,8 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable appDbPortTable(appDbPtr.get(), APP_PORT_TABLE_NAME);
     // for command responses from the driver
     swss::SubscriberStateTable appDbMuxResponseTable(appDbPtr.get(), APP_MUX_CABLE_RESPONSE_TABLE_NAME);
+    // for command response of forwarding state probing from driver 
+    swss::SubscriberStateTable appDbForwardingResponseTable(appDbPtr.get(), APP_FORWARDING_STATE_RESPONSE_TABLE_NAME);
     // for getting state db MUX state when orchagent updates it
     swss::SubscriberStateTable stateDbPortTable(stateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
     // for getting state db default route state 
@@ -1171,7 +1269,7 @@ void DbInterface::handleSwssNotification()
     // for getting peer's link status
     swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
     // for getting peer's admin forwarding state
-    swss::SubscriberStateTable stateDbPeerMuxResponseTable(stateDbPtr.get(), PEER_FORWARDING_STATE_RESPONSE_TABLE);
+    swss::SubscriberStateTable stateDbPeerMuxTable(stateDbPtr.get(), STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
@@ -1192,10 +1290,11 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&configDbMuxTable);
     swssSelect.addSelectable(&appDbPortTable);
     swssSelect.addSelectable(&appDbMuxResponseTable);
+    swssSelect.addSelectable(&appDbForwardingResponseTable);
     swssSelect.addSelectable(&stateDbPortTable);
     swssSelect.addSelectable(&stateDbRouteTable);
     swssSelect.addSelectable(&stateDbMuxInfoTable);
-    swssSelect.addSelectable(&stateDbPeerMuxResponseTable);
+    swssSelect.addSelectable(&stateDbPeerMuxTable);
     swssSelect.addSelectable(&netlinkNeighbor);
 
     while (mPollSwssNotifcation) {
@@ -1220,14 +1319,16 @@ void DbInterface::handleSwssNotification()
             handleLinkStateNotifiction(appDbPortTable);
         } else if (selectable == static_cast<swss::Selectable *> (&appDbMuxResponseTable)) {
             handleMuxResponseNotifiction(appDbMuxResponseTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&appDbForwardingResponseTable)) {
+            handleForwardingResponseNotification(appDbForwardingResponseTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbPortTable)) {
             handleMuxStateNotifiction(stateDbPortTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbRouteTable)) {
             handleDefaultRouteStateNotification(stateDbRouteTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbMuxInfoTable)) {
             handlePeerLinkStateNotification(stateDbMuxInfoTable);
-        } else if (selectable == static_cast<swss::Selectable *> (&stateDbPeerMuxResponseTable)) {
-            handlePeerMuxResponseNotification(stateDbPeerMuxResponseTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbPeerMuxTable)) {
+            handlePeerMuxStateNotification(stateDbPeerMuxTable);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

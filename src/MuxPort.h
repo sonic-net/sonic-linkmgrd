@@ -145,7 +145,7 @@ public:
     *
     *@return label of MUX state
     */
-    inline void probeMuxState() {mDbInterfacePtr->probeMuxState(mMuxPortConfig.getPortName());};
+    void probeMuxState();
 
     /**
     *@method setMuxLinkmgrState
