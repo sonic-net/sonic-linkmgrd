@@ -290,6 +290,12 @@ void MuxPort::handleMuxConfig(const std::string &config)
         mode = common::MuxPortConfig::Manual;
     } else if (config == "standby") {
         mode = common::MuxPortConfig::Standby;
+    } else if (config == "detach") {
+        if (mMuxPortConfig.getPortCableType() ==  common::MuxPortConfig::PortCableType::ActiveStandby) {
+            MUXLOGWARNING(boost::format("port: %s, detach mode is only supported for acitve-active cable type")  % mMuxPortConfig.getPortName());
+            return;
+        }
+        mode = common::MuxPortConfig::Detached;
     }
 
     boost::asio::io_service &ioService = mStrand.context();
