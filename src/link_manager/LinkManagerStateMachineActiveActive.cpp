@@ -762,7 +762,8 @@ void ActiveActiveStateMachine::switchMuxState(
     mux_state::MuxState::Label label
 )
 {
-    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
+        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached) {
         MUXLOGWARNING(
             boost::format("%s: Switching MUX state to '%s'") %
             mMuxPortConfig.getPortName() %
@@ -789,14 +790,16 @@ void ActiveActiveStateMachine::switchMuxState(
 //
 void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label label)
 {
-    MUXLOGWARNING(
-        boost::format("%s: Switching peer MUX state to '%s'") %
-        mMuxPortConfig.getPortName() %
-        mMuxStateName[label]
-    );
-    enterPeerMuxState(label);
-    mMuxPortPtr->setPeerMuxState(label);
-    startPeerMuxWaitTimer();
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
+        MUXLOGWARNING(
+            boost::format("%s: Switching peer MUX state to '%s'") %
+            mMuxPortConfig.getPortName() %
+            mMuxStateName[label]
+        );
+        enterPeerMuxState(label);
+        mMuxPortPtr->setPeerMuxState(label);
+        startPeerMuxWaitTimer();
+    }
 }
 
 //

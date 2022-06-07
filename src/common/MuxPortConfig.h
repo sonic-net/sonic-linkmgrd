@@ -50,7 +50,8 @@ public:
         Auto,
         Manual,
         Active,
-        Standby
+        Standby,
+        Detached      // mux mode for active-active cable type only 
     };
 
     /**
