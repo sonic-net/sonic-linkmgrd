@@ -261,25 +261,13 @@ void LinkProber::handleUpdateEthernetFrame()
 //
 void LinkProber::handleSendSwitchCommand()
 {
-    resetTxBufferTlv();
-    appendTlvCommand(Command::COMMAND_SWITCH_ACTIVE);
-    appendTlvSentinel();
-
-    size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
-    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
-    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
+    initTxBufferTlvSendSwitch();
 
     sendHeartbeat();
 
-    resetTxBufferTlv();
-    appendTlvSentinel();
-    totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
-    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
-    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
+    initTxBufferTlvSentinel();
 
-    // inform the composite state machine about commend send completion
+    // inform the composite state machine about command send completion
     boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
@@ -752,6 +740,48 @@ size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
     *(reinterpret_cast<uint32_t *> (tlvPtr->data + paddingSize)) = htonl(seqNo);
     mTxPacketSize += tlvSize;
     return tlvSize;
+}
+
+//
+// ---> initTxBufferTlvSendSwitch
+//
+// Initialize TX buffer TLVs to send switch command to peer
+//
+void LinkProber::initTxBufferTlvSendSwitch()
+{
+    resetTxBufferTlv();
+    appendTlvCommand(Command::COMMAND_SWITCH_ACTIVE);
+    appendTlvSentinel();
+
+    calculateTxPacketChecksum();
+}
+
+//
+// ---> initTxBufferTlvSentinel
+//
+// Initialize TX buffer to have only TLV sentinel
+//
+void LinkProber::initTxBufferTlvSentinel()
+{
+    resetTxBufferTlv();
+    appendTlvSentinel();
+
+    calculateTxPacketChecksum();
+}
+
+//
+// ---> calculateChecksum
+//
+// Calculate TX packet checksums in both IP header and ICMP header
+//
+void LinkProber::calculateTxPacketChecksum()
+{
+    size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
+    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
+    computeChecksum(ipHeader, ipHeader->ihl << 2);
 }
 
 // 
