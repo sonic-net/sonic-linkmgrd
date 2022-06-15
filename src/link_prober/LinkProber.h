@@ -447,7 +447,34 @@ private:
     *@return the appended TLV size
     */
     size_t appendTlvDummy(size_t paddingSize, int seqNo);
-    
+
+    /**
+     * @method initTlvSendSwitch
+     * 
+     * @brief initialize TX buffer TLVs to send switch command to peer
+     * 
+     * @return none
+     */
+    void initTxBufferTlvSendSwitch();
+
+    /**
+     * @method initTxBufferTlvSentinel
+     * 
+     * @brief initialize TX buffer to have only TLV sentinel
+     * 
+     * @return none
+     */
+    void initTxBufferTlvSentinel();
+
+    /**
+     * @method calculateChecksum
+     * 
+     * @brief calculate TX packet checksums in both IP header and ICMP header
+     * 
+     * @return none
+     */
+    inline void calculateTxPacketChecksum();
+
     /**
      * @method getProbingInterval
      * 
