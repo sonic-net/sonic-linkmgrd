@@ -516,7 +516,7 @@ void DbInterface::processTorMacAddress(std::string& mac)
         mMuxManagerPtr->setTorMacAddress(macAddress);
     }
     catch (const std::invalid_argument &invalidArgument) {
-        throw MUX_ERROR(ConfigNotFound, "Invalid ToR MAC address " + mac);
+        MUXLOGFATAL("Config Not Found: Invalid ToR MAC address" + mac);
     }
 }
 
@@ -537,7 +537,7 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
     if (configDbMetadataTable.hget(localhost, key, mac)) {
         processTorMacAddress(mac);
     } else {
-        throw MUX_ERROR(ConfigNotFound, "ToR MAC address is not found");
+        MUXLOGFATAL("Config Not Found: ToR MAC address is not found");
     }
 }
 
@@ -577,7 +577,7 @@ void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopba
     }
 
     if (!loopback2IPv4Found) {
-        throw MUX_ERROR(ConfigNotFound, "Loopback2 IPv4 address missing");
+        MUXLOGFATAL(boost::format("Config not found: Loopback2 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
     }
 }
 
