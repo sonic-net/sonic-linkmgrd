@@ -516,7 +516,7 @@ void DbInterface::processTorMacAddress(std::string& mac)
         mMuxManagerPtr->setTorMacAddress(macAddress);
     }
     catch (const std::invalid_argument &invalidArgument) {
-        MUXLOGFATAL("Config Not Found: Invalid ToR MAC address" + mac);
+        throw MUX_ERROR(ConfigNotFound, "Invalid ToR MAC address " + mac);
     }
 }
 
@@ -537,7 +537,7 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
     if (configDbMetadataTable.hget(localhost, key, mac)) {
         processTorMacAddress(mac);
     } else {
-        MUXLOGFATAL("Config Not Found: ToR MAC address is not found");
+        throw MUX_ERROR(ConfigNotFound, "ToR MAC address is not found");
     }
 }
 
