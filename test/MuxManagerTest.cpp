@@ -440,6 +440,7 @@ TEST_F(MuxManagerTest, Loopback2Address)
     processLoopback2InterfaceInfo(loopbackIntfs);
 
     EXPECT_TRUE(getLoopbackIpv4Address(port).to_string() == ipAddress);
+    EXPECT_TRUE(mMuxManagerPtr->getLoopbackIpv4Address() == getLoopbackIpv4Address(port));
 }
 
 TEST_F(MuxManagerTest, Loopback2AddressException)
