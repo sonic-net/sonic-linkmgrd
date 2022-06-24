@@ -175,6 +175,15 @@ public:
     inline void setLoopbackIpv4Address(boost::asio::ip::address& address) {mMuxConfig.setLoopbackIpv4Address(address);};
 
     /**
+     * @method getLoopbackIpv4Address
+     * 
+     * @brief getter for loop back ipv4 address 
+     * 
+     * @return IPv4 address
+     */
+    inline boost::asio::ip::address getLoopbackIpv4Address() {return mMuxConfig.getLoopbackIpv4Address();};
+
+    /**
     *@method initialize
     *
     *@brief initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db

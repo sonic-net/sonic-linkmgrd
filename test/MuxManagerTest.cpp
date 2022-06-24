@@ -285,6 +285,7 @@ TEST_F(MuxManagerTest, Loopback2Address)
     processLoopback2InterfaceInfo(loopbackIntfs);
 
     EXPECT_TRUE(getLoopbackIpv4Address(port).to_string() == ipAddress);
+    EXPECT_TRUE(mMuxManagerPtr->getLoopbackIpv4Address() == getLoopbackIpv4Address(port));
 }
 
 TEST_F(MuxManagerTest, Loopback2AddressException)
@@ -293,13 +294,14 @@ TEST_F(MuxManagerTest, Loopback2AddressException)
 
     createPort(port);
 
+    std::string defaultAddress = "10.212.64.0";
     std::vector<std::string> loopbackIntfs = {
         "Loopback2|2603:10e1:100:d::1/128",
         "Loopback2|250.260.270.280/32",
         "Loopback2"
     };
 
-    EXPECT_THROW(processLoopback2InterfaceInfo(loopbackIntfs), common::ConfigNotFoundException);
+    EXPECT_TRUE(getLoopbackIpv4Address(port).to_string() == defaultAddress);
 }
 
 TEST_F(MuxManagerTest, ToRMacAddress)
