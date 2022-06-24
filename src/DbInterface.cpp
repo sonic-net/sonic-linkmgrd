@@ -577,7 +577,7 @@ void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopba
     }
 
     if (!loopback2IPv4Found) {
-        throw MUX_ERROR(ConfigNotFound, "Loopback2 IPv4 address missing");
+        MUXLOGFATAL(boost::format("Config not found: Loopback2 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
     }
 }
 
