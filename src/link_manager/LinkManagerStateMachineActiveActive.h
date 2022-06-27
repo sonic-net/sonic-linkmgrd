@@ -237,6 +237,15 @@ public: // state transition functions
     void initializeTransitionFunctionTable() override;
 
     /**
+     * @method LinkProberActiveMuxActiveLinkUpTransitionFunction
+     *
+     * @brief transition function when entering {LinkProberActive, MuxActive, LinkUp} state
+     *
+     * @param nextState                     reference to composite state
+     */
+    void LinkProberActiveMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
      * @method LinkProberActiveMuxStandbyLinkUpTransitionFunction
      *
      * @brief transition function when entering {LinkProberActive, MuxStandby, LinkUp} state
