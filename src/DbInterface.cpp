@@ -542,6 +542,53 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
+// ---> getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve Vlan MAC address informtaion
+//
+void DbInterface::getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGWARNING("Reading Vlan MAC Address");
+    swss::Table configDbVlanTable(configDbConnector.get(), CFG_VLAN_TABLE_NAME);
+    std::vector<std::string> vlanNames;
+
+    configDbVlanTable.getKeys(vlanNames);
+    
+    if (vlanNames.size() > 0) {
+        const std::string vlanName = vlanNames[0];
+        const std::string field = "mac";
+        std::string mac;
+        
+        if (configDbVlanTable.hget(vlanName, field, mac)) {
+            processVlanMacAddress(mac);
+        } else {
+            throw MUX_ERROR(ConfigNotFound, "MAC address is not found for" + vlanName);
+        }
+    } else {
+        throw MUX_ERROR(ConfigNotFound, "VLAN table is not found in CONFIG DB");
+    }
+}
+
+//
+// ---> processVlanMacAddress(std::string& mac);
+//
+// process Vlan Mac Address 
+//
+void processVlanMacAddress(std::string& mac)
+{
+    try {
+        swss::MacAddress swssMacAddress(mac);
+        std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+
+        memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
+        mMuxManagerPtr->setVlanMacAddress(macAddress);
+    }
+    catch (const std::invalid_argument &invalidArgument) {
+        throw MUX_ERROR(ConfigNotFound, "Invalid Vlan MAC address " + mac);
+    }
+}
+
+//
 // ---> processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
 //
 // process Loopback2 interface information

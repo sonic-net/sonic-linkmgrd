@@ -167,6 +167,17 @@ public:
     inline void setTorMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mTorMacAddress = address;};
 
     /**
+     * @method setVlanMacAddress
+     * 
+     * @brief setter for Vlan MAC address
+     * 
+     * @param address (in) Vlan MAC address
+     * 
+     * @return none
+     */
+    inline void setVlanMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mVlanMacAddress = address;};
+
+    /**
     *@method setLoopbackIpv4Address
     *
     *@brief setter for Loopback IPv4 address
@@ -351,6 +362,7 @@ private:
     bool mUseWellKnownMacActiveActive = true;
 
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
+    std::array<uint8_t, ETHER_ADDR_LEN> mVlanMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");
 };
 
