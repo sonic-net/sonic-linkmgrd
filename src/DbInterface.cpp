@@ -562,10 +562,12 @@ void DbInterface::getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbC
         if (configDbVlanTable.hget(vlanName, field, mac)) {
             processVlanMacAddress(mac);
         } else {
-            throw MUX_ERROR(ConfigNotFound, "MAC address is not found for" + vlanName);
+            MUXLOGWARNING(boost::format("MAC address is not found for %s, fall back to use device MAC for link prober.") % vlanName);
+            mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
         }
     } else {
-        throw MUX_ERROR(ConfigNotFound, "VLAN table is not found in CONFIG DB");
+        MUXLOGWARNING("VLAN table is not found in CONFIG DB, fall back to use device MAC for link prober.");
+        mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
     }
 }
 
@@ -584,7 +586,8 @@ void DbInterface::processVlanMacAddress(std::string& mac)
         mMuxManagerPtr->setVlanMacAddress(macAddress);
     }
     catch (const std::invalid_argument &invalidArgument) {
-        throw MUX_ERROR(ConfigNotFound, "Invalid Vlan MAC address " + mac);
+        MUXLOGWARNING("Invalid Vlan MAC address " + mac);
+        mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
     }
 }
 

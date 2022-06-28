@@ -310,7 +310,7 @@ void MuxManager::processGetServerMacAddress(
 void MuxManager::processSrcMac(bool useTorMac)
 {
     if (mMuxConfig.getIfEnableUseTorMac() != useTorMac) {
-        mMuxConfig.setIfUseTorMacAsSrcMac(useTorMac);
+        setIfUseTorMacAsSrcMac(useTorMac);
 
         PortMapIterator portMapIterator = mPortMap.begin();
         while (portMapIterator != mPortMap.end()) {

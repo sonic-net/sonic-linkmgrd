@@ -531,9 +531,12 @@ TEST_F(MuxManagerTest, VlanMacAddressException)
 
     createPort(port);
 
-    std::string mac = "invalid mac";
+    EXPECT_TRUE(getIfUseToRMac(port) == false);
 
-    EXPECT_THROW(processVlanMacAddress(mac), common::ConfigNotFoundException);
+    std::string mac = "invalid mac";
+    processVlanMacAddress(mac);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == true);
 }
 
 TEST_F(MuxManagerTest, SrcMacAddressUpdate)
