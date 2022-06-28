@@ -262,6 +262,15 @@ public:
     void handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
 
     /**
+     * @method handleSrcMacAddressUpdate
+     * 
+     * @brief handles src mac address config update
+     * 
+     * @return none
+     */
+    void handleSrcMacAddressUpdate();
+
+    /**
     *@method handleGetMuxState
     *
     *@brief handles get MUX state updates

@@ -523,6 +523,69 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
+// ---> getVlanNames(std::shared_ptr<swss::DBConnector> configDbConnector);
+// 
+// get vlan names
+//
+void DbInterface::getVlanNames(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading Vlan MAC Address");
+    swss::Table configDbVlanTable(configDbConnector.get(), CFG_VLAN_TABLE_NAME);
+    std::vector<std::string> vlanNames;
+
+    configDbVlanTable.getKeys(vlanNames);
+    getVlanMacAddress(vlanNames);
+}
+
+//
+// ---> getVlanMacAddress(std::vector<std::string> &vlanNames);
+//
+// retrieve Vlan MAC address informtaion
+//
+void DbInterface::getVlanMacAddress(std::vector<std::string> &vlanNames)
+{
+    MUXLOGINFO("Reading Vlan MAC Address");
+
+    if (vlanNames.size() > 0) {
+        std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+        swss::Table configDbVlanTable(configDbPtr.get(), CFG_VLAN_TABLE_NAME);
+        const std::string vlanName = vlanNames[0];
+        const std::string field = "mac";
+        std::string mac;
+        
+        if (configDbVlanTable.hget(vlanName, field, mac)) {
+            processVlanMacAddress(mac);
+        } else {
+            MUXLOGWARNING(boost::format("MAC address is not found for %s, fall back to use device MAC for link prober.") % vlanName);
+            mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
+        }
+    } else {
+        MUXLOGWARNING("VLAN table is not found in CONFIG DB, fall back to use device MAC for link prober.");
+        mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
+    }
+}
+
+//
+// ---> processVlanMacAddress(std::string& mac);
+//
+// process Vlan Mac Address 
+//
+void DbInterface::processVlanMacAddress(std::string& mac)
+{
+    try {
+        swss::MacAddress swssMacAddress(mac);
+        std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+
+        memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
+        mMuxManagerPtr->setVlanMacAddress(macAddress);
+    }
+    catch (const std::invalid_argument &invalidArgument) {
+        MUXLOGWARNING("Invalid Vlan MAC address " + mac);
+        mMuxManagerPtr->setIfUseTorMacAsSrcMac(true);
+    }
+}
+
+//
 // ---> processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
 //
 // process Loopback2 interface information
@@ -777,7 +840,9 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                     } else if (f == "suspend_timer") {
                         mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
                     } else if (f == "interval_pck_loss_count_update") {
-                        mMuxManagerPtr->setLinkProberStatUpdateIntervalCount(boost::lexical_cast<uint32_t> (v));
+                        mMuxManagerPtr->setUseWellKnownMacActiveActive(v == "enable");
+                    } else if (f == "src_mac") {
+                        mMuxManagerPtr->processSrcMac(v == "ToRMac");
                     }
 
                     MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
@@ -1089,6 +1154,7 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
 
     getTorMacAddress(configDbPtr);
+    getVlanNames(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
     getServerIpAddress(configDbPtr);
 

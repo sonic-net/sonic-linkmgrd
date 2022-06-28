@@ -149,6 +149,22 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
 }
 
 //
+// ---> handleSrcMacAddressUpdate();
+// 
+// handles src mac address config update 
+//
+void MuxPort::handleSrcMacAddressUpdate()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleSrcMacConfigNotification,
+        mLinkManagerStateMachinePtr.get()
+    )));
+}
+
+//
 // ---> handleGetMuxState(const std::string &muxState);
 //
 // handles MUX state updates
