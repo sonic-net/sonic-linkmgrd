@@ -364,7 +364,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProberPeerUnknown)
 {
     setMuxActive();
-   
+
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive);
     VALIDATE_PEER_STATE(PeerActive, Active);
 
@@ -415,26 +415,57 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyLinkProberPeerUnknown)
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
 }
 
-TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState) 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState)
 {
     setMuxActive();
 
     postDefaultRouteEvent("ok", 1);
     EXPECT_FALSE(mMuxConfig.getIfEnableDefaultRouteFeature());
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 1);
 
     postDefaultRouteEvent("na", 1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,0);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 2);
 
     mMuxConfig.enableDefaultRouteFeature(true);
     postDefaultRouteEvent("na", 1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 2);
 
     postDefaultRouteEvent("ok", 1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount,1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount,3);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
 }
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatFirst)
+{
+    activateStateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    // the first toggle fails because the the inital mux state
+    // is standby when linkmgrd first boots up
+    postLinkProberEvent(link_prober::LinkProberState::Active, 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    // now linkmgrd should be stuck in mux wait timeout
+
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    // now linkmgrd should be stuck in mux probe timeout
+    runIoService(4);
+
+    // xcvrd now answers the mux probe
+    handleProbeMuxState("active", 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+}
+
 } /* namespace test */
