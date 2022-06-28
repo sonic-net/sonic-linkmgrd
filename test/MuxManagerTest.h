@@ -56,12 +56,14 @@ public:
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
     bool getIfUseWellKnownMac(std::string port);
+    bool getIfUseToRMac(std::string port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getLastUpdatedMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getWellKnownMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getTorMacAddress(std::string port);
+    std::array<uint8_t, ETHER_ADDR_LEN> getVlanMacAddress(std::string port);
     common::MuxPortConfig::PortCableType getPortCableType(const std::string &port);
     void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     link_manager::LinkManagerStateMachineBase::CompositeState getCompositeStateMachineState(std::string port);
@@ -70,6 +72,8 @@ public:
     void processServerMacAddress(std::string port, std::array<char, MAX_ADDR_SIZE + 1> ip, std::array<char, MAX_ADDR_SIZE + 1> mac);
     void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
     void processTorMacAddress(std::string &mac);
+    void getVlanMacAddress(std::vector<std::string> &vlanNames);
+    void processVlanMacAddress(std::string &mac);
     void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     void updateServerMacAddress(boost::asio::ip::address serverIp, const uint8_t *serverMac);

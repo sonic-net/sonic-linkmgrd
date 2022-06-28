@@ -624,7 +624,11 @@ void LinkProber::initializeSendBuffer()
 {
     ether_header *ethHeader = reinterpret_cast<ether_header *> (mTxBuffer.data());
     memcpy(ethHeader->ether_dhost, mMuxPortConfig.getBladeMacAddress().data(), sizeof(ethHeader->ether_dhost));
-    memcpy(ethHeader->ether_shost, mMuxPortConfig.getTorMacAddress().data(), sizeof(ethHeader->ether_shost));
+    if (mMuxPortConfig.ifEnableUseTorMac()) {
+        memcpy(ethHeader->ether_shost, mMuxPortConfig.getTorMacAddress().data(), sizeof(ethHeader->ether_shost));
+    } else {
+        memcpy(ethHeader->ether_shost, mMuxPortConfig.getVlanMacAddress().data(), sizeof(ethHeader->ether_shost));
+    }
     ethHeader->ether_type = htons(ETHERTYPE_IP);
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));

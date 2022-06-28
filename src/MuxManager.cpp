@@ -303,6 +303,25 @@ void MuxManager::processGetServerMacAddress(
 }
 
 //
+// ---> processSrcMac(bool useTorMac);
+//
+// processs src mac config 
+//
+void MuxManager::processSrcMac(bool useTorMac)
+{
+    if (mMuxConfig.getIfEnableUseTorMac() != useTorMac) {
+        setIfUseTorMacAsSrcMac(useTorMac);
+
+        PortMapIterator portMapIterator = mPortMap.begin();
+        while (portMapIterator != mPortMap.end()) {
+            portMapIterator->second->handleSrcMacAddressUpdate();
+            portMapIterator ++;
+        }
+    }
+}
+
+
+//
 // ---> processGetMuxState(const std::string &portName, const std::string &muxState);
 //
 // update MUX port state db notification

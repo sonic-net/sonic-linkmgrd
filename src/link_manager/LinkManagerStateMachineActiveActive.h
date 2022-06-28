@@ -570,7 +570,6 @@ private:
 
     boost::function<void()> mInitializeProberFnPtr;
     boost::function<void()> mStartProbingFnPtr;
-    boost::function<void()> mUpdateEthernetFrameFnPtr;
     boost::function<void()> mProbePeerTorFnPtr;
     boost::function<void(uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void()> mResumeTxFnPtr;
