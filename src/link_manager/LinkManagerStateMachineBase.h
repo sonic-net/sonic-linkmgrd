@@ -312,7 +312,7 @@ public:
      * 
      * @return none 
      */
-    void handleSrcMacConfigNotification();
+    virtual void handleSrcMacConfigNotification();
 
     /**
      *@method handleUseWellKnownMacAddressNotification

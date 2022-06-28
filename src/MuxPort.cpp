@@ -205,7 +205,7 @@ void MuxPort::handleUseWellKnownMacAddress()
 //
 void MuxPort::handleSrcMacAddressUpdate()
 {
-    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(

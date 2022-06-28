@@ -548,7 +548,7 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 //
 void DbInterface::getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
-    MUXLOGWARNING("Reading Vlan MAC Address");
+    MUXLOGINFO("Reading Vlan MAC Address");
     swss::Table configDbVlanTable(configDbConnector.get(), CFG_VLAN_TABLE_NAME);
     std::vector<std::string> vlanNames;
 

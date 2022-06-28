@@ -309,7 +309,6 @@ void MuxManager::processGetServerMacAddress(
 //
 void MuxManager::processSrcMac(bool useTorMac)
 {
-    MUXLOGWARNING("");
     if (mMuxConfig.getIfEnableUseTorMac() != useTorMac) {
         mMuxConfig.setIfUseTorMacAsSrcMac(useTorMac);
 

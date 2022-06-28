@@ -323,7 +323,7 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
 // 
 void ActiveActiveStateMachine::handleSrcMacConfigNotification()
 {
-    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (mUpdateEthernetFrameFnPtr) {
         mUpdateEthernetFrameFnPtr();
