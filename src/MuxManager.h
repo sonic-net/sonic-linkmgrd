@@ -182,6 +182,17 @@ public:
     inline void setVlanMacAddress(std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxConfig.setVlanMacAddress(address);};
 
     /**
+     * @method processSrcMac
+     * 
+     * @brief processs src mac config 
+     * 
+     * @param enable (in) bool 
+     * 
+     * @return none
+     */
+    void processSrcMac(bool useTorMac);
+
+    /**
     *@method setSuspendTimeout_msec
     *
     *@brief setter for LinkProber suspend timer timeout

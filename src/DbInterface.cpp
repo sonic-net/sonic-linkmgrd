@@ -574,7 +574,7 @@ void DbInterface::getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbC
 //
 // process Vlan Mac Address 
 //
-void processVlanMacAddress(std::string& mac)
+void DbInterface::processVlanMacAddress(std::string& mac)
 {
     try {
         swss::MacAddress swssMacAddress(mac);
@@ -895,6 +895,8 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                         mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
                     } else if (f == "use_well_known_mac") {
                         mMuxManagerPtr->setUseWellKnownMacActiveActive(v == "enable");
+                    } else if (f == "src_mac") {
+                        mMuxManagerPtr->processSrcMac(v == "ToRMac");
                     }
 
                     MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
@@ -1319,6 +1321,7 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbPeerMuxTable(stateDbPtr.get(), STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
+    getVlanMacAddress(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
     getPortCableType(configDbPtr);
     getServerIpAddress(configDbPtr);
