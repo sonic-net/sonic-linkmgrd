@@ -542,19 +542,32 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
-// ---> getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+// ---> getVlanNames(std::shared_ptr<swss::DBConnector> configDbConnector);
+// 
+// get vlan names
 //
-// retrieve Vlan MAC address informtaion
-//
-void DbInterface::getVlanMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+void DbInterface::getVlanNames(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
     MUXLOGINFO("Reading Vlan MAC Address");
     swss::Table configDbVlanTable(configDbConnector.get(), CFG_VLAN_TABLE_NAME);
     std::vector<std::string> vlanNames;
 
     configDbVlanTable.getKeys(vlanNames);
-    
+    getVlanMacAddress(vlanNames);
+}
+
+//
+// ---> getVlanMacAddress(std::vector<std::string> &vlanNames);
+//
+// retrieve Vlan MAC address informtaion
+//
+void DbInterface::getVlanMacAddress(std::vector<std::string> &vlanNames)
+{
+    MUXLOGINFO("Reading Vlan MAC Address");
+
     if (vlanNames.size() > 0) {
+        std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+        swss::Table configDbVlanTable(configDbPtr.get(), CFG_VLAN_TABLE_NAME);
         const std::string vlanName = vlanNames[0];
         const std::string field = "mac";
         std::string mac;
@@ -1324,7 +1337,7 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbPeerMuxTable(stateDbPtr.get(), STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
-    getVlanMacAddress(configDbPtr);
+    getVlanNames(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
     getPortCableType(configDbPtr);
     getServerIpAddress(configDbPtr);

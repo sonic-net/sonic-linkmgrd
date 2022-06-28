@@ -210,6 +210,11 @@ void MuxManagerTest::processTorMacAddress(std::string &mac)
     mDbInterfacePtr->processTorMacAddress(mac);
 }
 
+void MuxManagerTest::getVlanMacAddress(std::vector<std::string> &vlanNames)
+{
+    mDbInterfacePtr->getVlanMacAddress(vlanNames);
+}
+
 void MuxManagerTest::processVlanMacAddress(std::string &mac)
 {
     mDbInterfacePtr->processVlanMacAddress(mac);
@@ -525,7 +530,21 @@ TEST_F(MuxManagerTest, VlanMacAddress)
     EXPECT_TRUE(vlanMac == macAddress);
 }
 
-TEST_F(MuxManagerTest, VlanMacAddressException)
+TEST_F(MuxManagerTest, GetVlanMacAddressException)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == false);
+
+    std::vector<std::string> emptyVlanNameInput;
+    getVlanMacAddress(emptyVlanNameInput);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == true);
+}
+
+TEST_F(MuxManagerTest, ProcessVlanMacAddressException)
 {
     std::string port = "Ethernet0";
 

@@ -72,6 +72,7 @@ public:
     void processServerMacAddress(std::string port, std::array<char, MAX_ADDR_SIZE + 1> ip, std::array<char, MAX_ADDR_SIZE + 1> mac);
     void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
     void processTorMacAddress(std::string &mac);
+    void getVlanMacAddress(std::vector<std::string> &vlanNames);
     void processVlanMacAddress(std::string &mac);
     void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
