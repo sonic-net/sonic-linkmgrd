@@ -302,6 +302,15 @@ public:
     void handleUseWellKnownMacAddress();
 
     /**
+     * @method handleSrcMacAddressUpdate
+     * 
+     * @brief handles src mac address config update
+     * 
+     * @return none
+     */
+    void handleSrcMacAddressUpdate();
+
+    /**
     *@method handleGetMuxState
     *
     *@brief handles get MUX state updates

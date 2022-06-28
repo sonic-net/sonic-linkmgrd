@@ -306,6 +306,15 @@ public:
     virtual void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
 
     /**
+     * @method handleSrcMacConfigNotification
+     * 
+     * @brief handle src mac config notification
+     * 
+     * @return none 
+     */
+    void handleSrcMacConfigNotification();
+
+    /**
      *@method handleUseWellKnownMacAddressNotification
      *
      *@brief handle use well known Server MAC address
@@ -560,6 +569,8 @@ private:
     static std::vector<std::string> mMuxStateName;
     static std::vector<std::string> mLinkStateName;
     static std::vector<std::string> mLinkHealthName;
+
+    boost::function<void ()> mUpdateEthernetFrameFnPtr;
 
 private:
     TransitionFunction mStateTransitionHandler[link_prober::LinkProberState::Label::Count]

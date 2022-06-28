@@ -211,6 +211,15 @@ public:
     inline const std::array<uint8_t, ETHER_ADDR_LEN>& getTorMacAddress() const {return mMuxConfig.getTorMacAddress();};
 
     /**
+     * @method getVlanMacAddress
+     * 
+     * @brief getter for Vlan MAC address
+     * 
+     * @return Vlan MAC address
+     */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getVlanMacAddress() const {return mMuxConfig.getVlanMacAddress();};
+
+    /**
     *@method getLoopbackIpv4Address
     *
     *@brief getter for Loopback IPv4 address
@@ -359,6 +368,15 @@ public:
     *@return none
     */
     inline void setLastUpdatedMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mLastUpdatedMacAddress = address;};
+
+    /**
+     * @method ifEnableUseTorMac
+     * 
+     * @brief check if use ToR MAC address as src MAC for link prober 
+     * 
+     * @reutrn if use ToR MAC
+     */
+    inline bool ifEnableUseTorMac() {return mMuxConfig.getIfEnableUseTorMac();};
 
 private:
     MuxConfig &mMuxConfig;
