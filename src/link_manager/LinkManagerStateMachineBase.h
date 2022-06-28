@@ -312,7 +312,7 @@ public:
      * 
      * @return none 
      */
-    virtual void handleSrcMacConfigNotification();
+    void handleSrcMacConfigNotification();
 
     /**
      *@method handleUseWellKnownMacAddressNotification
@@ -569,6 +569,8 @@ private:
     static std::vector<std::string> mMuxStateName;
     static std::vector<std::string> mLinkStateName;
     static std::vector<std::string> mLinkHealthName;
+
+    boost::function<void ()> mUpdateEthernetFrameFnPtr;
 
 private:
     TransitionFunction mStateTransitionHandler[link_prober::LinkProberState::Label::Count]

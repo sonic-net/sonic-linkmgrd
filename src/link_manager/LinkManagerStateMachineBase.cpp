@@ -144,9 +144,26 @@ void LinkManagerStateMachineBase::handleGetServerMacAddressNotification(std::arr
 //
 // handle src mac config notification 
 // 
-void LinkManagerStateMachineBase::handleSrcMacConfigNotification() 
+void LinkManagerStateMachineBase::handleSrcMacConfigNotification()
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (mUpdateEthernetFrameFnPtr) {
+        mUpdateEthernetFrameFnPtr();
+    } else {
+        std::array<uint8_t, ETHER_ADDR_LEN> address = (mMuxPortConfig.ifEnableUseTorMac())? mMuxPortConfig.getTorMacAddress() : mMuxPortConfig.getVlanMacAddress() ;
+        std::array<char, 3 * ETHER_ADDR_LEN> addressStr = {0};
+        snprintf(
+            addressStr.data(), addressStr.size(), "%02x:%02x:%02x:%02x:%02x:%02x",
+            address[0], address[1], address[2], address[3], address[4], address[5]
+        );
+
+        MUXLOGERROR(boost::format("%s: failed to update Ethernet frame with src mac '%s', link prober init state: %d") %
+            mMuxPortConfig.getPortName() %
+            addressStr.data() %
+            mComponentInitState.test(LinkProberComponent)
+        );
+    }
 }
 
 //

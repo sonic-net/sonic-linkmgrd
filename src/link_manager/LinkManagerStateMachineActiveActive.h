@@ -171,15 +171,6 @@ public: // db event handlers
     void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address) override;
 
     /**
-     * @method handleSrcMacConfigNotification
-     * 
-     * @brief handle src mac config notification
-     * 
-     * @return none 
-     */
-    void handleSrcMacConfigNotification() override;
-
-    /**
      *@method handleUseWellKnownMacAddressNotification
      *
      *@brief handle use well known Server MAC address
@@ -570,7 +561,6 @@ private:
 
     boost::function<void()> mInitializeProberFnPtr;
     boost::function<void()> mStartProbingFnPtr;
-    boost::function<void()> mUpdateEthernetFrameFnPtr;
     boost::function<void()> mProbePeerTorFnPtr;
     boost::function<void(uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void()> mResumeTxFnPtr;
