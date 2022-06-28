@@ -171,6 +171,15 @@ public: // db event handlers
     void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address) override;
 
     /**
+     * @method handleSrcMacConfigNotification
+     * 
+     * @brief handle src mac config notification
+     * 
+     * @return none 
+     */
+    void handleSrcMacConfigNotification() override;
+
+    /**
      *@method handleUseWellKnownMacAddressNotification
      *
      *@brief handle use well known Server MAC address

@@ -284,15 +284,6 @@ public:
     void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
 
     /**
-     * @method handleSrcMacConfigNotification
-     * 
-     * @brief handle src mac config notification
-     * 
-     * @return none 
-     */
-    void handleSrcMacConfigNotification();
-
-    /**
     *@method handleGetMuxStateNotification
     *
     *@brief handle get MUX state notification

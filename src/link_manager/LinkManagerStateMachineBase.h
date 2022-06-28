@@ -306,6 +306,15 @@ public:
     virtual void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
 
     /**
+     * @method handleSrcMacConfigNotification
+     * 
+     * @brief handle src mac config notification
+     * 
+     * @return none 
+     */
+    void handleSrcMacConfigNotification();
+
+    /**
      *@method handleUseWellKnownMacAddressNotification
      *
      *@brief handle use well known Server MAC address
