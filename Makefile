@@ -8,7 +8,7 @@ LINKMGRD_TARGET := linkmgrd
 LINKMGRD_TEST_TARGET := linkmgrd-test
 CP := cp
 MKDIR := mkdir
-CC := g++
+CXX := g++
 MV := mv
 BOOST_MACROS = -DBOOST_LOG_USE_NATIVE_SYSLOG -DBOOST_LOG_DYN_LINK
 GCOV_FLAGS := -fprofile-arcs -ftest-coverage
@@ -66,7 +66,7 @@ all: sonic-linkmgrd
 release-targets: $(OBJS) $(USER_OBJS) $(OBJS_LINKMGRD)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	$(CC) -pthread -o "$(LINKMGRD_TARGET)" $(OBJS) $(OBJS_LINKMGRD) $(USER_OBJS) $(LIBS)
+	$(CXX) -pthread -o "$(LINKMGRD_TARGET)" $(OBJS) $(OBJS_LINKMGRD) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -77,7 +77,7 @@ sonic-linkmgrd: clean-targets
 test-targets: $(OBJS) $(USER_OBJS) $(OBJS_LINKMGRD_TEST)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	$(CC) -pthread -fprofile-generate -lgcov -o "$(LINKMGRD_TEST_TARGET)" $(OBJS) $(OBJS_LINKMGRD_TEST) $(USER_OBJS) $(LIBS) $(LIBS_TEST)
+	$(CXX) -pthread -fprofile-generate -lgcov -o "$(LINKMGRD_TEST_TARGET)" $(OBJS) $(OBJS_LINKMGRD_TEST) $(USER_OBJS) $(LIBS) $(LIBS_TEST)
 	@echo 'Executing test target: $@'
 	LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5 ./$(LINKMGRD_TEST_TARGET)
 	$(GCOVR) -r ./ --html --html-details -o $(LINKMGRD_TEST_TARGET)-result.html
