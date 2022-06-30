@@ -468,4 +468,32 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatF
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatFirstMuxUnknown)
+{
+    activateStateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    // the first toggle fails because the the inital mux state
+    // is standby when linkmgrd first boots up
+    postLinkProberEvent(link_prober::LinkProberState::Active, 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    // xcvrd now answers the mux probe
+    handleProbeMuxState("active", 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+}
+
 } /* namespace test */
