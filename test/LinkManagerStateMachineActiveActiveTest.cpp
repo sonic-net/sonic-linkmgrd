@@ -496,4 +496,76 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatF
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigActiveProbeActive)
+{
+    activateStateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    VALIDATE_STATE(Unknown, Standby, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleMuxConfig("active", 1);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    handleMuxState("unknown", 5);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    // xcvrd now answers the mux probe
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigActiveProbeStandby)
+{
+    activateStateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    VALIDATE_STATE(Unknown, Standby, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleMuxConfig("active", 1);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    handleMuxState("unknown", 5);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    // xcvrd now answers the mux probe
+    handleProbeMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+}
+
 } /* namespace test */

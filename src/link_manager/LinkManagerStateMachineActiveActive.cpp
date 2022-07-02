@@ -163,6 +163,7 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
     MUXLOGWARNING(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mWaitTimer.cancel();
+    mLastMuxStateNotification = label;
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::SwssUpdate) {
@@ -543,6 +544,15 @@ void ActiveActiveStateMachine::initializeTransitionFunctionTable()
                                    boost::placeholders::_1
                                );
 
+    mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
+                           [mux_state::MuxState::Label::Standby]
+                           [link_state::LinkState::Label::Up] =
+                               boost::bind(
+                                   &ActiveActiveStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunction,
+                                   this,
+                                   boost::placeholders::_1
+                               );
+
     mStateTransitionHandler[link_prober::LinkProberState::Label::Active]
                            [mux_state::MuxState::Label::Unknown]
                            [link_state::LinkState::Label::Up] =
@@ -621,8 +631,28 @@ void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunctio
 void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active && mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
+        // last switch mux state to active failed, try again
+        switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+    } else {
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+    }
 }
+
+//
+// ---> LinkProberUnknownMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
+//
+// transition function when entering {LinkProberUnknown, MuxStandby, LinkUp} state
+//
+void ActiveActiveStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunction(CompositeState &nextState)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active && mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
+        // last switch mux state to active failed, try again
+        switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+    }
+}
+
 
 //
 // ---> LinkProberActiveMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
@@ -781,10 +811,12 @@ void ActiveActiveStateMachine::enterPeerLinkProberState(link_prober::LinkProberS
 //
 void ActiveActiveStateMachine::switchMuxState(
     CompositeState &nextState,
-    mux_state::MuxState::Label label
+    mux_state::MuxState::Label label,
+    bool forceSwitch
 )
 {
-    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
+    if (forceSwitch ||
+        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
         mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached) {
         MUXLOGWARNING(
             boost::format("%s: Switching MUX state to '%s'") %
