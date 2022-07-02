@@ -150,15 +150,15 @@ public: // db event handlers
 
     /**
      * @method handleDefaultRouteStateNotification(const DefaultRoute routeState)
-     * 
+     *
      * @brief handle default route state notification from routeorch
-     * 
+     *
      * @param routeState
-     * 
+     *
      * @return none
-    */
+     */
     void handleDefaultRouteStateNotification(const DefaultRoute routeState) override;
-    
+
     /**
      *@method handleGetServerMacNotification
      *
@@ -273,6 +273,15 @@ public: // state transition functions
     void LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
 
     /**
+     * @method LinkProberUnknownMuxStandbyLinkUpTransitionFunction
+     *
+     * @brief transition function when entering {LinkProberUnknown, MuxStandby, LinkUp} state
+     *
+     * @param nextState                     reference to composite state
+     */
+    void LinkProberUnknownMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
      * @method LinkProberUnknownMuxUnknownLinkUpTransitionFunction
      *
      * @brief transition function when entering {LinkProberUnknown, MuxUnknown, LinkUp} state
@@ -374,8 +383,9 @@ private: // utility methods to check/modify state
      *
      * @param nextState                     reference to composite state
      * @param label                         new MuxState label to switch to
+     * @param forceSwitch                   force switch mux state, used to match the driver state only
      */
-    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
+    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
     /**
      * @method switchPeerMuxState
@@ -467,9 +477,9 @@ private:
 
     /**
      * @method shutdownOrRestartLinkProberOnDefaultRoute()
-     * 
+     *
      * @brief  shutdown or restart link prober based on default route state
-     * 
+     *
      * @return none
      */
     void shutdownOrRestartLinkProberOnDefaultRoute() override;
@@ -558,6 +568,7 @@ private: // testing only
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
+    mux_state::MuxState::Label mLastMuxStateNotification = mux_state::MuxState::Label::Unknown;
 
 private:
     uint32_t mMuxProbeBackoffFactor = 1;
