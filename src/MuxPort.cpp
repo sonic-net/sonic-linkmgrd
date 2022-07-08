@@ -36,6 +36,8 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
+#include "swss/warm_restart.h"
+
 #include "MuxPort.h"
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
@@ -402,6 +404,18 @@ void MuxPort::probeMuxState()
             break;
         default:
             break;
+    }
+}
+
+//
+// ---> warmRestartReconciliation();
+//
+// brief port warm restart reconciliation procedure
+//
+void MuxPort::warmRestartReconciliation()
+{
+    if (swss::WarmStart::isWarmStart() && mMuxPortConfig.getMode() != common::MuxPortConfig::Mode::Auto) {
+        mDbInterfacePtr->warmRestartReconciliation(mMuxPortConfig.getPortName());
     }
 }
 

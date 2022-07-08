@@ -441,6 +441,17 @@ public:
     */
     void addOrUpdateDefaultRouteState(bool is_v4, const std::string &routeState);
 
+    /**
+     * @method updateWarmRestartReconciliationCount
+     * 
+     * @brief update warm restart reconciliation count
+     * 
+     * @param increment
+     * 
+     * @return none
+     */
+    void updateWarmRestartReconciliationCount(int increment);
+
 private:
     /**
     *@method getMuxPortCableType
@@ -505,6 +516,38 @@ private:
     */
     void setDbInterfacePtr(std::shared_ptr<mux::DbInterface> dbInterfacePtr) {mDbInterfacePtr = dbInterfacePtr;};
 
+private: 
+    /**
+     * @method startWarmRestartReconciliationTimer
+     * 
+     * @brief start warm restart reconciliation timer
+     * 
+     * @return none
+     */
+    void startWarmRestartReconciliationTimer(uint32_t timeout=0);
+
+    /**
+     * @method handleWarmRestartReconciliationTimeout
+     * 
+     * @brief handle warm restart reconciliationTimeout
+     *
+     * @param errorCode (in) Boost error code 
+     *  
+     * @return none
+     */
+    void handleWarmRestartReconciliationTimeout(const boost::system::error_code errorCode);
+
+    /**
+     * @method handleUpdateReconciliationCount
+     * 
+     * @brief handler of updating reconciliation port count 
+     * 
+     * @param increment
+     * 
+     * @return none
+     */
+    void handleUpdateReconciliationCount(int increment);
+
 private:
     common::MuxConfig mMuxConfig;
 
@@ -512,6 +555,10 @@ private:
     boost::asio::io_service::work mWork;
     boost::thread_group mThreadGroup;
     boost::asio::signal_set mSignalSet;
+
+    boost::asio::io_service::strand mStrand;
+    boost::asio::deadline_timer mReconciliationTimer;
+    uint16_t mPortReconciliationCount = 0;
 
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr;
 

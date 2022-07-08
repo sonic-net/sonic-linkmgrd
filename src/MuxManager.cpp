@@ -28,6 +28,8 @@
 
 #include <boost/bind/bind.hpp>
 
+#include "swss/warm_restart.h"
+
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
 #include "MuxManager.h"
@@ -43,7 +45,9 @@ MuxManager::MuxManager() :
     mMuxConfig(),
     mWork(mIoService),
     mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),
-    mDbInterfacePtr(std::make_shared<mux::DbInterface> (this, &mIoService))
+    mDbInterfacePtr(std::make_shared<mux::DbInterface> (this, &mIoService)),
+    mStrand(mIoService),
+    mReconciliationTimer(mIoService)
 {
     mSignalSet.add(SIGUSR1);
     mSignalSet.add(SIGUSR2);
@@ -76,11 +80,17 @@ void MuxManager::setUseWellKnownMacActiveActive(bool useWellKnownMac)
 //
 void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature_default_route)
 {
+
     for (uint8_t i = 0; (mMuxConfig.getNumberOfThreads() > 2) &&
                         (i < mMuxConfig.getNumberOfThreads() - 2); i++) {
         mThreadGroup.create_thread(
             boost::bind(&boost::asio::io_service::run, &mIoService)
         );
+    }
+
+    if (swss::WarmStart::isWarmStart()) {
+        MUXLOGINFO("Detected warm restart context, starting reconciliation timer.");
+        startWarmRestartReconciliationTimer(swss::WarmStart::getWarmStartTimer("linkmgrd", "mux"));
     }
 
     mDbInterfacePtr->initialize();
@@ -505,6 +515,67 @@ void MuxManager::generateServerMac(uint16_t serverId, std::array<uint8_t, ETHER_
         address[addrIndex--] = offset % 0xff;
         offset /= 0xff;
     }
+}
+
+// ---> updateWarmRestartReconciliationCount(int increment);
+//
+// update warm restart reconciliation count
+//
+void MuxManager::updateWarmRestartReconciliationCount(int increment)
+{
+    MUXLOGDEBUG(increment);
+
+    boost::asio::io_service &ioService = mStrand.context();
+
+    ioService.post(mStrand.wrap(boost::bind(
+        &MuxManager::handleUpdateReconciliationCount,
+        this,
+        increment
+    )));
+}
+
+// ---> handleUpdateReconciliationCount(int increment);
+//
+// handler of updating reconciliation port count
+// 
+void MuxManager::handleUpdateReconciliationCount(int increment)
+{
+    MUXLOGDEBUG(mPortReconciliationCount);
+
+    mPortReconciliationCount += increment;
+
+    if(mPortReconciliationCount == 0) {
+        mReconciliationTimer.cancel();
+    } 
+}
+
+// ---> startWarmRestartReconciliationTimer
+//
+// start warm restart reconciliation timer
+// 
+void MuxManager::startWarmRestartReconciliationTimer(uint32_t timeout)
+{
+    mReconciliationTimer.expires_from_now(boost::posix_time::seconds(
+        timeout == 0? mMuxConfig.getMuxReconciliationTimeout_sec():timeout
+    ));
+    mReconciliationTimer.async_wait(mStrand.wrap(boost::bind(
+        &MuxManager::handleWarmRestartReconciliationTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
+}
+
+// ---> handleWarmRestartReconciliationTimeout
+// 
+// handle warm restart reconciliationTimeout
+//
+void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::error_code errorCode)
+{
+    if (errorCode == boost::system::errc::success) {
+        MUXLOGWARNING("Reconciliation timed out after warm restart, set service to reconciled now.");
+    }
+
+    swss::WarmStart::setWarmStartState("linkmgrd", swss::WarmStart::RECONCILED);
 }
 
 } /* namespace mux */

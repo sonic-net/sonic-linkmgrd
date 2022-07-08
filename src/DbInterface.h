@@ -274,6 +274,29 @@ public:
     */
     void stopSwssNotificationPoll() {mPollSwssNotifcation = false;};
 
+    /**
+     * @method setMuxMode 
+     * 
+     * @brief set config db mux mode 
+     * 
+     * @param portName (in) MUX port name 
+     * @param state (in) MUX mode state 
+     *  
+     * @return none
+     */
+    void setMuxMode(const std::string &portName, const std::string state);
+
+    /**
+     * @method warmRestartReconciliation
+     * 
+     * @brief port warm restart reconciliation procedure
+     * 
+     * @param portName(in) Mux port name
+     * 
+     * @return none
+     */
+    virtual void warmRestartReconciliation(const std::string &portName);
+
 private:
     friend class test::MuxManagerTest;
 
@@ -398,6 +421,18 @@ private:
         const uint64_t unknownEventCount, 
         const uint64_t expectedPacketCount
     );
+
+    /**
+     * @method handleSetMuxMode
+     * 
+     * @brief handle set mux mode 
+     * 
+     * @param portName (in) MUX port name
+     * @param state (in) MUX mode state
+     * 
+     * @return none
+     */
+    virtual void handleSetMuxMode(const std::string &portName, const std::string state);
 
     /**
     *@method processTorMacAddress

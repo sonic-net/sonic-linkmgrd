@@ -715,6 +715,7 @@ void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDb
     std::vector<swss::KeyOpFieldsValuesTuple> entries;
 
     configDbMuxCableTable.getContent(entries);
+    mMuxManagerPtr->updateWarmRestartReconciliationCount(entries.size());
     processServerIpAddress(entries);
 }
 
@@ -815,6 +816,52 @@ void DbInterface::getSoCIpAddress(std::shared_ptr<swss::DBConnector> configDbCon
 
     configDbMuxCableTable.getContent(entries);
     processSoCIpAddress(entries);
+}
+
+// ---> warmRestartReconciliation(const std::string &portName);
+//
+// port warm restart reconciliation procedure
+//
+void DbInterface::warmRestartReconciliation(const std::string &portName)
+{
+    MUXLOGDEBUG(portName);
+
+    setMuxMode(portName, "auto");
+    mMuxManagerPtr->updateWarmRestartReconciliationCount(-1);
+}
+
+//
+// ---> setMuxMode
+//
+// set config db mux mode
+//
+void DbInterface::setMuxMode(const std::string &portName, const std::string state)
+{
+    MUXLOGDEBUG(portName);
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handleSetMuxMode,
+        this,
+        portName,
+        state
+    )));
+}
+
+//
+// ---> handleSetMuxmode
+//
+// handle set mux mode
+//
+void DbInterface::handleSetMuxMode(const std::string &portName, const std::string state)
+{
+    MUXLOGWARNING(boost::format("%s: configuring mux mode to %s after warm restart") % portName % state);
+
+    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+    std::shared_ptr<swss::Table> configDbMuxCableTablePtr = std::make_shared<swss::Table> (
+        configDbPtr.get(), CFG_MUX_CABLE_TABLE_NAME
+    );
+    configDbMuxCableTablePtr->hset(portName, "state", state);
 }
 
 //
