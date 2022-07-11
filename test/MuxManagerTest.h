@@ -83,6 +83,9 @@ public:
     void initLinkProberActiveStandby(std::shared_ptr<link_manager::ActiveStandbyStateMachine> linkManagerStateMachine);
     void generateServerMac(const std::string &portName, std::array<uint8_t, ETHER_ADDR_LEN> &address);
     void createPort(std::string port, common::MuxPortConfig::PortCableType portCableType = common::MuxPortConfig::PortCableType::ActiveStandby);
+    void warmRestartReconciliation(const std::string &portName);
+    void updatePortReconciliationCount(int increment);
+    void startWarmRestartReconciliationTimer(uint32_t timeout);
 
 public:
     static const std::string PortName;

@@ -826,8 +826,10 @@ void DbInterface::warmRestartReconciliation(const std::string &portName)
 {
     MUXLOGDEBUG(portName);
 
-    setMuxMode(portName, "auto");
-    mMuxManagerPtr->updateWarmRestartReconciliationCount(-1);
+    if (isWarmStart()) {
+        setMuxMode(portName, "auto");
+        mMuxManagerPtr->updateWarmRestartReconciliationCount(-1);
+    }
 }
 
 //

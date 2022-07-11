@@ -28,8 +28,6 @@
 
 #include <boost/bind/bind.hpp>
 
-#include "swss/warm_restart.h"
-
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
 #include "MuxManager.h"
@@ -80,7 +78,6 @@ void MuxManager::setUseWellKnownMacActiveActive(bool useWellKnownMac)
 //
 void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature_default_route)
 {
-
     for (uint8_t i = 0; (mMuxConfig.getNumberOfThreads() > 2) &&
                         (i < mMuxConfig.getNumberOfThreads() - 2); i++) {
         mThreadGroup.create_thread(
@@ -88,12 +85,12 @@ void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature
         );
     }
 
-    if (swss::WarmStart::isWarmStart()) {
-        MUXLOGINFO("Detected warm restart context, starting reconciliation timer.");
-        startWarmRestartReconciliationTimer(swss::WarmStart::getWarmStartTimer("linkmgrd", "mux"));
-    }
-
     mDbInterfacePtr->initialize();
+
+    if (mDbInterfacePtr->isWarmStart()) {
+        MUXLOGINFO("Detected warm restart context, starting reconciliation timer.");
+        startWarmRestartReconciliationTimer(mDbInterfacePtr->getWarmStartTimer());
+    }
 
     mMuxConfig.enableSwitchoverMeasurement(enable_feature_measurement);
     mMuxConfig.enableDefaultRouteFeature(enable_feature_default_route);
@@ -575,7 +572,7 @@ void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::err
         MUXLOGWARNING("Reconciliation timed out after warm restart, set service to reconciled now.");
     }
 
-    swss::WarmStart::setWarmStartState("linkmgrd", swss::WarmStart::RECONCILED);
+    mDbInterfacePtr->setWarmStartStateReconciled();
 }
 
 } /* namespace mux */
