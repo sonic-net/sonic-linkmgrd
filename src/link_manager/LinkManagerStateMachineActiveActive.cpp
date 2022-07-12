@@ -299,7 +299,7 @@ void ActiveActiveStateMachine::handleGetServerMacAddressNotification(std::array<
         mMuxPortConfig.setBladeMacAddress(address);
         if (mUpdateEthernetFrameFnPtr) {
             mUpdateEthernetFrameFnPtr();
-        } else {
+        } else if (mComponentInitState.test(LinkProberComponent)) {
             std::array<char, 3 *ETHER_ADDR_LEN> addressStr = {0};
             snprintf(
                 addressStr.data(), addressStr.size(), "%02x:%02x:%02x:%02x:%02x:%02x",
@@ -335,7 +335,7 @@ void ActiveActiveStateMachine::handleUseWellKnownMacAddressNotification()
 
     if (mUpdateEthernetFrameFnPtr) {
         mUpdateEthernetFrameFnPtr();
-    } else {
+    } else if (mComponentInitState.test(LinkProberComponent)) {
         std::array<char, 3 *ETHER_ADDR_LEN> addressStr = {0};
         snprintf(
             addressStr.data(), addressStr.size(), "%02x:%02x:%02x:%02x:%02x:%02x",
