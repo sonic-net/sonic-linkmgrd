@@ -374,6 +374,15 @@ public:
      */
     inline bool getIfEnableUseTorMac() {return mEnableUseTorMac;};
 
+    /**
+     * @method getMuxReconciliationTimeout
+     * 
+     * @brief getter of mux reconciliation time out 
+     * 
+     * @return timeout in sec
+     */
+    inline uint32_t getMuxReconciliationTimeout_sec(){return mMuxReconciliationTimeout_sec;};
+
 private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
@@ -386,6 +395,8 @@ private:
 
     bool mEnableSwitchoverMeasurement = false;
     uint32_t mDecreasedTimeoutIpv4_msec = 10;
+
+    uint32_t mMuxReconciliationTimeout_sec = 10;
 
     bool mEnableDefaultRouteFeature = false;
     bool mUseWellKnownMacActiveActive = true;

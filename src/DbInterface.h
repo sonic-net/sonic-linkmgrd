@@ -34,6 +34,7 @@
 #include "swss/dbconnector.h"
 #include "swss/producerstatetable.h"
 #include "swss/subscriberstatetable.h"
+#include "swss/warm_restart.h"
 
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
 #include "mux_state/MuxState.h"
@@ -274,6 +275,56 @@ public:
     */
     void stopSwssNotificationPoll() {mPollSwssNotifcation = false;};
 
+    /**
+     * @method setMuxMode 
+     * 
+     * @brief set config db mux mode 
+     * 
+     * @param portName (in) MUX port name 
+     * @param state (in) MUX mode state 
+     *  
+     * @return none
+     */
+    void setMuxMode(const std::string &portName, const std::string state);
+
+    /**
+     * @method warmRestartReconciliation
+     * 
+     * @brief port warm restart reconciliation procedure
+     * 
+     * @param portName(in) Mux port name
+     * 
+     * @return none
+     */
+    void warmRestartReconciliation(const std::string &portName);
+
+    /**
+     * @method isWarmStart
+     * 
+     * @brief is warm start or not
+     * 
+     * @return system flag for warm start context 
+     */
+    virtual bool isWarmStart(){return swss::WarmStart::isWarmStart();};
+
+    /**
+     * @method getWarmStartTimer
+     * 
+     * @brief get warm start time out in sec
+     * 
+     * @return timeout in sec 
+     */
+    virtual uint32_t getWarmStartTimer(){return swss::WarmStart::getWarmStartTimer("linkmgrd", "mux");};
+
+    /**
+     * @method setWarmStartStateReconciled
+     * 
+     * @brief set warm start state reconciled
+     * 
+     * @return none
+     */
+    virtual void setWarmStartStateReconciled(){swss::WarmStart::setWarmStartState("linkmgrd", swss::WarmStart::RECONCILED);};
+
 private:
     friend class test::MuxManagerTest;
 
@@ -398,6 +449,18 @@ private:
         const uint64_t unknownEventCount, 
         const uint64_t expectedPacketCount
     );
+
+    /**
+     * @method handleSetMuxMode
+     * 
+     * @brief handle set mux mode 
+     * 
+     * @param portName (in) MUX port name
+     * @param state (in) MUX mode state
+     * 
+     * @return none
+     */
+    virtual void handleSetMuxMode(const std::string &portName, const std::string state);
 
     /**
     *@method processTorMacAddress

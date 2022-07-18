@@ -426,6 +426,8 @@ void ActiveStandbyStateMachine::activateStateMachine()
         mStartProbingFnPtr();
 
         updateMuxLinkmgrState();
+
+        mMuxPortPtr->warmRestartReconciliation();
     }
 }
 

@@ -245,6 +245,26 @@ void MuxManagerTest::updatePortCableType(const std::string &port, const std::str
     mMuxManagerPtr->updatePortCableType(port, cableType);
 }
 
+void MuxManagerTest::warmRestartReconciliation(const std::string &portName)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+
+    muxPortPtr->warmRestartReconciliation();
+}
+
+void MuxManagerTest::updatePortReconciliationCount(int increment)
+{
+    mMuxManagerPtr->updateWarmRestartReconciliationCount(increment);
+    runIoService(1);
+}
+
+void MuxManagerTest::startWarmRestartReconciliationTimer(uint32_t timeout)
+{
+    mMuxManagerPtr->startWarmRestartReconciliationTimer(
+        timeout
+    );
+}
+
 void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachineActiveActive)
 {
     mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachineActiveActive->getLinkProberStateMachinePtr().get());
@@ -817,5 +837,35 @@ INSTANTIATE_TEST_CASE_P(
         std::make_tuple("manual", common::MuxPortConfig::Mode::Manual, common::MuxPortConfig::PortCableType::ActiveActive)
     )
 );
+
+TEST_F(MuxManagerTest, WarmRestart)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    mDbInterfacePtr->mWarmStartFlag = true;
+    startWarmRestartReconciliationTimer(UINT32_MAX);
+    updatePortReconciliationCount(1);
+    warmRestartReconciliation(port);
+
+    runIoService(3);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxModeInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetWarmStartStateReconciledInvokeCount, 1);
+}
+
+TEST_F(MuxManagerTest, WarmRestartTimeout)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    mDbInterfacePtr->mWarmStartFlag = true;
+    startWarmRestartReconciliationTimer(mDbInterfacePtr->getWarmStartTimer());
+
+    runIoService(1);
+    EXPECT_EQ(mDbInterfacePtr->mSetWarmStartStateReconciledInvokeCount, 1);
+}
 
 } /* namespace test */
