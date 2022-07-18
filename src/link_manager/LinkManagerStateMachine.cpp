@@ -482,6 +482,8 @@ void LinkManagerStateMachine::activateStateMachine()
         mStartProbingFnPtr();
 
         updateMuxLinkmgrState();
+
+        mMuxPortPtr->warmRestartReconciliation();
     }
 }
 

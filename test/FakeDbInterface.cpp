@@ -85,4 +85,24 @@ void FakeDbInterface::postPckLossRatio(
     mExpectedPacketCount = expectedPacketCount;
 } 
 
+void FakeDbInterface::handleSetMuxMode(const std::string &portName, const std::string state)
+{
+    mSetMuxModeInvokeCount += 1;
+}
+
+bool FakeDbInterface::isWarmStart()
+{
+    return mWarmStartFlag;
+}
+
+uint32_t FakeDbInterface::getWarmStartTimer()
+{
+    return 0;
+}
+
+void FakeDbInterface::setWarmStartStateReconciled()
+{
+    mSetWarmStartStateReconciledInvokeCount++;
+}
+
 } /* namespace test */
