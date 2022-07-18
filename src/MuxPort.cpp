@@ -405,4 +405,16 @@ void MuxPort::probeMuxState()
     }
 }
 
+//
+// ---> warmRestartReconciliation();
+//
+// brief port warm restart reconciliation procedure
+//
+void MuxPort::warmRestartReconciliation()
+{
+    if (mMuxPortConfig.getMode() != common::MuxPortConfig::Mode::Auto) {
+        mDbInterfacePtr->warmRestartReconciliation(mMuxPortConfig.getPortName());
+    }
+}
+
 } /* namespace mux */

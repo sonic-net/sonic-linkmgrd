@@ -26,6 +26,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
+#include "swss/warm_restart.h"
+
 #include "MuxManager.h"
 #include "MuxPort.h"
 #include "common/MuxConfig.h"
@@ -122,6 +124,13 @@ int main(int argc, const char* argv[])
 
         // initialize static data
         link_prober::IcmpPayload::generateGuid();
+
+        // warm restart static
+        swss::WarmStart::initialize("linkmgrd", "mux");
+        swss::WarmStart::checkWarmStart("linkmgrd", "mux");
+        if (swss::WarmStart::isWarmStart()) {
+            swss::WarmStart::setWarmStartState("linkmgrd", swss::WarmStart::INITIALIZED);
+        }
 
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
         muxManagerPtr->initialize(measureSwitchover, defaultRoute);
