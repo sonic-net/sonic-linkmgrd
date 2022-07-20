@@ -411,6 +411,26 @@ void MuxManagerTest::createPort(std::string port, common::MuxPortConfig::PortCab
     EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachineBase::MuxStateComponent) == 1);
 }
 
+void MuxManagerTest::resetUpdateEthernetFrameFn(const std::string &portName)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+    std::shared_ptr<link_manager::LinkManagerStateMachineBase> linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachinePtr();
+    
+    boost::function<void()> fnPtr = NULL;
+    switch (getPortCableType(portName)) {
+        case common::MuxPortConfig::PortCableType::ActiveActive: {
+            (std::dynamic_pointer_cast<link_manager::ActiveActiveStateMachine>(linkManagerStateMachine))->setUpdateEthernetFrameFnPtr(fnPtr);
+            break;
+        }
+        case common::MuxPortConfig::PortCableType::ActiveStandby: {
+            (std::dynamic_pointer_cast<link_manager::ActiveStandbyStateMachine>(linkManagerStateMachine))->setUpdateEthernetFrameFnPtr(fnPtr);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 TEST_F(MuxManagerTest, UpdatePortCableTypeActiveStandby)
 {
     std::string port = MuxManagerTest::PortName;
@@ -641,6 +661,33 @@ TEST_F(MuxManagerTest, ServerMacAddressException)
     std::array<uint8_t, ETHER_ADDR_LEN> serverMacAfter = getBladeMacAddress(port);
 
     EXPECT_TRUE(serverMacBefore == serverMacAfter);
+}
+
+TEST_F(MuxManagerTest, ServerMacBeforeLinkProberInit)
+{
+    std::string port = "Ethernet0";
+    std::string ipAddress = "192.168.0.1";
+
+    createPort(port);
+    resetUpdateEthernetFrameFn(port);
+
+    std::string mac = "a0:1b:c2:3d:e4:5f";
+    std::array<char, MAX_ADDR_SIZE + 1> macAddress = {0};
+    memcpy(macAddress.data(), mac.c_str(), mac.size());
+    std::array<char, MAX_ADDR_SIZE + 1> serverIpAddress = {0};
+    memcpy(serverIpAddress.data(), ipAddress.c_str(), ipAddress.size());
+
+    processServerMacAddress(port, serverIpAddress, macAddress);
+
+    runIoService();
+
+    std::array<uint8_t, ETHER_ADDR_LEN> serverMac = getBladeMacAddress(port);
+
+    swss::MacAddress swssMacAddress(mac);
+    std::array<uint8_t, ETHER_ADDR_LEN> expectedMac;
+    memcpy(expectedMac.data(), swssMacAddress.getMac(), expectedMac.size());
+
+    EXPECT_TRUE(serverMac == expectedMac);
 }
 
 TEST_F(MuxManagerTest, ServerMacActiveActive)
