@@ -56,6 +56,7 @@ public:
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
     bool getIfUseWellKnownMac(std::string port);
+    bool setUseWellKnownMacActiveActive(bool use);
     bool getIfUseToRMac(std::string port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);

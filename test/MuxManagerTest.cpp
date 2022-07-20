@@ -108,6 +108,11 @@ bool MuxManagerTest::getIfUseWellKnownMac(std::string port)
     return muxPortPtr->mMuxPortConfig.getIfUseWellKnownMacActiveActive();
 }
 
+bool MuxManagerTest::setUseWellKnownMacActiveActive(bool use)
+{
+    mMuxManagerPtr->setUseWellKnownMacActiveActive(use);
+}
+
 bool MuxManagerTest::getIfUseToRMac(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -415,7 +420,7 @@ void MuxManagerTest::resetUpdateEthernetFrameFn(const std::string &portName)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
     std::shared_ptr<link_manager::LinkManagerStateMachineBase> linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachinePtr();
-    
+
     boost::function<void()> fnPtr = NULL;
     switch (getPortCableType(portName)) {
         case common::MuxPortConfig::PortCableType::ActiveActive: {
@@ -759,6 +764,26 @@ TEST_F(MuxManagerTest, ServerMacActiveActive)
     bladeMacAddress = getBladeMacAddress(port);
     EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 4);
     EXPECT_TRUE(bladeMacAddress == wellKnownMac);
+}
+
+TEST_F(MuxManagerTest, ServerMacActiveActiveBeforeLinkProberInit)
+{
+    std::string port = MuxManagerTest::PortName;
+    std::string ipAddress = MuxManagerTest::ServerAddress;
+    std::string ipAddressSoC = MuxManagerTest::ServerAddress;
+
+    createPort(port, common::MuxPortConfig::ActiveActive);
+    resetUpdateEthernetFrameFn(port);
+
+    std::array<uint8_t, ETHER_ADDR_LEN> serverMac = {0, 'b', 2, 'd', 4, 'f'};
+    boost::asio::ip::address serverAddress = boost::asio::ip::address::from_string(ipAddress);
+    setUseWellKnownMacActiveActive(false);
+    updateServerMacAddress(serverAddress, serverMac.data());
+
+    runIoService(2);
+
+    std::array<uint8_t, ETHER_ADDR_LEN> bladeMacAddress = getBladeMacAddress(port);
+    EXPECT_TRUE(bladeMacAddress == serverMac);
 }
 
 TEST_F(MuxManagerTest, LinkmgrdConfig)
