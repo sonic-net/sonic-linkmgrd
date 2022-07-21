@@ -67,6 +67,9 @@ public:
     void updateServerMacAddress(boost::asio::ip::address serverIp, const uint8_t *serverMac);
     void processGetMuxState(const std::string &portName, const std::string &muxState);
     void createPort(std::string port);
+    void warmRestartReconciliation(const std::string &portName);
+    void updatePortReconciliationCount(int increment);
+    void startWarmRestartReconciliationTimer(uint32_t timeout);
 
 public:
     std::shared_ptr<mux::MuxManager> mMuxManagerPtr;

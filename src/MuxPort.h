@@ -310,6 +310,15 @@ public:
     */
     void resetPckLossCount();
 
+    /**
+     * @method warmRestartReconciliation
+     * 
+     * @brief port warm restart reconciliation procedure
+     * 
+     * @return none
+     */
+    void warmRestartReconciliation();
+
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

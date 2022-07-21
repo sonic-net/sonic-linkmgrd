@@ -57,10 +57,14 @@ public:
         const uint64_t unknownEventCount, 
         const uint64_t expectedPacketCount
     ) override;
-
+    virtual bool isWarmStart() override;
+    virtual uint32_t getWarmStartTimer() override;
+    virtual void setWarmStartStateReconciled() override; 
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
 
+private:
+    virtual void handleSetMuxMode(const std::string &portName, const std::string state) override;
 
 public:
     mux_state::MuxState::Label mNextMuxState;
@@ -75,6 +79,9 @@ public:
     uint32_t mPostLinkProberMetricsInvokeCount = 0;
     uint64_t mUnknownEventCount = 0;
     uint64_t mExpectedPacketCount = 0;
+    uint32_t mSetMuxModeInvokeCount = 0;
+    uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
+    bool mWarmStartFlag = false;
 };
 
 } /* namespace test */
