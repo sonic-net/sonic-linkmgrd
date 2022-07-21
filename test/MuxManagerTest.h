@@ -53,6 +53,7 @@ public:
     uint32_t getTimeoutIpv4_msec(std::string port);
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
+    bool setUseWellKnownMacActiveActive(bool use);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
@@ -71,6 +72,7 @@ public:
     void warmRestartReconciliation(const std::string &portName);
     void updatePortReconciliationCount(int increment);
     void startWarmRestartReconciliationTimer(uint32_t timeout);
+    void resetUpdateEthernetFrameFn(const std::string &portName);
     void postMetricsEvent(const std::string &portName, mux_state::MuxState::Label label);
     void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
     void initializeThread();
