@@ -428,8 +428,8 @@ void MuxPort::handleTsaEnable()
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachine::handleMuxConfigNotification,
-        &mLinkManagerStateMachine,
+        &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
+        mLinkManagerStateMachinePtr.get(),
         common::MuxPortConfig::Mode::Standby
     )));
 }

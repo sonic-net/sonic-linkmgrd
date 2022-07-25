@@ -1451,6 +1451,7 @@ void DbInterface::handleSwssNotification()
 
     swss::Select swssSelect;
     swssSelect.addSelectable(&configDbMuxLinkmgrTable);
+    swssSelect.addSelectable(&configDbBgpDeviceGlobalTable);
     swssSelect.addSelectable(&configDbMuxTable);
     swssSelect.addSelectable(&appDbPortTable);
     swssSelect.addSelectable(&appDbMuxResponseTable);
