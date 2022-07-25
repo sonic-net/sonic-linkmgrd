@@ -417,4 +417,21 @@ void MuxPort::warmRestartReconciliation()
     }
 }
 
+//
+// ---> handleTsaEnable();
+//
+// handle TSA Enable 
+//
+void MuxPort::handleTsaEnable()
+{
+    MUXLOGWARNING(boost::format("port: %s, configuring to Standby due to tsa_enable notification from CONFIG DB. ") % mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleMuxConfigNotification,
+        &mLinkManagerStateMachine,
+        common::MuxPortConfig::Mode::Standby
+    )));
+}
+
 } /* namespace mux */

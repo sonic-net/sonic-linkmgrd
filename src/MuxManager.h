@@ -452,6 +452,15 @@ public:
      */
     void updateWarmRestartReconciliationCount(int increment);
 
+    /**
+     * @method handleTsaEnableNotification
+     * 
+     * @brief handle TSA Enable Notification
+     * 
+     * @return none
+     */
+    void handleTsaEnableNotification(bool enable);
+
 private:
     /**
     *@method getMuxPortCableType

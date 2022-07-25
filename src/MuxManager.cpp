@@ -575,4 +575,21 @@ void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::err
     mDbInterfacePtr->setWarmStartStateReconciled();
 }
 
+//
+// ---> handleTsaEnableNotification
+//
+// handle TSA Enable Notification
+//
+void MuxManager::handleTsaEnableNotification(bool enable)
+{
+    if (enable) {
+        PortMapIterator portMapIterator = mPortMap.begin();
+
+        while (portMapIterator != mPortMap.end()) {
+            portMapIterator->second->handleTsaEnable();
+            portMapIterator ++;
+        }
+    }
+}
+
 } /* namespace mux */

@@ -395,6 +395,15 @@ public:
      */
     void warmRestartReconciliation();
 
+    /**
+     * @method handleTsaEnable
+     * 
+     * @brief handle TSA Enable event 
+     * 
+     * @return none
+     */
+    void handleTsaEnable();
+
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

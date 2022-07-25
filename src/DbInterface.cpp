@@ -1355,6 +1355,53 @@ void DbInterface::handleDefaultRouteStateNotification(swss::SubscriberStateTable
 }
 
 //
+// ---> handleBgpDeviceGlobal(swss::SubscriberStateTable &configDbBgpDeviceGlobalTable);
+//
+// handle tsa_enable notification from BGP Device Global table 
+//
+void DbInterface::handleBgpDeviceGlobal(swss::SubscriberStateTable &configDbBgpDeviceGlobalTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    configDbBgpDeviceGlobalTable.pops(entries);
+    processTsaEnableNotification(entries);
+}
+
+//
+// ---> processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process Tsa Enable Notification
+//
+void DbInterface::processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string key = kfvKey(entry);
+        std::string op = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "tsa_enabled";}
+        );
+
+        if (cit != fieldValues.cend()) {
+            const std::string field = cit->first;
+            const std::string value = cit->second;
+
+            MUXLOGDEBUG(boost::format("key: %s, operation: %s, field: %s, value: %s") %
+                key %
+                op %
+                field %
+                value
+            );
+
+            mMuxManagerPtr->handleTsaEnableNotification(value == "true");
+        }
+    }
+}
+
+//
 // ---> handleSwssNotification();
 //
 // main thread method for handling SWSS notification
@@ -1367,6 +1414,8 @@ void DbInterface::handleSwssNotification()
 
     // For reading Link Prober configurations from the MUX linkmgr table name
     swss::SubscriberStateTable configDbMuxLinkmgrTable(configDbPtr.get(), CFG_MUX_LINKMGR_TABLE_NAME);
+    // for tsa_enable notification
+    swss::SubscriberStateTable configDbBgpDeviceGlobalTable(configDbPtr.get(), CFG_BGP_DEVICE_GLOBAL_TABLE_NAME);
 
     swss::SubscriberStateTable configDbMuxTable(configDbPtr.get(), CFG_MUX_CABLE_TABLE_NAME);
 
@@ -1430,6 +1479,8 @@ void DbInterface::handleSwssNotification()
             handleMuxLinkmgrConfigNotifiction(configDbMuxLinkmgrTable);
         } else if (selectable == static_cast<swss::Selectable *> (&configDbMuxTable)) {
             handleMuxPortConfigNotifiction(configDbMuxTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&configDbBgpDeviceGlobalTable)) {
+            handleBgpDeviceGlobal(configDbBgpDeviceGlobalTable);
         } else if (selectable == static_cast<swss::Selectable *> (&appDbPortTable)) {
             handleLinkStateNotifiction(appDbPortTable);
         } else if (selectable == static_cast<swss::Selectable *> (&appDbMuxResponseTable)) {
