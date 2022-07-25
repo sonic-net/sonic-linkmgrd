@@ -174,6 +174,11 @@ void MuxManagerTest::processMuxPortConfigNotifiction(std::deque<swss::KeyOpField
     mDbInterfacePtr->processMuxPortConfigNotifiction(entries);
 }
 
+void MuxManagerTest::processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    mDbInterfacePtr->processTsaEnableNotification(entries);
+}
+
 link_manager::LinkManagerStateMachineBase::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -938,6 +943,19 @@ TEST_F(MuxManagerTest, WarmRestartTimeout)
 
     runIoService(1);
     EXPECT_EQ(mDbInterfacePtr->mSetWarmStartStateReconciledInvokeCount, 1);
+}
+
+TEST_F(MuxManagerTest, TsaEnable)
+{
+    createPort("Ethernet0");
+
+    std::deque<swss::KeyOpFieldsValuesTuple> entries = {
+        {"BGP_DEVICE_GLOBAL", "SET", {{"tsa_enabled", "true"}}},
+    };
+    processTsaEnableNotification(entries);
+    runIoService();
+
+    EXPECT_TRUE(getMode("Ethernet0") == common::MuxPortConfig::Mode::Standby);
 }
 
 } /* namespace test */
