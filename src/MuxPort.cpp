@@ -422,15 +422,20 @@ void MuxPort::warmRestartReconciliation()
 //
 // handle TSA Enable 
 //
-void MuxPort::handleTsaEnable()
+void MuxPort::handleTsaEnable(bool enable)
 {
-    MUXLOGWARNING(boost::format("port: %s, configuring to Standby due to tsa_enable notification from CONFIG DB. ") % mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("port: %s, configuring mux mode due to tsa_enable notification from CONFIG DB. ") % mMuxPortConfig.getPortName());
+
+    common::MuxPortConfig::Mode mode = common::MuxPortConfig::Auto;
+    if (enable) {
+        mode = common::MuxPortConfig::Standby;
+    }
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
         mLinkManagerStateMachinePtr.get(),
-        common::MuxPortConfig::Mode::Standby
+        mode
     )));
 }
 

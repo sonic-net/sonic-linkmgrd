@@ -956,6 +956,14 @@ TEST_F(MuxManagerTest, TsaEnable)
     runIoService();
 
     EXPECT_TRUE(getMode("Ethernet0") == common::MuxPortConfig::Mode::Standby);
+
+    std::deque<swss::KeyOpFieldsValuesTuple> disable_entries = {
+        {"BGP_DEVICE_GLOBAL", "SET", {{"tsa_enabled", "false"}}},
+    };
+    processTsaEnableNotification(disable_entries);
+    runIoService();
+
+    EXPECT_TRUE(getMode("Ethernet0") == common::MuxPortConfig::Mode::Auto);
 }
 
 } /* namespace test */

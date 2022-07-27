@@ -582,13 +582,11 @@ void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::err
 //
 void MuxManager::handleTsaEnableNotification(bool enable)
 {
-    if (enable) {
-        PortMapIterator portMapIterator = mPortMap.begin();
+    PortMapIterator portMapIterator = mPortMap.begin();
 
-        while (portMapIterator != mPortMap.end()) {
-            portMapIterator->second->handleTsaEnable();
-            portMapIterator ++;
-        }
+    while (portMapIterator != mPortMap.end()) {
+        portMapIterator->second->handleTsaEnable(enable);
+        portMapIterator ++;
     }
 }
 

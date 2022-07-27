@@ -402,7 +402,7 @@ public:
      * 
      * @return none
      */
-    void handleTsaEnable();
+    void handleTsaEnable(bool enable);
 
 protected:
     friend class test::MuxManagerTest;
