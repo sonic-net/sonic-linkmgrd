@@ -67,6 +67,7 @@ public:
     std::array<uint8_t, ETHER_ADDR_LEN> getVlanMacAddress(std::string port);
     common::MuxPortConfig::PortCableType getPortCableType(const std::string &port);
     void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    void processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
     link_manager::LinkManagerStateMachineBase::CompositeState getCompositeStateMachineState(std::string port);
     void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);
     void processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &servers);

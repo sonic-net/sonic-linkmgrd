@@ -806,6 +806,24 @@ private:
     */
     void handleDefaultRouteStateNotification(swss::SubscriberStateTable &statedbRouteTable);
 
+    /**
+     * @method handleBgpDeviceGlobal
+     * 
+     * @brief handle tsa_enable notification from BGP Device Global table 
+     * 
+     * @return none
+     */
+    void handleBgpDeviceGlobal(swss::SubscriberStateTable &configDbBgpDeviceGlobalTable);
+
+    /**
+     * @method processTsaEnableNotification
+     * 
+     * @brief process Tsa Enable Notification
+     * 
+     * @return none
+     */
+    void processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
 private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;
