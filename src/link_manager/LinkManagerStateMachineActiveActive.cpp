@@ -844,7 +844,9 @@ void ActiveActiveStateMachine::probeMuxState()
 void ActiveActiveStateMachine::updateMuxLinkmgrState()
 {
     Label label = Label::Unhealthy;
-    if (ls(mCompositeState) == link_state::LinkState::Label::Up && ps(mCompositeState) == link_prober::LinkProberState::Label::Active && ms(mCompositeState) == mux_state::MuxState::Label::Active) {
+    if (ls(mCompositeState) == link_state::LinkState::Label::Up &&
+        ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
+        (mMuxPortConfig.ifEnableDefaultRouteFeature() == false || mDefaultRouteState == DefaultRoute::OK)) {
         label = Label::Healthy;
     }
     setLabel(label);
