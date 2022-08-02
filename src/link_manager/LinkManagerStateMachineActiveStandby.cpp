@@ -792,6 +792,8 @@ void ActiveStandbyStateMachine::handleSuspendTimerExpiry()
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+    } else {
+        mUnknownActiveUpBackoffFactor = 1;
     }
 }
 
@@ -1057,7 +1059,9 @@ void ActiveStandbyStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFuncti
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
     // Suspend TX probes to help peer ToR takes over in case active link is bad
-    mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
+    mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec()*mUnknownActiveUpBackoffFactor);
+    mUnknownActiveUpBackoffFactor <<= 1;
+    mUnknownActiveUpBackoffFactor = mUnknownActiveUpBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mUnknownActiveUpBackoffFactor;
     mWaitActiveUpCount = 0;
 }
 
@@ -1194,7 +1198,7 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mWaitActiveUpCount > 7? MAX_BACKOFF_FACTOR : (1<<mWaitActiveUpCount));
 
     if (mWaitActiveUpCount++ & 0x1) {
         mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
