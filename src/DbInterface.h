@@ -138,7 +138,7 @@ public:
     *
     *@return none
     */
-    virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+    void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
 
     /**
     *@method setPeerMuxState
@@ -197,7 +197,7 @@ public:
     *
     *@return none
     */
-    virtual void postMetricsEvent(
+    void postMetricsEvent(
         const std::string &portName,
         link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
@@ -349,7 +349,7 @@ private:
     *
     *@return none
     */
-    void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
+    virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
 
     /**
     *@method handleSetPeerMuxState
@@ -409,7 +409,7 @@ private:
     *
     *@return none
     */
-    void handlePostMuxMetrics(
+    virtual void handlePostMuxMetrics(
         const std::string portName,
         link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label,
