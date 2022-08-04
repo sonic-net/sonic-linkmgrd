@@ -847,6 +847,7 @@ private:
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
+    uint32_t mWaitStandbyUpBackoffFactor = 1;
     uint32_t mUnknownActiveUpBackoffFactor = 1;
 
     bool mPendingMuxModeChange = false;

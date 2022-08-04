@@ -944,6 +944,12 @@ void ActiveStandbyStateMachine::handleMuxProbeTimeout(boost::system::error_code 
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
+    if (!(ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Standby &&
+         ls(mCompositeState) == link_state::LinkState::Label::Up)) {
+             mWaitStandbyUpBackoffFactor = 1;
+    }
+
     if (errorCode == boost::system::errc::success &&
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Wait ||
          ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
@@ -1214,7 +1220,9 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxStandbyLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mWaitStandbyUpBackoffFactor);
+    mWaitStandbyUpBackoffFactor <<= 1;
+    mWaitStandbyUpBackoffFactor = mWaitStandbyUpBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mWaitStandbyUpBackoffFactor;
 }
 
 //
