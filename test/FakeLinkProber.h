@@ -51,6 +51,7 @@ public:
     void restartTxProbes();
     void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
     void revertProbeIntervalAfterSwitchComplete();
+    void handleSendSwitchCommand();
 
 
 public:
