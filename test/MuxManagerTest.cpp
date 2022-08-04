@@ -275,6 +275,21 @@ void MuxManagerTest::startWarmRestartReconciliationTimer(uint32_t timeout)
     );
 }
 
+void MuxManagerTest::postMetricsEvent(const std::string &portName, mux_state::MuxState::Label label)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+
+    return muxPortPtr->postMetricsEvent(link_manager::ActiveStandbyStateMachine::Metrics::SwitchingStart, label);
+}
+
+void MuxManagerTest::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+
+    return muxPortPtr->setMuxState(label);
+}
+
+
 void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachineActiveActive)
 {
     mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachineActiveActive->getLinkProberStateMachinePtr().get());
@@ -964,6 +979,31 @@ TEST_F(MuxManagerTest, TsaEnable)
     runIoService();
 
     EXPECT_TRUE(getMode("Ethernet0") == common::MuxPortConfig::Mode::Auto);
+}
+
+TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
+{
+    createPort("Ethernet0");
+
+    for (int i=0; i<2000; i++) {
+        postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
+        setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
+
+        runIoService(2);
+
+        EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
+    }
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2000);
+    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, 2000);
+
+    // mux manager test should use real MuxPort objects instead of FakeMuxPort
+    // make sure without `runIoService`, handler invoke count doesn't increase
+    for (int i=0; i<2000; i++) {
+        postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
+        setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
+    }
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2000);
+    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, 2000);
 }
 
 } /* namespace test */

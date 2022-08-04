@@ -36,7 +36,7 @@ public:
     FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_service *ioService);
     virtual ~FakeDbInterface() = default;
 
-    virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label) override;
+    virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label) override;
     virtual void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label) override;
     virtual void getMuxState(const std::string &portName) override;
     virtual void probeMuxState(const std::string &portName) override;
@@ -45,10 +45,11 @@ public:
         const std::string &portName,
         link_manager::ActiveStandbyStateMachine::Label label
     ) override;
-    virtual void postMetricsEvent(
-        const std::string &portName,
+    virtual void handlePostMuxMetrics(
+        const std::string portName,
         link_manager::ActiveStandbyStateMachine::Metrics metrics,
-        mux_state::MuxState::Label label
+        mux_state::MuxState::Label label,
+        boost::posix_time::ptime time
     ) override;
     virtual void postLinkProberMetricsEvent(
         const std::string &portName, 
@@ -88,7 +89,10 @@ public:
     uint64_t mExpectedPacketCount = 0;
     uint32_t mSetMuxModeInvokeCount = 0;
     uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
+    
     bool mWarmStartFlag = false;
+
+    bool mDbInterfaceRaceConditionCheckFailure = false;
 };
 
 } /* namespace test */
