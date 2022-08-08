@@ -1004,16 +1004,18 @@ TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
 
     createPort("Ethernet0");
 
-    uint32_t TOGGLE_COUNT = 2000;
+    uint32_t TOGGLE_COUNT = 1000;
 
-    for (int i=0; i<TOGGLE_COUNT; i++) {
+    for (uint32_t i=0; i<TOGGLE_COUNT; i++) {
         postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
         setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
-
+        
+        // wait for handler to be completed 
+        usleep(1000);
         EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
+        EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, i+1);
+        EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, i+1);
     }
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, TOGGLE_COUNT);
-    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, TOGGLE_COUNT);
 
     terminate();
 }
