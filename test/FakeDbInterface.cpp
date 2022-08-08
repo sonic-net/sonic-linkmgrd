@@ -46,7 +46,7 @@ void FakeDbInterface::handleSetMuxState(const std::string portName, mux_state::M
     mDbInterfaceRaceConditionCheckFailure = false;
 }
 
-void FakeDbInterface::setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label)
+void FakeDbInterface::handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label)
 {
     mLastSetPeerMuxState = label;
     mSetPeerMuxStateInvokeCount++;
@@ -62,7 +62,7 @@ void FakeDbInterface::probeMuxState(const std::string &portName)
     mProbeMuxStateInvokeCount++;
 }
 
-void FakeDbInterface::probeForwardingState(const std::string &portName)
+void FakeDbInterface::handleProbeForwardingState(const std::string portName)
 {
     mProbeForwardingStateInvokeCount++;
 }

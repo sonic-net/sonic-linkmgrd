@@ -162,7 +162,7 @@ public:
     *
     *@return none
     */
-    virtual void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
+    void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
 
     /**
     *@method probeMuxState
@@ -184,7 +184,7 @@ public:
      * 
      * @return none
      */
-    virtual void probeForwardingState(const std::string &portName);
+    void probeForwardingState(const std::string &portName);
 
     /**
     *@method setMuxLinkmgrState
@@ -380,7 +380,7 @@ private:
     *
     *@return none
     */
-    void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label);
+    virtual void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label);
 
     /**
     *@method handleProbeMuxState
@@ -402,7 +402,7 @@ private:
      * 
      * @return none
      */
-    void handleProbeForwardingState(const std::string portName);
+    virtual void handleProbeForwardingState(const std::string portName);
 
     /**
     *@method handleSetMuxLinkmgrState
