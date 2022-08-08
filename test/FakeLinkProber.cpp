@@ -127,10 +127,10 @@ void FakeLinkProber::handleSendSwitchCommand()
     boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_prober::LinkProberStateMachineBase::*) (link_prober::SwitchActiveCommandCompleteEvent&)>
-            (&link_prober::LinkProberStateMachineBase::processEvent),
+        static_cast<void (link_prober::LinkProberStateMachine::*) (link_prober::SwitchActiveCommandCompleteEvent&)>
+            (&link_prober::LinkProberStateMachine::processEvent),
         mLinkProberStateMachine,
-        link_prober::LinkProberStateMachineBase::getSwitchActiveCommandCompleteEvent()
+        link_prober::LinkProberStateMachine::getSwitchActiveCommandCompleteEvent()
     )));
 }
 
