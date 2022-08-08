@@ -289,6 +289,22 @@ void MuxManagerTest::setMuxState(const std::string &portName, mux_state::MuxStat
     return muxPortPtr->setMuxState(label);
 }
 
+void MuxManagerTest::initializeThread()
+{
+    for (uint8_t i = 0; i < 3; i++) {
+        mMuxManagerPtr->mThreadGroup.create_thread(
+            boost::bind(&boost::asio::io_service::run, &(mMuxManagerPtr->getIoService()))
+        );
+    }
+}
+
+void MuxManagerTest::terminate()
+{
+    mMuxManagerPtr->getIoService().stop();
+    mMuxManagerPtr->mWork.~work();  // destructor is used to inform work is finished, only then run() is permitted to exit.
+    mMuxManagerPtr->mThreadGroup.join_all();
+}
+
 
 void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachineActiveActive)
 {
@@ -983,27 +999,23 @@ TEST_F(MuxManagerTest, TsaEnable)
 
 TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
 {
+    // create thread pool
+    initializeThread();
+
     createPort("Ethernet0");
 
-    for (int i=0; i<2000; i++) {
+    uint32_t TOGGLE_COUNT = 2000;
+
+    for (int i=0; i<TOGGLE_COUNT; i++) {
         postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
         setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
-
-        runIoService(2);
 
         EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
     }
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2000);
-    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, 2000);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, TOGGLE_COUNT);
+    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, TOGGLE_COUNT);
 
-    // mux manager test should use real MuxPort objects instead of FakeMuxPort
-    // make sure without `runIoService`, handler invoke count doesn't increase
-    for (int i=0; i<2000; i++) {
-        postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
-        setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
-    }
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2000);
-    EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, 2000);
+    terminate();
 }
 
 } /* namespace test */

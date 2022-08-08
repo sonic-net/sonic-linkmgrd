@@ -91,6 +91,8 @@ public:
     void resetUpdateEthernetFrameFn(const std::string &portName);
     void postMetricsEvent(const std::string &portName, mux_state::MuxState::Label label);
     void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+    void initializeThread();
+    void terminate();
 
 public:
     static const std::string PortName;
