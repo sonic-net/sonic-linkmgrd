@@ -441,6 +441,31 @@ TEST_F(LinkManagerStateMachineTest, MuxAStandbyCliManual)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxActiveCliStandby)
+{
+    setMuxActive();
+
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 0);
+    handleMuxConfig("standby");
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 1);
+
+    mFakeMuxPort.mFakeLinkProber->handleSendSwitchCommand();
+    runIoService(2);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    // swss notification
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    // change state to active
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("standby", 4);
+    VALIDATE_STATE(Standby, Standby, Up);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
 {
     setMuxStandby();

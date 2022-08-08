@@ -121,6 +121,19 @@ void FakeLinkProber::sendPeerSwitchCommand()
     mSendPeerSwitchCommand++;
 }
 
+void FakeLinkProber::handleSendSwitchCommand()
+{
+    // inform the composite state machine about command send completion
+    boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (link_prober::LinkProberStateMachineBase::*) (link_prober::SwitchActiveCommandCompleteEvent&)>
+            (&link_prober::LinkProberStateMachineBase::processEvent),
+        mLinkProberStateMachine,
+        link_prober::LinkProberStateMachineBase::getSwitchActiveCommandCompleteEvent()
+    )));
+}
+
 void FakeLinkProber::resetIcmpPacketCounts()
 {
     MUXLOGINFO("");
