@@ -275,6 +275,37 @@ void MuxManagerTest::startWarmRestartReconciliationTimer(uint32_t timeout)
     );
 }
 
+void MuxManagerTest::postMetricsEvent(const std::string &portName, mux_state::MuxState::Label label)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+
+    return muxPortPtr->postMetricsEvent(link_manager::ActiveStandbyStateMachine::Metrics::SwitchingStart, label);
+}
+
+void MuxManagerTest::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+
+    return muxPortPtr->setMuxState(label);
+}
+
+void MuxManagerTest::initializeThread()
+{
+    for (uint8_t i = 0; i < 3; i++) {
+        mMuxManagerPtr->mThreadGroup.create_thread(
+            boost::bind(&boost::asio::io_service::run, &(mMuxManagerPtr->getIoService()))
+        );
+    }
+}
+
+void MuxManagerTest::terminate()
+{
+    mMuxManagerPtr->getIoService().stop();
+    mMuxManagerPtr->mWork.~work();  // destructor is used to inform work is finished, only then run() is permitted to exit.
+    mMuxManagerPtr->mThreadGroup.join_all();
+}
+
+
 void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::ActiveActiveStateMachine> linkManagerStateMachineActiveActive)
 {
     mFakeLinkProber = std::make_shared<FakeLinkProber> (linkManagerStateMachineActiveActive->getLinkProberStateMachinePtr().get());
@@ -964,6 +995,29 @@ TEST_F(MuxManagerTest, TsaEnable)
     runIoService();
 
     EXPECT_TRUE(getMode("Ethernet0") == common::MuxPortConfig::Mode::Auto);
+}
+
+TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
+{
+    // create thread pool
+    initializeThread();
+
+    createPort("Ethernet0");
+
+    uint32_t TOGGLE_COUNT = 1000;
+
+    for (uint32_t i=0; i<TOGGLE_COUNT; i++) {
+        postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
+        setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
+        
+        // wait for handler to be completed 
+        usleep(1000);
+        EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
+        EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, i+1);
+        EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, i+1);
+    }
+
+    terminate();
 }
 
 } /* namespace test */

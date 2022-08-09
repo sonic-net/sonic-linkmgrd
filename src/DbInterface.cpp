@@ -70,12 +70,11 @@ void DbInterface::getMuxState(const std::string &portName)
 {
     MUXLOGDEBUG(portName);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleGetMuxState,
         this,
         portName
-    )));
+    ));
 }
 
 //
@@ -87,13 +86,12 @@ void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::
 {
     MUXLOGDEBUG(boost::format("%s: setting mux to %s") % portName % mMuxState[label]);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleSetMuxState,
         this,
         portName,
         label
-    )));
+    ));
 }
 
 //
@@ -105,13 +103,12 @@ void DbInterface::setPeerMuxState(const std::string &portName, mux_state::MuxSta
 {
     MUXLOGDEBUG(boost::format("%s: setting peer mux to %s") % portName % mMuxState[label]);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleSetPeerMuxState,
         this,
         portName,
         label
-    )));
+    ));
 }
 
 
@@ -124,12 +121,11 @@ void DbInterface::probeMuxState(const std::string &portName)
 {
     MUXLOGDEBUG(portName);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleProbeMuxState,
         this,
         portName
-    )));
+    ));
 }
 
 //
@@ -141,12 +137,11 @@ void DbInterface::probeForwardingState(const std::string &portName)
 {
     MUXLOGDEBUG(portName);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleProbeForwardingState,
         this,
         portName
-    )));
+    ));
 }
 
 //
@@ -158,13 +153,12 @@ void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::
 {
     MUXLOGDEBUG(boost::format("%s: setting mux linkmgr to %s") % portName % mMuxLinkmgrState[static_cast<int> (label)]);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleSetMuxLinkmgrState,
         this,
         portName,
         label
-    )));
+    ));
 }
 
 //
@@ -187,15 +181,14 @@ void DbInterface::postMetricsEvent(
         mMuxMetrics[static_cast<int> (metrics)]
     );
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handlePostMuxMetrics,
         this,
         portName,
         metrics,
         label,
         boost::posix_time::microsec_clock::universal_time()
-    )));
+    ));
 }
 
 // 
@@ -215,14 +208,13 @@ void DbInterface::postLinkProberMetricsEvent(
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &DbInterface::handlePostLinkProberMetrics,
         this,
         portName,
         metrics,
         boost::posix_time::microsec_clock::universal_time()
-    )));
+    ));
 }
 
 //
@@ -244,14 +236,13 @@ void DbInterface::postPckLossRatio(
         expectedPacketCount
     );
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand,boost::bind(
         &DbInterface::handlePostPckLossRatio,
         this,
         portName,
         unknownEventCount,
         expectedPacketCount
-    ))); 
+    ));
 }
 
 //
@@ -841,13 +832,12 @@ void DbInterface::setMuxMode(const std::string &portName, const std::string stat
 {
     MUXLOGDEBUG(portName);
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand,boost::bind(
         &DbInterface::handleSetMuxMode,
         this,
         portName,
         state
-    )));
+    ));
 }
 
 //
