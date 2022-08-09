@@ -47,6 +47,14 @@ public:
 
     void activateStateMachine();
 
+    virtual inline void postMetricsEvent(
+        link_manager::ActiveStandbyStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label
+    ) {
+        mDbInterfacePtr->handlePostMuxMetrics(mMuxPortConfig.getPortName(), metrics, label, boost::posix_time::microsec_clock::universal_time());
+    };
+    virtual inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->handleSetMuxState(mMuxPortConfig.getPortName(), label);};
+
     std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }
     const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };

@@ -512,7 +512,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     handleMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    handleMuxConfig("active", 1);
+    handleMuxConfig("active", 2);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
@@ -524,7 +524,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     VALIDATE_STATE(Unknown, Unknown, Up);
 
     // xcvrd now answers the mux probe
-    handleProbeMuxState("active", 3);
+    handleProbeMuxState("active", 4);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
@@ -549,7 +549,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     handleMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    handleMuxConfig("active", 1);
+    handleMuxConfig("active", 2);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
@@ -557,11 +557,11 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     handleMuxState("unknown", 5);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
     // xcvrd now answers the mux probe
-    handleProbeMuxState("standby", 3);
+    handleProbeMuxState("standby", 4);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
     handleMuxState("active", 3);
