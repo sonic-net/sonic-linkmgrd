@@ -38,9 +38,11 @@ FakeDbInterface::FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_se
 {
 }
 
-void FakeDbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
+void FakeDbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label)
 {
     mSetMuxStateInvokeCount++;
+
+    mDbInterfaceRaceConditionCheckFailure = false;
 }
 
 void FakeDbInterface::getMuxState(const std::string &portName)
@@ -58,13 +60,16 @@ void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manag
     mSetMuxLinkmgrStateInvokeCount++;
 }
 
-void FakeDbInterface::postMetricsEvent(
-    const std::string &portName,
-    link_manager::LinkManagerStateMachine::Metrics metrics,
-    mux_state::MuxState::Label label
+void FakeDbInterface::handlePostMuxMetrics(
+        const std::string portName,
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label,
+        boost::posix_time::ptime time
 )
 {
     mPostMetricsInvokeCount++;
+
+    mDbInterfaceRaceConditionCheckFailure = true;
 }
 
 void FakeDbInterface::postLinkProberMetricsEvent(

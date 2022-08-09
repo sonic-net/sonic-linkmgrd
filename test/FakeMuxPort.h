@@ -48,6 +48,14 @@ public:
 
     void activateStateMachine();
 
+    virtual inline void postMetricsEvent(
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label
+    ) {
+        mDbInterfacePtr->handlePostMuxMetrics(mMuxPortConfig.getPortName(), metrics, label, boost::posix_time::microsec_clock::universal_time());
+    };
+    virtual inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->handleSetMuxState(mMuxPortConfig.getPortName(), label);};
+
     const link_manager::LinkManagerStateMachine::CompositeState& getCompositeState() {return getLinkManagerStateMachine()->getCompositeState();};
     link_prober::LinkProberStateMachine& getLinkProberStateMachine() {return getLinkManagerStateMachine()->getLinkProberStateMachine();};
     mux_state::MuxStateMachine& getMuxStateMachine() {return getLinkManagerStateMachine()->getMuxStateMachine();};

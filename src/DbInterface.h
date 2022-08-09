@@ -132,7 +132,19 @@ public:
     *
     *@return none
     */
-    virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+    void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+
+    /**
+    *@method handleSetMuxState
+    *
+    *@brief set MUX state in APP DB for orchagent processing
+    *
+    *@param portName (in)   MUX/port name
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
 
     /**
     *@method probeMuxState
@@ -168,10 +180,29 @@ public:
     *
     *@return none
     */
-    virtual void postMetricsEvent(
+    void postMetricsEvent(
         const std::string &portName,
         link_manager::LinkManagerStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
+    );
+
+    /**
+    *@method handlePostMuxMetrics
+    *
+    *@brief set MUX metrics to state db
+    *
+    *@param portName (in)   MUX/port name
+    *@param metrics (in)    metrics data
+    *@param label (in)      label of target state
+    *@param time (in)       current time
+    *
+    *@return none
+    */
+    virtual void handlePostMuxMetrics(
+        const std::string portName,
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label,
+        boost::posix_time::ptime time
     );
 
     /**
@@ -311,18 +342,6 @@ private:
     void handleGetMuxState(const std::string portName);
 
     /**
-    *@method handleSetMuxState
-    *
-    *@brief set MUX state in APP DB for orchagent processing
-    *
-    *@param portName (in)   MUX/port name
-    *@param label (in)      label of target state
-    *
-    *@return none
-    */
-    void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
-
-    /**
     *@method handleProbeMuxState
     *
     *@brief trigger xcvrd to read MUX state using i2c
@@ -344,25 +363,6 @@ private:
     *@return none
     */
     void handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
-
-    /**
-    *@method handlePostMuxMetrics
-    *
-    *@brief set MUX metrics to state db
-    *
-    *@param portName (in)   MUX/port name
-    *@param metrics (in)    metrics data
-    *@param label (in)      label of target state
-    *@param time (in)       current time
-    *
-    *@return none
-    */
-    void handlePostMuxMetrics(
-        const std::string portName,
-        link_manager::LinkManagerStateMachine::Metrics metrics,
-        mux_state::MuxState::Label label,
-        boost::posix_time::ptime time
-    );
 
     /**
      * @method handlePostLinkProberMetrics
