@@ -848,6 +848,8 @@ void LinkManagerStateMachine::handleSuspendTimerExpiry()
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+    } else {
+        mUnknownActiveUpBackoffFactor = 1;
     }
 }
 
@@ -997,6 +999,12 @@ void LinkManagerStateMachine::startMuxProbeTimer(uint32_t factor)
 void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (!(ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Standby &&
+         ls(mCompositeState) == link_state::LinkState::Label::Up)) {
+             mWaitStandbyUpBackoffFactor = 1;
+    }
 
     if (errorCode == boost::system::errc::success &&
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Wait ||
@@ -1148,7 +1156,9 @@ void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
     // Suspend TX probes to help peer ToR takes over in case active link is bad
-    mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
+    mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec()*mUnknownActiveUpBackoffFactor);
+    mUnknownActiveUpBackoffFactor <<= 1;
+    mUnknownActiveUpBackoffFactor = mUnknownActiveUpBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mUnknownActiveUpBackoffFactor;
     mWaitActiveUpCount = 0;
 }
 
@@ -1285,7 +1295,7 @@ void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(Co
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mWaitActiveUpCount > 7? MAX_BACKOFF_FACTOR : (1<<mWaitActiveUpCount));
 
     if (mWaitActiveUpCount++ & 0x1) {
         mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
@@ -1301,7 +1311,9 @@ void LinkManagerStateMachine::LinkProberWaitMuxStandbyLinkUpTransitionFunction(C
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mWaitStandbyUpBackoffFactor);
+    mWaitStandbyUpBackoffFactor <<= 1;
+    mWaitStandbyUpBackoffFactor = mWaitStandbyUpBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mWaitStandbyUpBackoffFactor;
 }
 
 //
