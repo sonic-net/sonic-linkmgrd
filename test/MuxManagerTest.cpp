@@ -1010,8 +1010,8 @@ TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
         postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
         setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
         
-        // wait for handler to be completed 
-        usleep(1000);
+        // wait 10ms for handler to be completed 
+        usleep(10000);
         EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
         EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, i+1);
         EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, i+1);
