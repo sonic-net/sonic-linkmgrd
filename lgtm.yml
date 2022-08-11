@@ -50,6 +50,7 @@ extraction:
       - "libnl-genl-3-200"
       - "libnl-nf-3-200"
       - "libnl-genl-3-dev"
+      - "uuid-dev"
     after_prepare:
     - "export GNU_MAKE=make"
     - "git clone https://github.com/Azure/sonic-swss-common; pushd sonic-swss-common; ./autogen.sh; fakeroot dpkg-buildpackage -us -uc -b; popd"
