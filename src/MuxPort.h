@@ -110,7 +110,7 @@ public:
     *
     *@return none
     */
-    inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
+    virtual inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
 
     /**
     *@method getMuxState
@@ -157,7 +157,7 @@ public:
     *
     *@return none
     */
-    inline void postMetricsEvent(
+    virtual inline void postMetricsEvent(
         link_manager::LinkManagerStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     ) {
