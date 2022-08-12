@@ -999,22 +999,22 @@ TEST_F(MuxManagerTest, TsaEnable)
 
 TEST_F(MuxManagerTest, DbInterfaceRaceConditionCheck)
 {
+    createPort("Ethernet0");
+
     // create thread pool
     initializeThread();
-
-    createPort("Ethernet0");
 
     uint32_t TOGGLE_COUNT = 1000;
 
     for (uint32_t i=0; i<TOGGLE_COUNT; i++) {
         postMetricsEvent("Ethernet0", mux_state::MuxState::Label::Active);
         setMuxState("Ethernet0", mux_state::MuxState::Label::Active);
-        
-        // wait 10ms for handler to be completed 
-        usleep(10000);
+
+        // wait for handlers to be completed 
+        while(mDbInterfacePtr->mSetMuxStateInvokeCount != i+1 || mDbInterfacePtr->mPostMetricsInvokeCount != i+1) {
+            usleep(10000);
+        }
         EXPECT_FALSE(mDbInterfacePtr->mDbInterfaceRaceConditionCheckFailure);
-        EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, i+1);
-        EXPECT_EQ(mDbInterfacePtr->mPostMetricsInvokeCount, i+1);
     }
 
     terminate();
