@@ -841,7 +841,7 @@ private:
     // for communicating with orchagent
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;
     // for communication with driver (setting peer's forwarding state)
-    std::shared_ptr<swss::ProducerStateTable> mAppDbPeerMuxTablePtr;
+    std::shared_ptr<swss::Table> mAppDbPeerMuxTablePtr;
     // for communicating with the driver (probing the mux)
     std::shared_ptr<swss::Table> mAppDbMuxCommandTablePtr;
     // for communication with the driver (probing forwarding state)
