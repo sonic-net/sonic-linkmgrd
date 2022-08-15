@@ -43,7 +43,7 @@ public:
     void handleProbeMuxState(std::string, uint32_t count = 0);
     void handleLinkState(std::string linkState, uint32_t count = 0);
     void handleMuxConfig(std::string config, uint32_t count = 0);
-    void activateStateMachine();
+    void activateStateMachine(bool enable_feature_default_route=false);
     void setMuxActive();
     void setMuxStandby();
     void postDefaultRouteEvent(std::string routeState, uint32_t count = 0);
