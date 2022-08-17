@@ -172,6 +172,7 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
         mProbePeerTorFnPtr();
         mResumeTxFnPtr();
         postMuxStateEvent(label);
+        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
     } else {
         if (label == mux_state::MuxState::Unknown) {
             // probe xcvrd to read the current mux state
@@ -829,6 +830,7 @@ void ActiveActiveStateMachine::switchMuxState(
         }
         enterMuxState(nextState, label);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
+        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mMuxPortPtr->setMuxState(label);
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
