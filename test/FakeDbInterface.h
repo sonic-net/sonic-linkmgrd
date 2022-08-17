@@ -43,7 +43,7 @@ public:
     virtual void handleProbeForwardingState(const std::string portName) override;
     virtual void setMuxLinkmgrState(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::Label label
+        link_manager::LinkManagerStateMachineBase::Label label
     ) override;
     virtual void handlePostMuxMetrics(
         const std::string portName,
@@ -76,6 +76,7 @@ public:
 
     mux_state::MuxState::Label mLastSetMuxState;
     mux_state::MuxState::Label mLastSetPeerMuxState;
+    link_manager::LinkManagerStateMachineBase::Label mLastSetMuxLinkmgrState;
 
     uint32_t mSetMuxStateInvokeCount = 0;
     uint32_t mSetPeerMuxStateInvokeCount = 0;

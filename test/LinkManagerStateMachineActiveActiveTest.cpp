@@ -213,9 +213,10 @@ void LinkManagerStateMachineActiveActiveTest::handleMuxConfig(std::string config
     runIoService(count);
 }
 
-void LinkManagerStateMachineActiveActiveTest::activateStateMachine()
+void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_feature_default_route)
 {
     mFakeMuxPort.activateStateMachine();
+    mMuxConfig.enableDefaultRouteFeature(enable_feature_default_route);
 }
 
 void LinkManagerStateMachineActiveActiveTest::setMuxActive()
@@ -566,6 +567,25 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
     handleMuxState("active", 3);
     VALIDATE_STATE(Unknown, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceWriteActive)
+{
+    activateStateMachine(true);
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+
+    postDefaultRouteEvent("ok", 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
 }
 
 } /* namespace test */
