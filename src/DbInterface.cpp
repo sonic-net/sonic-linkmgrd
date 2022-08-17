@@ -259,7 +259,7 @@ void DbInterface::initialize()
         mAppDbMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
             mAppDbPtr.get(), APP_MUX_CABLE_TABLE_NAME
         );
-        mAppDbPeerMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
+        mAppDbPeerMuxTablePtr = std::make_shared<swss::Table> (
             mAppDbPtr.get(), APP_PEER_HW_FORWARDING_STATE_TABLE_NAME
         );
         mAppDbMuxCommandTablePtr = std::make_shared<swss::Table> (
@@ -360,10 +360,7 @@ void DbInterface::handleSetPeerMuxState(const std::string portName, mux_state::M
     MUXLOGDEBUG(boost::format("%s: setting peer mux state to %s") % portName % mMuxState[label]);
 
     if (label <= mux_state::MuxState::Label::Unknown) {
-        std::vector<swss::FieldValueTuple> values = {
-            {"state", mMuxState[label]},
-        };
-        mAppDbPeerMuxTablePtr->set(portName, values);
+        mAppDbPeerMuxTablePtr->hset(portName, "state", mMuxState[label]);
     }
 }
 
