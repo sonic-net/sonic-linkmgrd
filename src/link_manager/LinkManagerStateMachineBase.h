@@ -120,6 +120,18 @@ public:
 class LinkManagerStateMachineBase : public common::StateMachine {
 public:
     /**
+     *@enum Metrics
+     *
+     *@brief Metrics Data to be written to MUX_METRICS state db table
+     */
+    enum class Metrics {
+        SwitchingStart,
+        SwitchingEnd,
+
+        Count
+    };
+    
+    /**
      *@enum Label
      *
      *@brief Label corresponding to each LINKMGR Health State

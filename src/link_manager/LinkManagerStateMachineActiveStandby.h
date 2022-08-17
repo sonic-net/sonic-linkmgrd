@@ -64,18 +64,6 @@ class ActiveStandbyStateMachine: public LinkManagerStateMachineBase,
                                public std::enable_shared_from_this<ActiveStandbyStateMachine>
 {
 public:
-    /**
-     *@enum Metrics
-     *
-     *@brief Metrics Data to be written to MUX_METRICS state db table
-     */
-    enum class Metrics {
-        SwitchingStart,
-        SwitchingEnd,
-
-        Count
-    };
-
     enum class LinkProberMetrics {
         LinkProberUnknownStart, 
         LinkProberUnknownEnd,
