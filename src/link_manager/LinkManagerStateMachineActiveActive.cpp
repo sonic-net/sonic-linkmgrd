@@ -1070,6 +1070,7 @@ void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const Default
 
     mDefaultRouteState = routeState;
     shutdownOrRestartLinkProberOnDefaultRoute();
+    updateMuxLinkmgrState();
 }
 
 //

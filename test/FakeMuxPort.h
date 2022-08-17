@@ -57,7 +57,7 @@ public:
 
     std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }
-    const link_manager::ActiveStandbyStateMachine::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };
+    const link_manager::LinkManagerStateMachineBase::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };
     link_prober::LinkProberStateMachineBase* getLinkProberStateMachinePtr() { return getLinkManagerStateMachinePtr()->getLinkProberStateMachinePtr().get(); };
     mux_state::MuxStateMachine& getMuxStateMachine() { return getLinkManagerStateMachinePtr()->getMuxStateMachine(); };
     link_state::LinkStateMachine& getLinkStateMachine() { return getLinkManagerStateMachinePtr()->getLinkStateMachine(); };
