@@ -49,6 +49,7 @@ jobs:
           libboost-graph-parallel-dev \
           libboost-log-dev \
           libboost-regex-dev \
+          libboost-serialization-dev \
           googletest \
           libgtest-dev \
           libgmock-dev \
@@ -69,7 +70,8 @@ jobs:
       project: build
       pipeline: 9
       artifact: sonic-swss-common
-      runVersion: 'latestFromBranch'
+      runVersion: 'specific'
+      runId: 128696
       runBranch: 'refs/heads/master'
       path: '$(Build.SourcesDirectory)/sonic-swss-common'
     displayName: "Download sonic swss common deb packages"
@@ -118,6 +120,7 @@ jobs:
           libboost-graph-parallel-dev \
           libboost-log-dev \
           libboost-regex-dev \
+          libboost-serialization-dev \
           googletest \
           libgtest-dev \
           libhiredis0.14 \
@@ -137,7 +140,8 @@ jobs:
       project: build
       pipeline: 9
       artifact: sonic-swss-common.arm64
-      runVersion: 'latestFromBranch'
+      runVersion: 'specific'
+      runId: 128696
       runBranch: 'refs/heads/master'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.arm64'
     displayName: "Download sonic swss common deb packages"
@@ -181,6 +185,7 @@ jobs:
           libboost-graph-parallel-dev \
           libboost-log-dev \
           libboost-regex-dev \
+          libboost-serialization-dev \
           googletest \
           libgtest-dev \
           libhiredis0.14 \
@@ -200,7 +205,8 @@ jobs:
       project: build
       pipeline: 9
       artifact: sonic-swss-common.armhf
-      runVersion: 'latestFromBranch'
+      runVersion: 'specific'
+      runId: 128696
       runBranch: 'refs/heads/master'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.armhf'
     displayName: "Download sonic swss common deb packages"
