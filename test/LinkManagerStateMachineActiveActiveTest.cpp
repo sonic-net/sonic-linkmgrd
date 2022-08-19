@@ -324,15 +324,8 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
     VALIDATE_STATE(Active, Standby, Up);
 
     handleMuxConfig("auto", 1);
-    handleProbeMuxState("standby", 3);
-    VALIDATE_STATE(Unknown, Standby, Up);
-
-    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
-    VALIDATE_STATE(Active, Active, Up);
-
-    handleMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 

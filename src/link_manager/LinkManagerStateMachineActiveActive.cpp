@@ -215,21 +215,19 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
 {
     if (mComponentInitState.all()) {
         CompositeState nextState = mCompositeState;
+        mMuxPortConfig.setMode(mode);
         if (mode == common::MuxPortConfig::Mode::Active && ms(mCompositeState) != mux_state::MuxState::Label::Active) {
-            switchMuxState(nextState, mux_state::MuxState::Label::Active);
+            switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
         } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
-            switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         } else {
-            // enforce link prober state to match mux state to trigger possible transitions
-            initLinkProberState(nextState);
-            probeMuxState();
+            // enforce a state transtion calculation based on current states
+            mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
         updateMuxLinkmgrState();
     }
-
-    mMuxPortConfig.setMode(mode);
     shutdownOrRestartLinkProberOnDefaultRoute();
 }
 
