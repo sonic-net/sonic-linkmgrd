@@ -140,13 +140,7 @@ void LinkProber::initialize()
         throw MUX_ERROR(SocketError, errMsg.str());
     }
 
-    SockAddrLinkLayer addr;
-#ifdef __STDC_LIB_EXT1__
-    memset_s(&addr, sizeof(addr), 0, sizeof(addr));
-#else
-    memset(&addr, 0, sizeof(addr));
-#endif
-
+    SockAddrLinkLayer addr = {0};
     addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_ALL);
