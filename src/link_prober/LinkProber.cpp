@@ -21,8 +21,6 @@
  *      Author: tamer
  */
 
-#define __STDC_WANT_LIB_EXT1__ 1
-#include <string.h>
 #include <netpacket/packet.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -740,11 +738,7 @@ size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
     Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
     tlvPtr->tlvhead.type = TlvType::TLV_DUMMY;
     tlvPtr->tlvhead.length = htons(paddingSize + sizeof(uint32_t));
-#ifdef __STDC_LIB_EXT1__
-    memset_s(tlvPtr->data, sizeof(tlvPtr->data), 0, paddingSize);
-#else
     memset(tlvPtr->data, 0, paddingSize);
-#endif
     *(reinterpret_cast<uint32_t *> (tlvPtr->data + paddingSize)) = htonl(seqNo);
     mTxPacketSize += tlvSize;
     return tlvSize;
