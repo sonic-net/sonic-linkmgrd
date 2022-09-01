@@ -259,6 +259,11 @@ void LinkManagerStateMachineActiveActiveTest::postDefaultRouteEvent(std::string 
     runIoService(count);
 }
 
+const common::MuxPortConfig &LinkManagerStateMachineActiveActiveTest::getMuxPortConfig()
+{
+    return mFakeMuxPort.getMuxPortConfig();
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActive)
 {
     setMuxActive();
@@ -579,6 +584,13 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceWriteActiv
 
     postDefaultRouteEvent("ok", 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, SetMuxConfigAutoBeforeInit)
+{
+    EXPECT_EQ(getMuxPortConfig().getMode(), common::MuxPortConfig::Mode::Auto);
+    handleMuxConfig("active", 1);
+    EXPECT_EQ(getMuxPortConfig().getMode(), common::MuxPortConfig::Mode::Active);
 }
 
 } /* namespace test */

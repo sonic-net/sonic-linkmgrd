@@ -213,9 +213,9 @@ void ActiveActiveStateMachine::handleSwssLinkStateNotification(const link_state:
 //
 void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPortConfig::Mode mode)
 {
+    mMuxPortConfig.setMode(mode);
     if (mComponentInitState.all()) {
         CompositeState nextState = mCompositeState;
-        mMuxPortConfig.setMode(mode);
         if (mode == common::MuxPortConfig::Mode::Active && ms(mCompositeState) != mux_state::MuxState::Label::Active) {
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
         } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {

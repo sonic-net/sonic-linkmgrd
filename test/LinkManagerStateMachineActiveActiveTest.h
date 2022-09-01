@@ -47,6 +47,7 @@ public:
     void setMuxActive();
     void setMuxStandby();
     void postDefaultRouteEvent(std::string routeState, uint32_t count = 0);
+    const common::MuxPortConfig &getMuxPortConfig();
 
 public:
     boost::asio::io_service mIoService;
