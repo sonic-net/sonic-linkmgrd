@@ -130,6 +130,11 @@ LinkProber::LinkProber(
 //
 void LinkProber::initialize()
 {
+    SockAddrLinkLayer addr = {0};
+    addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
+    addr.sll_family = AF_PACKET;
+    addr.sll_protocol = htons(ETH_P_ALL);
+
     mSocket = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
     if (mSocket < 0) {
         std::ostringstream errMsg;
@@ -138,10 +143,6 @@ void LinkProber::initialize()
         throw MUX_ERROR(SocketError, errMsg.str());
     }
 
-    SockAddrLinkLayer addr = {0};
-    addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
-    addr.sll_family = AF_PACKET;
-    addr.sll_protocol = htons(ETH_P_ALL);
     if (bind(mSocket, (struct sockaddr *) &addr, sizeof(addr))) {
         std::ostringstream errMsg;
         errMsg << "Failed to bind to interface '" << mMuxPortConfig.getPortName() << "' with '"
