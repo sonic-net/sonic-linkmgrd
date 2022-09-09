@@ -215,8 +215,8 @@ void LinkManagerStateMachineActiveActiveTest::handleMuxConfig(std::string config
 
 void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_feature_default_route)
 {
-    mFakeMuxPort.activateStateMachine();
     mMuxConfig.enableDefaultRouteFeature(enable_feature_default_route);
+    mFakeMuxPort.activateStateMachine();
 }
 
 void LinkManagerStateMachineActiveActiveTest::setMuxActive()
