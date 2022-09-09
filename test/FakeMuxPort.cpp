@@ -139,6 +139,10 @@ void FakeMuxPort::activateStateMachine()
     setComponentInitState(0);
     setComponentInitState(1);
     setComponentInitState(2);
+
+    if (mMuxPortConfig.ifEnableDefaultRouteFeature() == true){
+        mFakeLinkProber->shutdownTxProbes();
+    }
 }
 
 } /* namespace test */
