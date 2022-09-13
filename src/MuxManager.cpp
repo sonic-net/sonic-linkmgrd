@@ -522,13 +522,11 @@ void MuxManager::updateWarmRestartReconciliationCount(int increment)
 {
     MUXLOGDEBUG(increment);
 
-    boost::asio::io_service &ioService = mStrand.context();
-
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand,boost::bind(
         &MuxManager::handleUpdateReconciliationCount,
         this,
         increment
-    )));
+    ));
 }
 
 // ---> handleUpdateReconciliationCount(int increment);
@@ -555,11 +553,11 @@ void MuxManager::startWarmRestartReconciliationTimer(uint32_t timeout)
     mReconciliationTimer.expires_from_now(boost::posix_time::seconds(
         timeout == 0? mMuxConfig.getMuxReconciliationTimeout_sec():timeout
     ));
-    mReconciliationTimer.async_wait(mStrand.wrap(boost::bind(
+    mReconciliationTimer.async_wait(boost::bind(
         &MuxManager::handleWarmRestartReconciliationTimeout,
         this,
         boost::asio::placeholders::error
-    )));
+    ));
 }
 
 // ---> handleWarmRestartReconciliationTimeout
