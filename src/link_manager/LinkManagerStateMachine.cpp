@@ -482,7 +482,9 @@ void LinkManagerStateMachine::activateStateMachine()
         mStartProbingFnPtr();
 
         updateMuxLinkmgrState();
+    }
 
+    if (mComponentInitState.test(LinkProberComponent) && mComponentInitState.test(MuxStateComponent)) {
         mMuxPortPtr->warmRestartReconciliation();
     }
 }
