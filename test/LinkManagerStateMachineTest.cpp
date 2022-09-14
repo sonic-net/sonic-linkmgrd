@@ -468,6 +468,29 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveCliStandby)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyRecvSwitchActiveTlv)
+{
+    setMuxStandby();
+
+    mFakeMuxPort.mFakeLinkProber->handleSwitchCommandRecv();
+    runIoService(2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mPostSwitchCauseInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::TlvSwitchActiveCommand);
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    // change state to active
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("active", 4);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
 {
     setMuxStandby();
