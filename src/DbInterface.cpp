@@ -205,7 +205,7 @@ void DbInterface::postSwitchCause(
         link_manager::ActiveStandbyStateMachine::SwitchCause cause
 )
 {
-    MUXLOGWARNING(boost::format("%s: post switch cause %s") %
+    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
         portName %
         mActiveStandbySwitchCause[static_cast<int>(cause)]
     );
@@ -234,7 +234,7 @@ void DbInterface::handlePostSwitchCause(
         boost::posix_time::ptime time
 )
 {
-    MUXLOGWARNING(boost::format("%s: post switch cause %s") %
+    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
         portName %
         mActiveStandbySwitchCause[static_cast<int>(cause)]
     );
