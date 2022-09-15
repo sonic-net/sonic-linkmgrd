@@ -51,6 +51,8 @@ extraction:
       - "libnl-nf-3-200"
       - "libnl-genl-3-dev"
       - "uuid-dev"
+      - "libyang"
+      - "libyang-dev"
     after_prepare:
     - "export GNU_MAKE=make"
     - "git clone https://github.com/Azure/sonic-swss-common; pushd sonic-swss-common; ./autogen.sh; fakeroot dpkg-buildpackage -us -uc -b; popd"
