@@ -177,6 +177,17 @@ void LinkManagerStateMachineBase::handleUseWellKnownMacAddressNotification()
 }
 
 //
+// ---> handleControlPlaneConnectionFailure();
+//
+// handle control plane connection failure
+//
+void LinkManagerStateMachineBase::handleControlPlaneConnectionFailure()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+
+}
+
+//
 // ---> handleGetMuxStateNotification(mux_state::MuxState::Label label);
 //
 // handle get MUX state notification
