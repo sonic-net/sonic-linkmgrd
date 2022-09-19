@@ -588,4 +588,19 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, SetMuxConfigAutoBeforeInit)
     EXPECT_EQ(getMuxPortConfig().getMode(), common::MuxPortConfig::Mode::Active);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, GrpcTransientFailure)
+{
+    activateStateMachine();
+
+    postLinkEvent(link_state::LinkState::Up);
+    handleMuxState("active", 3);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 4);
+    VALIDATE_STATE(Active, Active, Up);
+
+    mIoService.restart();
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, 0);
+    handleProbeMuxState("failure", 2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, 1);
+}
+
 } /* namespace test */
