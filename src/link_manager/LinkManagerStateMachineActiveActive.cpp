@@ -283,10 +283,17 @@ void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxSta
 void ActiveActiveStateMachine::handleControlPlaneConnectionFailure()
 {
     // If mWaitTimer is expired, no gRPC request in on-going, trigger a mux probe immediately. 
-    uint32_t expiryTime = mWaitTimer.expires_from_now().total_milliseconds();
+    auto expiryTime = mWaitTimer.expires_at();
+    auto now = boost::posix_time::microsec_clock::universal_time();
 
-    MUXLOGWARNING(boost::format("%s: lost gRPC connection, expiry time: %d.") % mMuxPortConfig.getPortName() % expiryTime);
-    if(expiryTime == 0) {
+    MUXLOGWARNING(boost::format("%s: lost gRPC connection, expiry time: %s, now: %s") 
+        % mMuxPortConfig.getPortName() 
+        % boost::posix_time::to_simple_string(expiryTime) 
+        % boost::posix_time::to_simple_string(now)
+    );
+    
+    if(expiryTime.is_not_a_date_time() || expiryTime < now) {
+        MUXLOGWARNING("");
         probeMuxState();
     }
 }
