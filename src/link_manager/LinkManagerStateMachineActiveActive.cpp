@@ -286,14 +286,15 @@ void ActiveActiveStateMachine::handleControlPlaneConnectionFailure()
     auto expiryTime = mWaitTimer.expires_at();
     auto now = boost::posix_time::microsec_clock::universal_time();
 
-    MUXLOGWARNING(boost::format("%s: lost gRPC connection, expiry time: %s, now: %s") 
+    MUXLOGINFO(boost::format("%s: lost gRPC connection, expiry time: %s, now: %s") 
         % mMuxPortConfig.getPortName() 
         % boost::posix_time::to_simple_string(expiryTime) 
         % boost::posix_time::to_simple_string(now)
     );
     
     if(expiryTime.is_not_a_date_time() || expiryTime < now) {
-        MUXLOGWARNING("");
+        MUXLOGDEBUG("");
+        
         probeMuxState();
     }
 }
