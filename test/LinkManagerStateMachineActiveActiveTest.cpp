@@ -452,13 +452,8 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatF
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
 
-    // now linkmgrd should be stuck in mux wait timeout
-
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Active, Unknown, Up);
-
-    // now linkmgrd should be stuck in mux probe timeout
-    runIoService(4);
 
     // xcvrd now answers the mux probe
     handleProbeMuxState("active", 4);
@@ -519,7 +514,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxConfigA
     handleMuxState("unknown", 5);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
     // xcvrd now answers the mux probe
