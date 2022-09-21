@@ -144,6 +144,18 @@ public:
         Count
     };
 
+    enum class SwitchCause {
+        PeerHeartbeatMissing,
+        PeerLinkDown,
+        TlvSwitchActiveCommand,
+        LinkDown,
+        TransceiverDaemonTimeout,
+        MatchingHardwareState,
+        ConfigMuxMode,
+
+        Count
+    };
+
 private:
     /**
      *@enum anonymous
@@ -350,7 +362,7 @@ private:
     *
     *@return none
     */
-    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
+    inline void switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause cause, CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
 public:
     /**
@@ -1061,6 +1073,8 @@ private:
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
+    
+    link_manager::ActiveStandbyStateMachine::SwitchCause mSendSwitchActiveCommandCause;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;

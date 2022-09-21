@@ -165,6 +165,21 @@ public:
     };
 
     /**
+     * @method postSwitchCause
+     * 
+     * @brief post mux switch cause 
+     * 
+     * @param cause (in) switch cause to post 
+     * 
+     * @return none
+     */
+    virtual inline void postSwitchCause(
+        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+    ) {
+        mDbInterfacePtr->postSwitchCause(mMuxPortConfig.getPortName(), cause);
+    };
+
+    /**
      * @method postLinkProberMetricsEvent
      * 
      * @brief post link prober pck loss event

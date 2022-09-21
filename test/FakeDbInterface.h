@@ -61,6 +61,10 @@ public:
     virtual bool isWarmStart() override;
     virtual uint32_t getWarmStartTimer() override;
     virtual void setWarmStartStateReconciled() override; 
+    virtual void postSwitchCause(
+        const std::string &portName,
+        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+    ) override;
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
 
@@ -82,6 +86,9 @@ public:
     uint64_t mExpectedPacketCount = 0;
     uint32_t mSetMuxModeInvokeCount = 0;
     uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
+    uint32_t mPostSwitchCauseInvokeCount = 0;
+
+    link_manager::ActiveStandbyStateMachine::SwitchCause mLastPostedSwitchCause;
     
     bool mWarmStartFlag = false;
 

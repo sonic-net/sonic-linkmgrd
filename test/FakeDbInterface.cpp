@@ -110,4 +110,13 @@ void FakeDbInterface::setWarmStartStateReconciled()
     mSetWarmStartStateReconciledInvokeCount++;
 }
 
+void FakeDbInterface::postSwitchCause(
+    const std::string &portName,
+    link_manager::ActiveStandbyStateMachine::SwitchCause cause
+)
+{
+    mPostSwitchCauseInvokeCount++;
+    mLastPostedSwitchCause = cause;
+}
+
 } /* namespace test */
