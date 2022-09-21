@@ -33,7 +33,6 @@ namespace link_manager
 
 constexpr auto MAX_BACKOFF_FACTOR = 128;
 
-
 //
 // ---> ActiveStandbyStateMachine(
 //          mux::MuxPort *muxPortPtr,
