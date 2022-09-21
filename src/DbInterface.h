@@ -54,6 +54,8 @@ namespace mux
 #define APP_PEER_HW_FORWARDING_STATE_TABLE_NAME    "HW_FORWARDING_STATE_PEER"
 #define STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME   "HW_MUX_CABLE_TABLE_PEER"
 
+#define STATE_MUX_SWITCH_CAUSE_TABLE_NAME "MUX_SWITCH_CAUSE"
+
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
 
@@ -231,6 +233,36 @@ public:
         const std::string portName,
         link_manager::ActiveStandbyStateMachine::Metrics metrics,
         mux_state::MuxState::Label label,
+        boost::posix_time::ptime time
+    );
+
+    /**
+     * @method postSwitchCause
+     * 
+     * @param portName (in) port name
+     * @param cause (in) switch cause 
+     * 
+     * @return none
+     */
+    virtual void postSwitchCause(
+        const std::string &portName,
+        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+    );
+
+    /**
+     * @method handlePostSwitchCause
+     * 
+     * @brief post switch cause to state db 
+     * 
+     * @param portName (in) port Name
+     * @param cause (in) switch cause to post
+     * @param time (in) current time
+     * 
+     * @return none
+     */
+    void handlePostSwitchCause(
+        const std::string &portName,
+        link_manager::ActiveStandbyStateMachine::SwitchCause cause,
         boost::posix_time::ptime time
     );
 
@@ -829,6 +861,7 @@ private:
     static std::vector<std::string> mMuxLinkmgrState;
     static std::vector<std::string> mMuxMetrics;
     static std::vector<std::string> mLinkProbeMetrics;
+    static std::vector<std::string> mActiveStandbySwitchCause;
 
 private:
     mux::MuxManager *mMuxManagerPtr;
@@ -852,6 +885,8 @@ private:
     std::shared_ptr<swss::Table> mStateDbMuxMetricsTablePtr;
     // for writing link probe statistics data
     std::shared_ptr<swss::Table> mStateDbLinkProbeStatsTablePtr;
+    // for writing mux switch reason to state db 
+    std::shared_ptr<swss::Table> mStateDbSwitchCauseTablePtr;
 
     std::shared_ptr<boost::thread> mSwssThreadPtr;
 
