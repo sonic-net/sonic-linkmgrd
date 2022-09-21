@@ -177,11 +177,11 @@ void LinkManagerStateMachineBase::handleUseWellKnownMacAddressNotification()
 }
 
 //
-// ---> handleControlPlaneConnectionFailure();
+// ---> handleProbeMuxFailure();
 //
 // handle control plane connection failure
 //
-void LinkManagerStateMachineBase::handleControlPlaneConnectionFailure()
+void LinkManagerStateMachineBase::handleProbeMuxFailure()
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 

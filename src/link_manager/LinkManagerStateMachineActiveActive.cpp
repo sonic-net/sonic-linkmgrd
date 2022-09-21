@@ -276,11 +276,11 @@ void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxSta
 }
 
 //
-// ---> handleControlPlaneConnectionFailure();
+// ---> handleProbeMuxFailure();
 //
 // handle gRPC connection failure 
 //
-void ActiveActiveStateMachine::handleControlPlaneConnectionFailure()
+void ActiveActiveStateMachine::handleProbeMuxFailure()
 {
     // If mWaitTimer is expired, no gRPC request in on-going, trigger a mux probe immediately. 
     auto expiryTime = mWaitTimer.expires_at();
@@ -293,8 +293,8 @@ void ActiveActiveStateMachine::handleControlPlaneConnectionFailure()
     );
     
     if(expiryTime.is_not_a_date_time() || expiryTime < now) {
-        MUXLOGDEBUG("");
-        
+        MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
         probeMuxState();
     }
 }

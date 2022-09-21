@@ -257,7 +257,7 @@ void MuxPort::handleProbeMuxState(const std::string &muxState)
     } else if (muxState == "failure" && mMuxPortConfig.getPortCableType() == common::MuxPortConfig::PortCableType::ActiveActive) {
         // gRPC connection failure for for active-active interfaces 
         boost::asio::post(mStrand, boost::bind(
-            &link_manager::LinkManagerStateMachineBase::handleControlPlaneConnectionFailure,
+            &link_manager::LinkManagerStateMachineBase::handleProbeMuxFailure,
             mLinkManagerStateMachinePtr.get()
         ));
 
