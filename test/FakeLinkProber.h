@@ -52,6 +52,8 @@ public:
     void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
     void revertProbeIntervalAfterSwitchComplete();
     void handleSendSwitchCommand();
+    void handleSwitchCommandRecv();
+
 
 
 public:
