@@ -336,6 +336,15 @@ public:
     virtual void handleUseWellKnownMacAddressNotification();
 
     /**
+     * @method handleProbeMuxFailure
+     * 
+     * @brief handle control plane connection failure 
+     * 
+     * @return none
+     */
+    virtual void handleProbeMuxFailure();
+
+    /**
      *@method handleGetMuxStateNotification
      *
      *@brief handle get MUX state notification
