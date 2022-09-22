@@ -229,7 +229,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceRepeatedMu
     VALIDATE_STATE(Wait, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
 
-    handleProbeMuxState ("unknown", 3);
+    handleProbeMuxState ("unknown", 1);
     VALIDATE_STATE(Wait, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 2);
 }
