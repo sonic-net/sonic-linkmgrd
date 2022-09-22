@@ -180,9 +180,12 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
     } else {
         if (label == mux_state::MuxState::Unknown) {
             // probe xcvrd to read the current mux state
-            startMuxProbeTimer();
+            probeMuxState();
+            enterMuxState(mCompositeState, mux_state::MuxState::Label::Wait);
+        } else {
+            enterMuxState(mCompositeState, label);
         }
-        enterMuxState(mCompositeState, label);
+
         setComponentInitState(MuxStateComponent);
         activateStateMachine();
     }
@@ -266,10 +269,12 @@ void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxSta
                 mMuxPortConfig.getPortName() %
                 mMuxStateName[label]
             );
-            startMuxProbeTimer();
+            probeMuxState();
+            enterMuxState(mCompositeState, mux_state::MuxState::Label::Wait);
+        } else {
+            enterMuxState(mCompositeState, label);
         }
 
-        enterMuxState(mCompositeState, label);
         setComponentInitState(MuxStateComponent);
         activateStateMachine();
     }
