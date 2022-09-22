@@ -254,14 +254,21 @@ void MuxPort::handleProbeMuxState(const std::string &muxState)
         label = mux_state::MuxState::Label::Active;
     } else if (muxState == "standby") {
         label = mux_state::MuxState::Label::Standby;
+    } else if (muxState == "failure" && mMuxPortConfig.getPortCableType() == common::MuxPortConfig::PortCableType::ActiveActive) {
+        // gRPC connection failure for for active-active interfaces 
+        boost::asio::post(mStrand, boost::bind(
+            &link_manager::LinkManagerStateMachineBase::handleProbeMuxFailure,
+            mLinkManagerStateMachinePtr.get()
+        ));
+
+        return;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleProbeMuxStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 //

@@ -140,6 +140,15 @@ public: // db event handlers
     void handleProbeMuxStateNotification(mux_state::MuxState::Label label) override;
 
     /**
+     * @method handleProbeMuxFailure
+     * 
+     * @brief handle gRPC connection failure notification
+     * 
+     * @return none
+     */
+    void handleProbeMuxFailure() override;
+
+    /**
      * @method handlePeerMuxStateNotification
      *
      * @brief handle peer MUX state notification
