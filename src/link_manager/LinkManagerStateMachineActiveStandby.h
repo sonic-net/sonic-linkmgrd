@@ -74,6 +74,17 @@ public:
         Count
     };
 
+    enum class SwitchCause {
+        PeerHeartbeatMissing,
+        PeerLinkDown,
+        TlvSwitchActiveCommand,
+        LinkDown,
+        TransceiverDaemonTimeout,
+        MatchingHardwareState,
+        ConfigMuxMode,
+
+        Count
+    };
 public:
     /**
     *@method ActiveStandbyStateMachine
@@ -195,7 +206,7 @@ private:
     *
     *@return none
     */
-    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
+    inline void switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause cause, CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
     /**
      * @method shutdownOrRestartLinkProberOnDefaultRoute()
@@ -844,6 +855,8 @@ private:
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
+
+    link_manager::ActiveStandbyStateMachine::SwitchCause mSendSwitchActiveCommandCause;
 };
 
 } /* namespace link_manager */
