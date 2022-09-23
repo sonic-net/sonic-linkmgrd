@@ -645,7 +645,9 @@ void ActiveActiveStateMachine::initializeTransitionFunctionTable()
 void ActiveActiveStateMachine::LinkProberActiveMuxActiveLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    if (ms(mCompositeState) == mux_state::MuxState::Unknown) {
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+    } else if (ms(mCompositeState) != mux_state::MuxState::Active) {
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
     }
 }
