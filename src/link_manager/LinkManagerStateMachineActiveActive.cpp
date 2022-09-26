@@ -179,10 +179,19 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
     } else {
         if (label == mux_state::MuxState::Unknown) {
-            // probe xcvrd to read the current mux state
+            MUXLOGWARNING(
+                boost::format("%s: ycabled reports MUX state as '%s' during init. phase! Is there a functioning gRPC server?") %
+                mMuxPortConfig.getPortName() %
+                mMuxStateName[label]
+            );
+
+            // probe ycabled to read the current mux state
             probeMuxState();
+            enterMuxState(mCompositeState, mux_state::MuxState::Label::Wait);
+        } else {
+            enterMuxState(mCompositeState, label);
         }
-        enterMuxState(mCompositeState, label);
+
         setComponentInitState(MuxStateComponent);
         activateStateMachine();
     }
@@ -262,14 +271,16 @@ void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxSta
     } else {
         if (label == mux_state::MuxState::Unknown) {
             MUXLOGWARNING(
-                boost::format("%s: xcvrd reports MUX state as '%s' during init. phase! Is there a functioning MUX?") %
+                boost::format("%s: ycabled reports MUX state as '%s' during init. phase! Is there a functioning gRPC server?") %
                 mMuxPortConfig.getPortName() %
                 mMuxStateName[label]
             );
             probeMuxState();
+            enterMuxState(mCompositeState, mux_state::MuxState::Label::Wait);
+        } else {
+            enterMuxState(mCompositeState, label);
         }
 
-        enterMuxState(mCompositeState, label);
         setComponentInitState(MuxStateComponent);
         activateStateMachine();
     }
@@ -792,6 +803,12 @@ void ActiveActiveStateMachine::enterMuxState(
     mux_state::MuxState::Label label
 )
 {
+    MUXLOGDEBUG(
+        boost::format("%s: Entering MUX state to '%s'") %
+        mMuxPortConfig.getPortName() %
+        mMuxStateName[label]
+    );
+
     mMuxStateMachine.enterState(label);
     ms(nextState) = label;
 }

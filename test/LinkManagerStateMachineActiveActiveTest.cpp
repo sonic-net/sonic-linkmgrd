@@ -219,6 +219,21 @@ void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_f
     mFakeMuxPort.activateStateMachine();
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceRepeatedMuxUnkown)
+{
+    // This unit test needs to run before any execution activatestateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    handleMuxState("unknown", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState ("unknown", 1);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 2);
+}
+
 void LinkManagerStateMachineActiveActiveTest::setMuxActive()
 {
     activateStateMachine();
