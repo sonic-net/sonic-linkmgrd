@@ -832,11 +832,11 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
 {
     setMuxStandby();
 
-    postMuxEvent(mux_state::MuxState::Unknown, 2);
+    postMuxEvent(mux_state::MuxState::Unknown, 3);
     VALIDATE_STATE(Standby, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Standby, Wait, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
@@ -903,11 +903,11 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
 {
     setMuxStandby();
 
-    postMuxEvent(mux_state::MuxState::Unknown, 2);
+    postMuxEvent(mux_state::MuxState::Unknown, 3);
     VALIDATE_STATE(Standby, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Standby, Wait, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
