@@ -948,7 +948,7 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
 
 }
 
-TEST_F(LinkManagerStateMachineTest, MuxUnknownGetMuxStateActive)
+TEST_F(LinkManagerStateMachineTest, MuxUnknownGetMuxStateStandby)
 {
     setMuxActive();
 
@@ -956,9 +956,16 @@ TEST_F(LinkManagerStateMachineTest, MuxUnknownGetMuxStateActive)
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    // even get mux state "active" in state db, which is mismatching from "unknown", LinkManager shouldn't switch to "unknown"
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    // even get mux state "standby" in state db, which is mismatching from "unknown", LinkManager shouldn't switch to "unknown"
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleGetMuxState("active", 2);
+    handleGetMuxState("standby", 2);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
 }
 
