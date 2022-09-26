@@ -362,7 +362,7 @@ private:
     *
     *@return none
     */
-    inline void switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause cause, CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
+    inline void switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause cause, CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
 public:
     /**
@@ -1074,7 +1074,7 @@ private:
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
     
-    link_manager::ActiveStandbyStateMachine::SwitchCause mSendSwitchActiveCommandCause;
+    link_manager::LinkManagerStateMachine::SwitchCause mSendSwitchActiveCommandCause;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Label::Uninitialized;

@@ -161,14 +161,14 @@ void DbInterface::postMetricsEvent(
 //
 // ---> void postSwitchCause(
 //         const std::string &portName,
-//         link_manager::ActiveStandbyStateMachine::SwitchCause cause)
+//         link_manager::LinkManagerStateMachine::SwitchCause cause)
 //     );
 //
 // post switch cause
 //
 void DbInterface::postSwitchCause(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+        link_manager::LinkManagerStateMachine::SwitchCause cause
 )
 {
     MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
@@ -188,7 +188,7 @@ void DbInterface::postSwitchCause(
 //
 // ---> void handlePostSwitchCause(
 //          const std::string portName,
-//          link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+//          link_manager::LinkManagerStateMachine::SwitchCause cause,
 //          boost::posix_time::ptime time
 //      );
 //
@@ -196,7 +196,7 @@ void DbInterface::postSwitchCause(
 //
 void DbInterface::handlePostSwitchCause(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+        link_manager::LinkManagerStateMachine::SwitchCause cause,
         boost::posix_time::ptime time
 )
 {

@@ -348,8 +348,8 @@ void LinkManagerStateMachine::enterMuxWaitState(CompositeState &nextState)
 //
 // switch Mux to switch via xcvrd to state label provider
 //
-void ActiveStandbyStateMachine::switchMuxState(
-    link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+void LinkManagerStateMachine::switchMuxState(
+    link_manager::LinkManagerStateMachine::SwitchCause cause,
     CompositeState &nextState,
     mux_state::MuxState::Label label,
     bool forceSwitch
@@ -606,7 +606,7 @@ void LinkManagerStateMachine::handleStateChange(LinkStateEvent &event, link_stat
                    ls(nextState) == link_state::LinkState::Down &&
                    ms(mCompositeState) == mux_state::MuxState::Label::Active) {
             // switch MUX to standby since we are entering LinkDown state
-            switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
+            switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
         }
@@ -665,7 +665,7 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
             mMuxStateName[label] %
             mMuxStateName[ms(mCompositeState)]
         );
-        switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::MatchingHardwareState, mCompositeState, ms(mCompositeState), true);
+        switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::MatchingHardwareState, mCompositeState, ms(mCompositeState), true);
     }
 }
 
@@ -781,7 +781,7 @@ void LinkManagerStateMachine::handlePeerLinkStateNotification(const link_state::
         CompositeState nextState = mCompositeState;
         enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
         if (mDefaultRouteState == DefaultRoute::OK) {
-            switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::PeerLinkDown, nextState, mux_state::MuxState::Label::Active);
+            switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::PeerLinkDown, nextState, mux_state::MuxState::Label::Active);
         }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
@@ -816,12 +816,12 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
                 ms(mCompositeState) != mux_state::MuxState::Label::Active) {
             CompositeState nextState = mCompositeState;
             enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-            switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::ConfigMuxMode, nextState, mux_state::MuxState::Label::Active);
+            switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::ConfigMuxMode, nextState, mux_state::MuxState::Label::Active);
             LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
             mCompositeState = nextState;
         } else if(mode == common::MuxPortConfig::Mode::Standby &&
                     ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
-            mSendSwitchActiveCommandCause = link_manager::ActiveStandbyStateMachine::SwitchCause::ConfigMuxMode;
+            mSendSwitchActiveCommandCause = link_manager::LinkManagerStateMachine::SwitchCause::ConfigMuxMode;
             mSendPeerSwitchCommandFnPtr();
         } else {
             mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
@@ -889,7 +889,7 @@ void LinkManagerStateMachine::handleSwitchActiveRequestEvent()
         ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
         CompositeState nextState = mCompositeState;
         enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-        switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::TlvSwitchActiveCommand, nextState, mux_state::MuxState::Label::Active);
+        switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::TlvSwitchActiveCommand, nextState, mux_state::MuxState::Label::Active);
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
@@ -1056,7 +1056,7 @@ void LinkManagerStateMachine::handleMuxWaitTimeout(boost::system::error_code err
         } else if (mMuxStateMachine.getWaitStateCause() == mux_state::WaitState::WaitStateCause::DriverUpdate) {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "xcvrd timed out responding to linkmgrd", mCompositeState);
             // send switch active command to peer
-            mSendSwitchActiveCommandCause = link_manager::ActiveStandbyStateMachine::SwitchCause::TransceiverDaemonTimeout;
+            mSendSwitchActiveCommandCause = link_manager::LinkManagerStateMachine::SwitchCause::TransceiverDaemonTimeout;
             mSendPeerSwitchCommandFnPtr();
         } else {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "Unknown timeout reason!!!", mCompositeState);
@@ -1207,7 +1207,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunctio
 
     // Start switching MUX to active state as we lost HB from active ToR
     if (mDefaultRouteState == DefaultRoute::OK) {
-        switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing, nextState, mux_state::MuxState::Label::Active);
+        switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::PeerHeartbeatMissing, nextState, mux_state::MuxState::Label::Active);
     }
     mDeadlineTimer.cancel();
     mWaitActiveUpCount = 0;

@@ -217,7 +217,7 @@ public:
      */
     virtual void postSwitchCause(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+        link_manager::LinkManagerStateMachine::SwitchCause cause
     );
 
     /**
@@ -233,7 +233,7 @@ public:
      */
     void handlePostSwitchCause(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+        link_manager::LinkManagerStateMachine::SwitchCause cause,
         boost::posix_time::ptime time
     );
 

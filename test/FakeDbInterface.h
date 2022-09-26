@@ -63,7 +63,7 @@ public:
     virtual void setWarmStartStateReconciled() override; 
     virtual void postSwitchCause(
         const std::string &portName,
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+        link_manager::LinkManagerStateMachine::SwitchCause cause
     ) override;
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
@@ -88,7 +88,7 @@ public:
     uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
     uint32_t mPostSwitchCauseInvokeCount = 0;
 
-    link_manager::ActiveStandbyStateMachine::SwitchCause mLastPostedSwitchCause;
+    link_manager::LinkManagerStateMachine::SwitchCause mLastPostedSwitchCause;
     
     bool mWarmStartFlag = false;
 

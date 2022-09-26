@@ -174,7 +174,7 @@ public:
      * @return none
      */
     virtual inline void postSwitchCause(
-        link_manager::ActiveStandbyStateMachine::SwitchCause cause
+        link_manager::LinkManagerStateMachine::SwitchCause cause
     ) {
         mDbInterfacePtr->postSwitchCause(mMuxPortConfig.getPortName(), cause);
     };

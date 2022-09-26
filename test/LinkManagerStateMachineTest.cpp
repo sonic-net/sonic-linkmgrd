@@ -453,7 +453,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveCliStandby)
     runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mPostSwitchCauseInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::ConfigMuxMode);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::LinkManagerStateMachine::SwitchCause::ConfigMuxMode);
 
     // swss notification
     handleMuxState("standby", 3);
@@ -476,7 +476,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyRecvSwitchActiveTlv)
     runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mPostSwitchCauseInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::TlvSwitchActiveCommand);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::LinkManagerStateMachine::SwitchCause::TlvSwitchActiveCommand);
 
     // swss notification
     handleMuxState("active", 3);
@@ -543,7 +543,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkDown)
     VALIDATE_STATE(Active, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::LinkManagerStateMachine::SwitchCause::LinkDown);
 
     // swss notification
     handleMuxState("standby", 4);
@@ -640,7 +640,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mPostSwitchCauseInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::LinkManagerStateMachine::SwitchCause::PeerHeartbeatMissing);
 
     // swss notification
     handleMuxState("active", 3);
@@ -1142,7 +1142,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyPeerLinkStateDown)
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mPostSwitchCauseInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerLinkDown);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::LinkManagerStateMachine::SwitchCause::PeerLinkDown);
 
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     VALIDATE_STATE(Active, Wait, Up);
