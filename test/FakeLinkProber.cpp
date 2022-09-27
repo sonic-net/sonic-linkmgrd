@@ -134,6 +134,18 @@ void FakeLinkProber::handleSendSwitchCommand()
     )));
 }
 
+void FakeLinkProber::handleSwitchCommandRecv()
+{
+    boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (link_prober::LinkProberStateMachine::*) (link_prober::SwitchActiveRequestEvent&)>
+            (&link_prober::LinkProberStateMachine::processEvent),
+        mLinkProberStateMachine,
+        link_prober::LinkProberStateMachine::getSwitchActiveRequestEvent()
+    )));
+}
+
 void FakeLinkProber::resetIcmpPacketCounts()
 {
     MUXLOGINFO("");

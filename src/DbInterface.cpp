@@ -47,6 +47,7 @@ std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
 std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end", "link_prober_wait_start", "link_prober_active_start", "link_prober_standby_start"};
+std::vector<std::string> DbInterface::mActiveStandbySwitchCause = {"Peer_Heartbeat_Missing" , "Peer_Link_Down" , "Tlv_Switch_Active_Command" , "Link_Down" , "Transceiver_Daemon_Timeout" , "Matching_Hardware_State" , "Config_Mux_Mode"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -157,6 +158,58 @@ void DbInterface::postMetricsEvent(
     ));
 }
 
+//
+// ---> void postSwitchCause(
+//         const std::string &portName,
+//         link_manager::LinkManagerStateMachine::SwitchCause cause)
+//     );
+//
+// post switch cause
+//
+void DbInterface::postSwitchCause(
+        const std::string &portName,
+        link_manager::LinkManagerStateMachine::SwitchCause cause
+)
+{
+    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
+        portName %
+        mActiveStandbySwitchCause[static_cast<int>(cause)]
+    );
+
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handlePostSwitchCause,
+        this,
+        portName,
+        cause,
+        boost::posix_time::microsec_clock::universal_time()
+    ));
+}
+
+//
+// ---> void handlePostSwitchCause(
+//          const std::string portName,
+//          link_manager::LinkManagerStateMachine::SwitchCause cause,
+//          boost::posix_time::ptime time
+//      );
+//
+// post switch cause to state db 
+//
+void DbInterface::handlePostSwitchCause(
+        const std::string &portName,
+        link_manager::LinkManagerStateMachine::SwitchCause cause,
+        boost::posix_time::ptime time
+)
+{
+    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
+        portName %
+        mActiveStandbySwitchCause[static_cast<int>(cause)]
+    );
+
+    mStateDbSwitchCauseTablePtr->hset(portName, "cause", mActiveStandbySwitchCause[static_cast<int>(cause)]);
+    mStateDbSwitchCauseTablePtr->hset(portName, "time", boost::posix_time::to_simple_string(time));
+}
+
+
 // 
 // ---> postLinkProberMetricsEvent(
 //        const std::string &portName, 
@@ -236,6 +289,9 @@ void DbInterface::initialize()
         );
         mStateDbLinkProbeStatsTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), LINK_PROBE_STATS_TABLE_NAME
+        );
+        mStateDbSwitchCauseTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(),  STATE_MUX_SWITCH_CAUSE_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
