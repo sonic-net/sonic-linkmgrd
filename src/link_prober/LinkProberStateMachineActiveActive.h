@@ -138,6 +138,18 @@ public:
      */
     void enterPeerState(LinkProberState::Label label) override;
 
+    /**
+     * @method handlePckLossRatioUpdate
+     * 
+     * @brief post pck loss ratio update to link manager
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
+    */
+    void handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
+
 private:
     /**
      *@method setCurrentPeerState

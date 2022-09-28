@@ -64,16 +64,6 @@ class ActiveStandbyStateMachine: public LinkManagerStateMachineBase,
                                public std::enable_shared_from_this<ActiveStandbyStateMachine>
 {
 public:
-    enum class LinkProberMetrics {
-        LinkProberUnknownStart, 
-        LinkProberUnknownEnd,
-        LinkProberWaitStart,
-        LinkProberActiveStart,
-        LinkProberStandbyStart,
-
-        Count
-    };
-
     enum class SwitchCause {
         PeerHeartbeatMissing,
         PeerLinkDown,

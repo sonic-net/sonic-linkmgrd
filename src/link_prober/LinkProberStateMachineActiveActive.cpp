@@ -198,4 +198,20 @@ inline void LinkProberStateMachineActiveActive::postLinkManagerPeerEvent(LinkPro
     )));
 }
 
+// 
+// ---> handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+//
+// post pck loss ratio update to link manager
+//
+void LinkProberStateMachineActiveActive::handlePckLossRatioUpdate(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) 
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
+    boost::asio::post(strand, boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handlePostPckLossRatioNotification,
+        mLinkManagerStateMachinePtr,
+        unknownEventCount,
+        expectedPacketCount
+    ));
+}
+
 } /* namespace link_prober */

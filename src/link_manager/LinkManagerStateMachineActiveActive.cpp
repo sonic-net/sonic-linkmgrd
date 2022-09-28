@@ -141,6 +141,9 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mRestartTxFnPtr = boost::bind(
                 &link_prober::LinkProber::restartTxProbes, mLinkProberPtr.get()
             );
+            mResetIcmpPacketCountsFnPtr = boost::bind(
+                &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
+            );
 
             setComponentInitState(LinkProberComponent);
 
@@ -425,6 +428,17 @@ void ActiveActiveStateMachine::handleStateChange(
             mLinkProberStateName[state]
         );
 
+        // update state db link prober metrics to collect link prober state change data
+        if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
+            mContinuousLinkProberUnknownEvent = false;
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveActiveStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
+        } 
+        
+        if (mContinuousLinkProberUnknownEvent == false && state == link_prober::LinkProberState::Label::Unknown) {
+            mContinuousLinkProberUnknownEvent = true;
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveActiveStateMachine::LinkProberMetrics::LinkProberUnknownStart);
+        } }
+         
         CompositeState nextState = mCompositeState;
         ps(nextState) = state;
         mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
@@ -1129,6 +1143,33 @@ void ActiveActiveStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
             mRestartTxFnPtr();
         }
     }
+}
+
+//
+// ---> handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount);
+// 
+// handle post pck loss ratio 
+//
+void ActiveActiveStateMachine::handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount)
+{
+    MUXLOGDEBUG(boost::format("%s: posting pck loss ratio, pck_loss_count / pck_expected_count : %d / %d") %
+        mMuxPortConfig.getPortName() %
+        unknownEventCount % 
+        expectedPacketCount
+    );
+    
+    mMuxPortPtr->postPckLossRatio(unknownEventCount, expectedPacketCount);
+}
+
+// ---> handleResetLinkProberPckLossCount();
+// 
+// reset link prober heartbeat packet loss count 
+// 
+void ActiveActiveStateMachine::handleResetLinkProberPckLossCount()
+{
+    MUXLOGDEBUG(boost::format("%s: reset link prober packet loss counts ") % mMuxPortConfig.getPortName());
+
+    mResetIcmpPacketCountsFnPtr();
 }
 
 } /* namespace link_manager */
