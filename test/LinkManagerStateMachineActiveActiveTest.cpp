@@ -336,15 +336,20 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
     VALIDATE_STATE(Active, Standby, Up);
 
+    // if toggle fails
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Standby, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+
     handleMuxState("standby", 3);
     VALIDATE_STATE(Active, Standby, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
     VALIDATE_STATE(Active, Standby, Up);
 
     handleMuxConfig("auto", 1);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 4);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
     VALIDATE_STATE(Active, Active, Up);
 }
