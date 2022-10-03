@@ -336,7 +336,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
     VALIDATE_STATE(Active, Standby, Up);
 
-    // if toggle fails
+    // if toggle fails, will retry.
     handleMuxState("active", 3);
     VALIDATE_STATE(Active, Standby, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
