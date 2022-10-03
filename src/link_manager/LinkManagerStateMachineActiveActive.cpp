@@ -437,7 +437,7 @@ void ActiveActiveStateMachine::handleStateChange(
         if (mContinuousLinkProberUnknownEvent == false && state == link_prober::LinkProberState::Label::Unknown) {
             mContinuousLinkProberUnknownEvent = true;
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveActiveStateMachine::LinkProberMetrics::LinkProberUnknownStart);
-        } }
+        } 
          
         CompositeState nextState = mCompositeState;
         ps(nextState) = state;
