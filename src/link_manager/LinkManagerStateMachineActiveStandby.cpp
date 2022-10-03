@@ -1147,7 +1147,13 @@ void ActiveStandbyStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunct
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    enterMuxWaitState(nextState);
+    if ((ps(mCompositeState) != ps(nextState)) &&
+        (ps(nextState) == link_prober::LinkProberState::Label::Active ||
+         ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
+        enterMuxWaitState(nextState);
+    } else {
+        startMuxProbeTimer();
+    }
 }
 
 //
