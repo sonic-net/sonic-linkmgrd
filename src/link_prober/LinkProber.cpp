@@ -930,7 +930,7 @@ void LinkProber::reportHeartbeatReplyNotReceivedActiveActive()
 {
     if (mTxSeqNo != mRxSelfSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpUnknownEvent());
-        mIcmpUnknownEventCount;
+        mIcmpUnknownEventCount++;
     }
     if (mTxSeqNo != mRxPeerSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
