@@ -95,6 +95,9 @@ inline void FakeMuxPort::initLinkProberActiveActive()
     getActiveActiveStateMachinePtr()->setRestartTxFnPtr(
         boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
     );
+    getActiveActiveStateMachinePtr()->setResetIcmpPacketCountsFnPtr(
+        boost::bind(&FakeLinkProber::resetIcmpPacketCounts, mFakeLinkProber.get())
+    );
 }
 
 inline void FakeMuxPort::initLinkProberActiveStandby()

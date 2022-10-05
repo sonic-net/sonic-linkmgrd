@@ -219,6 +219,22 @@ void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_f
     mFakeMuxPort.activateStateMachine();
 }
 
+void LinkManagerStateMachineActiveActiveTest::postPckLossRatioUpdateEvent(uint64_t unknownCount, uint64_t totalCount)
+{
+    mFakeMuxPort.postPckLossRatio(unknownCount, totalCount);
+    mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount = unknownCount;
+    mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount = totalCount;
+
+    runIoService();
+}
+
+void LinkManagerStateMachineActiveActiveTest::postPckLossCountsResetEvent()
+{
+    mFakeMuxPort.resetPckLossCount();
+
+    runIoService(4);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceRepeatedMuxUnkown)
 {
     // This unit test needs to run before any execution activatestateMachine();
@@ -623,4 +639,34 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, GrpcTransientFailure)
     EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, 1);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossMetricsEvent) 
+{
+    setMuxActive();
+
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 0);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+
+    EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 2);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossUpdateAndResetEvent)
+{
+    uint64_t unknownCount = 999;
+    uint64_t totalCount = 10000;
+
+    postPckLossRatioUpdateEvent(unknownCount,totalCount);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, unknownCount);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, totalCount);
+    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, unknownCount);
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, totalCount);
+
+    postPckLossCountsResetEvent();
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 0);    
+}
 } /* namespace test */
