@@ -641,7 +641,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, GrpcTransientFailure)
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossMetricsEvent) 
 {
-    setMuxStandby();
+    setMuxActive();
 
     EXPECT_EQ(mDbInterfacePtr->mPostLinkProberMetricsInvokeCount, 0);
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);

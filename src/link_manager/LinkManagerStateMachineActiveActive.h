@@ -595,6 +595,17 @@ private: // testing only
      */
     void setRestartTxFnPtr(boost::function<void()> restartTxFnPtr) { mRestartTxFnPtr = restartTxFnPtr; }
 
+    /**
+     * @method setResetIcmpPacketCountsFnPtr
+     *
+     * @brief set ResetIcmpPacketCountsFnPtr. This method is used for testing
+     *
+     * @param resetIcmpPacketCountsFnPtr (in)           pointer to new restartTxFnPtr
+     *
+     * @return none
+     */
+    void setResetIcmpPacketCountsFnPtr(boost::function<void()> resetIcmpPacketCountsFnPtr) { mResetIcmpPacketCountsFnPtr = resetIcmpPacketCountsFnPtr; }
+
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
