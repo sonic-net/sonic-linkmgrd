@@ -188,6 +188,27 @@ public: // db event handlers
      */
     void handleUseWellKnownMacAddressNotification() override;
 
+    /**
+     * @method handlePostPckLossRatioNotification
+     * 
+     * @brief handle get post pck loss ratio 
+     * 
+     * @param unknownEventCount (in) count of missing icmp packets
+     * @param expectedPacketCount (in) count of expected icmp packets
+     * 
+     * @return none
+    */
+    void handlePostPckLossRatioNotification(const uint64_t unknownEventCount, const uint64_t expectedPacketCount) override;
+
+    /**
+     * @method handleResetLinkProberPckLossCount
+     * 
+     * @brief reset link prober heartbeat packet loss count 
+     * 
+     * @return none
+    */
+    void handleResetLinkProberPckLossCount() override;
+
 public: // link prober event handlers
     /**
      * @method handleSuspendTimerExpiry
@@ -574,6 +595,17 @@ private: // testing only
      */
     void setRestartTxFnPtr(boost::function<void()> restartTxFnPtr) { mRestartTxFnPtr = restartTxFnPtr; }
 
+    /**
+     * @method setResetIcmpPacketCountsFnPtr
+     *
+     * @brief set ResetIcmpPacketCountsFnPtr. This method is used for testing
+     *
+     * @param resetIcmpPacketCountsFnPtr (in)           pointer to new restartTxFnPtr
+     *
+     * @return none
+     */
+    void setResetIcmpPacketCountsFnPtr(boost::function<void()> resetIcmpPacketCountsFnPtr) { mResetIcmpPacketCountsFnPtr = resetIcmpPacketCountsFnPtr; }
+
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
@@ -593,8 +625,11 @@ private:
     boost::function<void()> mResumeTxFnPtr;
     boost::function<void()> mShutdownTxFnPtr;
     boost::function<void()> mRestartTxFnPtr;
+    boost::function<void ()> mResetIcmpPacketCountsFnPtr;
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
+
+    bool mContinuousLinkProberUnknownEvent = false;
 };
 
 } /* namespace link_manager */

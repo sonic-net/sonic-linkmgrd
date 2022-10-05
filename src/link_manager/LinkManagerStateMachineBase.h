@@ -157,6 +157,22 @@ public:
         Count
     };
 
+    /**
+     * @enum LinkProberMetrics
+     * 
+     * @brief labels corresponding to each link prober event
+     */
+    enum class LinkProberMetrics {
+        LinkProberUnknownStart, 
+        LinkProberUnknownEnd,
+        LinkProberWaitStart,
+        LinkProberActiveStart,
+        LinkProberStandbyStart,
+
+        Count
+    };
+
+
     using CompositeState = std::tuple<link_prober::LinkProberState::Label,
                                       mux_state::MuxState::Label,
                                       link_state::LinkState::Label>;
