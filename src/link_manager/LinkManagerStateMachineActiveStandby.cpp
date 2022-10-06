@@ -671,10 +671,13 @@ void ActiveStandbyStateMachine::handleMuxStateNotification(mux_state::MuxState::
             MUXLOGWARNING(boost::format("%s: Received unsolicited MUX state change notification!") %
                 mMuxPortConfig.getPortName()
             );
-        }
+        } 
         mProbePeerTorFnPtr();
         postMuxStateEvent(label);
-        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+        if (mMuxStateMachine.testWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate)) {
+            mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+            mMuxStateMachine.resetWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
+        }
     } else if (label == mux_state::MuxState::Unknown) {
         // state db may not have been initialized with up-to-date mux state
         // probe xcvrd to read the current mux state
