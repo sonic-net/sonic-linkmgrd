@@ -671,7 +671,7 @@ void ActiveStandbyStateMachine::handleMuxStateNotification(mux_state::MuxState::
             MUXLOGWARNING(boost::format("%s: Received unsolicited MUX state change notification!") %
                 mMuxPortConfig.getPortName()
             );
-        } 
+        }
         mProbePeerTorFnPtr();
         postMuxStateEvent(label);
         if (mMuxStateMachine.testWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate)) {
