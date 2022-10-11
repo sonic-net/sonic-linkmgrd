@@ -24,6 +24,8 @@
 #ifndef MUX_STATE_WAITSTATE_H_
 #define MUX_STATE_WAITSTATE_H_
 
+#include <bitset>
+
 #include <mux_state/MuxState.h>
 
 namespace mux_state
@@ -45,7 +47,9 @@ public:
     enum WaitStateCause {
         CauseUnknown,
         SwssUpdate,
-        DriverUpdate
+        DriverUpdate,
+
+        WaitStateCauseCount
     };
 
 public:
@@ -156,7 +160,29 @@ public:
     *
     *@return none
     */
-    void setWaitStateCause(WaitStateCause waitStateCause) {mWaitStateCause = waitStateCause;};
+    void setWaitStateCause(WaitStateCause waitStateCause);
+
+    /**
+     * @method testWaitStateCause
+     * 
+     * @brief testter wait cause
+     * 
+     * @param waitStateCause (in) casue for entering wait state
+     * 
+     * @return bool 
+     */
+    bool testWaitStateCause(WaitStateCause waitStateCause) {return mWaitStateCause.test(waitStateCause);};
+
+    /**
+     * @method resetWaitStateCause
+     * 
+     * @brief reset wait casue 
+     * 
+     * @param waitStateCause (in) cause for entering wait state
+     * 
+     * @return none
+     */
+    void resetWaitStateCause(WaitStateCause waitStateCause) {mWaitStateCause.reset(waitStateCause);};
 
     /**
     *@method getWaitOnSwssNotification
@@ -165,7 +191,7 @@ public:
     *
     *@return cause for entering wait state
     */
-    WaitStateCause getWaitStateCause() const {return mWaitStateCause;};
+    WaitStateCause getWaitStateCause() const {return mLastWaitStateCause;};
 
 private:
     uint8_t mActiveEventCount = 0;
@@ -173,7 +199,8 @@ private:
     uint8_t mUnknownEventCount = 0;
     uint8_t mErrorEventCount = 0;
 
-    WaitStateCause mWaitStateCause = CauseUnknown;
+    WaitStateCause mLastWaitStateCause = CauseUnknown;
+    std::bitset<WaitStateCauseCount> mWaitStateCause = {0};
 };
 
 } /* namespace mux_state */

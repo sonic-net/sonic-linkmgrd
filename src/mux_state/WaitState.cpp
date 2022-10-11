@@ -163,4 +163,15 @@ void WaitState::resetState()
     mErrorEventCount = 0;
 }
 
+//
+// setWaitStateCause(WaitStateCause waitStateCause)
+//
+// setter Wait Cause
+//    
+void WaitState::setWaitStateCause(WaitStateCause waitStateCause) 
+{
+    mLastWaitStateCause = waitStateCause;
+    mWaitStateCause.set(waitStateCause);
+}
+
 } /* namespace mux_state */

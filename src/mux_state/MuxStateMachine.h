@@ -257,6 +257,28 @@ public:
     void setWaitStateCause(WaitState::WaitStateCause waitStateCause) {mWaitState.setWaitStateCause(waitStateCause);};
 
     /**
+    *@method testWaitStateCause
+    *
+    *@brief testter Wait Cause
+    *
+    *@param waitStateCause (in)  cause for entering wait state
+    *
+    *@return bool
+    */
+    bool testWaitStateCause(WaitState::WaitStateCause waitStateCause) {return mWaitState.testWaitStateCause(waitStateCause);};
+
+    /**
+    *@method resetWaitStateCause
+    *
+    *@brief resetter Wait Cause
+    *
+    *@param waitStateCause (in)  cause for entering wait state
+    *
+    *@return none
+    */
+    void resetWaitStateCause(WaitState::WaitStateCause waitStateCause) {mWaitState.resetWaitStateCause(waitStateCause);};
+
+    /**
     *@method getWaitOnSwssNotification
     *
     *@brief getter Wait Cause
