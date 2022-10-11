@@ -730,7 +730,10 @@ void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::La
         }
         mProbePeerTorFnPtr();
         postMuxStateEvent(label);
-        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+        if (mMuxStateMachine.testWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate)) {
+            mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+            mMuxStateMachine.resetWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
+        }
     } else if (label == mux_state::MuxState::Unknown) {
         // state db may not have been initialized with up-to-date mux state
         // probe xcvrd to read the current mux state
