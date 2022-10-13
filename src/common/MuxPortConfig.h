@@ -175,6 +175,15 @@ public:
     inline uint32_t getNegativeStateChangeRetryCount() const {return mMuxConfig.getNegativeStateChangeRetryCount();};
 
     /**
+    *@method getPeerNegativeStateChangeRetryCount
+    *
+    *@brief getter for LinkProber peer negative state change retry count
+    *
+    *@return peer state change retry count
+    */
+    inline uint32_t getPeerNegativeStateChangeRetryCount() const {return mMuxConfig.getPeerNegativeStateChangeRetryCount();};
+
+    /**
     *@method getSuspendTimeout_msec
     *
     *@brief getter for LinkProber suspend timer timeout

@@ -120,6 +120,22 @@ public:
     */
     inline void setNegativeStateChangeRetryCount(uint32_t stateChangeRetryCount) {
         mNegativeStateChangeRetryCount = stateChangeRetryCount;
+        // this is to ensure for the same amount of link prober self and peer
+        // events, self link prober state change could be triggered first
+        setPeerNegativeStateChangeRetryCount(2 * stateChangeRetryCount);
+    };
+
+    /**
+    *@method setPeerNegativeStateChangeRetryCount
+    *
+    *@brief setter for LinkProber peer negative state change retry count
+    *
+    *@param peerStateChangeRetryCount (in)  peer state change retry count
+    *
+    *@return none
+    */
+    inline void setPeerNegativeStateChangeRetryCount(uint32_t peerStateChangeRetryCount) {
+        mPeerNegativeStateChangeRetryCount = peerStateChangeRetryCount;
     };
 
     /**
@@ -243,6 +259,15 @@ public:
     *@return state change retry count
     */
     inline uint32_t getNegativeStateChangeRetryCount() const {return mNegativeStateChangeRetryCount;};
+
+    /**
+    *@method getPeerNegativeStateChangeRetryCount
+    *
+    *@brief getter for LinkProber peer negative state change retry count
+    *
+    *@return peer state change retry count
+    */
+    inline uint32_t getPeerNegativeStateChangeRetryCount() const {return mPeerNegativeStateChangeRetryCount;};
 
     /**
     *@method getSuspendTimeout_msec
@@ -389,6 +414,7 @@ private:
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mPositiveStateChangeRetryCount = 1;
     uint32_t mNegativeStateChangeRetryCount = 3;
+    uint32_t mPeerNegativeStateChangeRetryCount = mNegativeStateChangeRetryCount * 2;
     uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
