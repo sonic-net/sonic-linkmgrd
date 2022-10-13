@@ -179,6 +179,11 @@ TEST_F(LinkProberMockTest, LinkProberActiveActive)
     handleTimeout();
     runIoService();
 
+    sendHeartbeat();
+
+    handleTimeout();
+    runIoService();
+
     TearDown();
 }
 

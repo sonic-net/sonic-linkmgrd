@@ -109,7 +109,7 @@ void LinkManagerStateMachineActiveActiveTest::postLinkProberEvent(link_prober::L
     }
 }
 
-void LinkManagerStateMachineActiveActiveTest::postPeerLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
+void LinkManagerStateMachineActiveActiveTest::postPeerLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count, uint32_t retry_count)
 {
     switch (label) {
         case link_prober::LinkProberState::PeerActive:
@@ -121,7 +121,8 @@ void LinkManagerStateMachineActiveActiveTest::postPeerLinkProberEvent(link_probe
             }
             break;
         case link_prober::LinkProberState::PeerUnknown:
-            for (uint8_t i = 0; i < mMuxConfig.getNegativeStateChangeRetryCount(); i++) {
+            retry_count = (retry_count == 0) ? mMuxConfig.getPeerNegativeStateChangeRetryCount() : retry_count;
+            for (uint8_t i = 0; i < retry_count; i++) {
                 mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpPeerUnknownEvent&>(
                     link_prober::LinkProberStateMachineBase::getIcmpPeerUnknownEvent()
                 );
@@ -394,6 +395,28 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
 
     handlePeerMuxState("standby", 1);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkDropUpstream)
+{
+    setMuxActive();
+
+    VALIDATE_PEER_STATE(PeerWait, Wait);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive);
+    VALIDATE_PEER_STATE(PeerActive, Active);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+
+    // post same amount of self unknown and peer unknown events
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 0, getMuxConfig().getNegativeStateChangeRetryCount());
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+
+    VALIDATE_PEER_STATE(PeerActive, Active);
+    VALIDATE_STATE(Unknown, Standby, Up);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 0, getMuxConfig().getNegativeStateChangeRetryCount());
+    VALIDATE_PEER_STATE(PeerUnknown, Active);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProberPeerUnknown)
