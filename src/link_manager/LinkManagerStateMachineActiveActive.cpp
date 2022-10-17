@@ -663,6 +663,9 @@ void ActiveActiveStateMachine::LinkProberActiveMuxActiveLinkUpTransitionFunction
         switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
     } else if (ms(mCompositeState) != mux_state::MuxState::Active) {
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    } else if (mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) {
+        // switch active to notify swss
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
     }
 }
 

@@ -235,21 +235,6 @@ void LinkManagerStateMachineActiveActiveTest::postPckLossCountsResetEvent()
     runIoService(4);
 }
 
-TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceRepeatedMuxUnkown)
-{
-    // This unit test needs to run before any execution activatestateMachine();
-    VALIDATE_STATE(Wait, Wait, Down);
-    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
-
-    handleMuxState("unknown", 2);
-    VALIDATE_STATE(Wait, Wait, Down);
-    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
-
-    handleProbeMuxState ("unknown", 1);
-    VALIDATE_STATE(Wait, Wait, Down);
-    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 2);
-}
-
 void LinkManagerStateMachineActiveActiveTest::setMuxActive()
 {
     activateStateMachine();
@@ -639,7 +624,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, GrpcTransientFailure)
     EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, 1);
 }
 
-TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossMetricsEvent) 
+TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossMetricsEvent)
 {
     setMuxActive();
 
@@ -657,7 +642,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossUpdateAndResetEvent)
     uint64_t unknownCount = 999;
     uint64_t totalCount = 10000;
 
-    postPckLossRatioUpdateEvent(unknownCount,totalCount);
+    postPckLossRatioUpdateEvent(unknownCount, totalCount);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, unknownCount);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, totalCount);
     EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, unknownCount);
@@ -667,6 +652,59 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, PostPckLossUpdateAndResetEvent)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpUnknownEventCount, 0);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mIcmpPacketCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mUnknownEventCount, 0);
-    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 0);    
+    EXPECT_EQ(mDbInterfacePtr->mExpectedPacketCount, 0);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceRepeatedMuxUnkown)
+{
+    // This unit test needs to run before any execution activatestateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    handleMuxState("unknown", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("unknown", 1);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 2);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceMuxUnkown)
+{
+    // This unit test needs to run before any execution activatestateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    handleMuxState("unknown", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("unknown", 1);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 2);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceConfigReloadMuxUnknown)
+{
+    VALIDATE_STATE(Wait, Wait, Down);
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    handleMuxState("unknown", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    activateStateMachine();
+
+    postLinkEvent(link_state::LinkState::Up);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
 }
 } /* namespace test */
