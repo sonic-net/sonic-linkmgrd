@@ -626,6 +626,7 @@ private:
     boost::function<void()> mShutdownTxFnPtr;
     boost::function<void()> mRestartTxFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void ()> mSendPeerProbeCommandFnPtr;
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
 

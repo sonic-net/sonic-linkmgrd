@@ -144,6 +144,9 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
+            mmSendPeerProbeCommandFnPtr = boost::bind(
+                &link_prober::LinkProber::sendPeerProbeCommand, mLinkProberPtr.get()
+            );
 
             setComponentInitState(LinkProberComponent);
 
@@ -536,6 +539,8 @@ void ActiveActiveStateMachine::handlePeerStateChange(
             case link_prober::LinkProberState::Label::PeerUnknown: {
                 if (mLabel == Label::Healthy) {
                     switchPeerMuxState(mux_state::MuxState::Label::Standby);
+                    // notify peer to probe for mux change
+                    mSendPeerProbeCommandFnPtr();
                 }
                 break;
             }
