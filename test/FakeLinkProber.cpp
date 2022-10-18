@@ -126,6 +126,13 @@ void FakeLinkProber::sendPeerSwitchCommand()
     mSendPeerSwitchCommand++;
 }
 
+void FakeLinkProber::sendPeerProbeCommand()
+{
+    MUXLOGINFO("");
+
+    mSendPeerProbeCommand++;
+}
+
 void FakeLinkProber::handleSendSwitchCommand()
 {
     // inform the composite state machine about command send completion
@@ -148,6 +155,18 @@ void FakeLinkProber::handleSwitchCommandRecv()
             (&link_prober::LinkProberStateMachineBase::processEvent),
         mLinkProberStateMachine,
         link_prober::LinkProberStateMachineBase::getSwitchActiveRequestEvent()
+    )));
+}
+
+void FakeLinkProber::handleMuxProbeCommandRecv()
+{
+    boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (link_prober::LinkProberStateMachineBase::*) (link_prober::MuxProbeRequestEvent&)>
+            (&link_prober::LinkProberStateMachineBase::processEvent),
+        mLinkProberStateMachine,
+        link_prober::LinkProberStateMachineBase::getMuxProbeRequestEvent()
     )));
 }
 

@@ -616,6 +616,17 @@ private: // testing only
     void setResetIcmpPacketCountsFnPtr(boost::function<void()> resetIcmpPacketCountsFnPtr) { mResetIcmpPacketCountsFnPtr = resetIcmpPacketCountsFnPtr; }
 
     /**
+     * @method set
+     *
+     * @brief set mSendPeerProbeCommandFnPtr. This method is used for testing
+     *
+     * @param sendPeerProbeCommandFnPtr (in)           pointer to new sendPeerProbeCommandFnPtr
+     *
+     * @return none
+     */
+    void setSendPeerProbeCommandFnPtr(boost::function<void()> sendPeerProbeCommandFnPtr) { mSendPeerProbeCommandFnPtr = sendPeerProbeCommandFnPtr; }
+
+    /**
      * @method startWaitMux
      *
      * @brief start waiting for mux, either mux set reply or probe reply

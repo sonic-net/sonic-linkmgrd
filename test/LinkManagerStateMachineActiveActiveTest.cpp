@@ -364,6 +364,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerActive)
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive);
     VALIDATE_PEER_STATE(PeerActive, Active);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 0);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
@@ -375,6 +376,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
 
     handlePeerMuxState("standby", 1);
@@ -393,6 +395,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProbe
 
     VALIDATE_PEER_STATE(PeerUnknown, Active);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 0);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandby)
@@ -422,6 +425,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyLinkProberPeerActive)
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive);
     VALIDATE_PEER_STATE(PeerActive, Active);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 0);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyLinkProberPeerUnknown)
@@ -433,6 +437,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyLinkProberPeerUnknown)
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown);
     VALIDATE_PEER_STATE(PeerUnknown, Wait);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 0);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState)
@@ -707,4 +712,61 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceConfigRelo
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
 }
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveRecvMuxProbeTlv)
+{
+    setMuxActive();
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.mFakeLinkProber->handleMuxProbeCommandRecv();
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+
+    handleMuxState("active", 2);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyRecvMuxProbeTlv)
+{
+    setMuxStandby();
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.mFakeLinkProber->handleMuxProbeCommandRecv();
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore);
+
+    VALIDATE_STATE(Unknown, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberUnknownRecvMuxProbeTlv)
+{
+    setMuxActive();
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+    VALIDATE_STATE(Unknown, Standby, Up);
+
+    // on-going toggle, in mux wait, no more mux probe
+    mFakeMuxPort.mFakeLinkProber->handleMuxProbeCommandRecv();
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Unknown, Standby, Up);
+}
+
 } /* namespace test */
