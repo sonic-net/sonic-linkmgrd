@@ -248,7 +248,7 @@ void LinkProber::sendPeerSwitchCommand()
 //
 // ---> sendPeerProbeCommand();
 //
-// send send peer probe command
+// send peer probe command
 //
 void LinkProber::sendPeerProbeCommand()
 {
