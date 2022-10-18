@@ -217,6 +217,15 @@ public: // link prober event handlers
      */
     void handleSuspendTimerExpiry() override;
 
+    /**
+     *@method handleMuxProbeRequestEvent
+     *
+     *@brief handle mux probe request from peer ToR
+     *
+     *@return none
+     */
+    void handleMuxProbeRequestEvent() override;
+
 public: // state handlers
     /**
      * @method handleStateChange
@@ -606,6 +615,24 @@ private: // testing only
      */
     void setResetIcmpPacketCountsFnPtr(boost::function<void()> resetIcmpPacketCountsFnPtr) { mResetIcmpPacketCountsFnPtr = resetIcmpPacketCountsFnPtr; }
 
+    /**
+     * @method startWaitMux
+     *
+     * @brief start waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void startWaitMux() { mWaitMux = true; }
+
+    /**
+     * @method stopWaitMux
+     *
+     * @brief stop waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void stopWaitMux() { mWaitMux = false; }
+
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
@@ -614,6 +641,7 @@ private: // peer link prober state and mux state
 private:
     uint32_t mMuxProbeBackoffFactor = 1;
 
+    bool mWaitMux = false;
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;

@@ -465,6 +465,15 @@ public:
     virtual void handleSwitchActiveRequestEvent();
 
     /**
+     *@method handleMuxProbeRequestEvent
+     *
+     *@brief handle mux probe request from peer ToR
+     *
+     *@return none
+     */
+    virtual void handleMuxProbeRequestEvent();
+
+    /**
      * @method handleDefaultRouteStateNotification(const DefaultRoute routeState)
      *
      * @brief handle default route state notification from routeorch

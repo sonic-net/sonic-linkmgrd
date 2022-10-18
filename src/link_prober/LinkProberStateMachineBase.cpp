@@ -33,6 +33,7 @@ IcmpUnknownEvent LinkProberStateMachineBase::mIcmpUnknownEvent;
 SuspendTimerExpiredEvent LinkProberStateMachineBase::mSuspendTimerExpiredEvent;
 SwitchActiveCommandCompleteEvent LinkProberStateMachineBase::mSwitchActiveCommandCompleteEvent;
 SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
+MuxProbeRequestEvent LinkProberStateMachineBase::mMuxProbeRequestEvent;
 IcmpPeerActiveEvent LinkProberStateMachineBase::mIcmpPeerActiveEvent;
 IcmpPeerUnknownEvent LinkProberStateMachineBase::mIcmpPeerUnknownEvent;
 
@@ -209,6 +210,17 @@ void LinkProberStateMachineBase::processEvent(SwitchActiveRequestEvent &switchAc
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }
+
+//
+// ---> processEvent(MuxProbeRequestEvent &muxProbeRequestEvent);
+//
+// process LinkProberState mux probe request event
+//
+void LinkProberStateMachineBase::processEvent(MuxProbeRequestEvent &muxProbeRequestEvent)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+}
+
 
 //
 // ---> handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);

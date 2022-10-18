@@ -339,15 +339,29 @@ void LinkProber::handleTlvCommandRecv(
 )
 {
     if (isPeer) {
-        if (tlvPtr->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
-            boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-            boost::asio::io_service &ioService = strand.context();
-            ioService.post(strand.wrap(boost::bind(
-                static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>
-                    (&LinkProberStateMachineBase::processEvent),
-                mLinkProberStateMachinePtr,
-                LinkProberStateMachineBase::getSwitchActiveRequestEvent()
-            )));
+        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+        boost::asio::io_service &ioService = strand.context();
+
+        switch (static_cast<Command>(tlvPtr->command)) {
+            case Command::COMMAND_SWITCH_ACTIVE: {
+                ioService.post(strand.wrap(boost::bind(
+                    static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
+                    mLinkProberStateMachinePtr,
+                    LinkProberStateMachineBase::getSwitchActiveRequestEvent()
+                )));
+                break;
+            }
+            case Command::COMMAND_MUX_PROBE: {
+                ioService.post(strand.wrap(boost::bind(
+                    static_cast<void (LinkProberStateMachineBase::*) (MuxProbeRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
+                    mLinkProberStateMachinePtr,
+                    LinkProberStateMachineBase::getMuxProbeRequestEvent()
+                )));
+                break;
+            }
+            default: {
+                break;
+            }
         }
     }
 }

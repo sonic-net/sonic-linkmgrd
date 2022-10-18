@@ -144,7 +144,7 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
-            mmSendPeerProbeCommandFnPtr = boost::bind(
+            mSendPeerProbeCommandFnPtr = boost::bind(
                 &link_prober::LinkProber::sendPeerProbeCommand, mLinkProberPtr.get()
             );
 
@@ -408,6 +408,21 @@ void ActiveActiveStateMachine::handleSuspendTimerExpiry()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
     mResumeTxFnPtr();
+}
+
+//
+// ---> handleMuxProbeRequestEvent();
+//
+// handle mux probe request from peer ToR
+//
+void ActiveActiveStateMachine::handleMuxProbeRequestEvent()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    // if there is no interaction with mux, probe mux
+    if (!mWaitMux) {
+        probeMuxState();
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------
@@ -1026,6 +1041,7 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
         this,
         boost::asio::placeholders::error
     )));
+    startWaitMux();
 }
 
 //
@@ -1036,6 +1052,8 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
 void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
             ms(mCompositeState) == mux_state::MuxState::Label::Error ||
@@ -1064,6 +1082,7 @@ void ActiveActiveStateMachine::startMuxWaitTimer(uint32_t factor)
         this,
         boost::asio::placeholders::error
     )));
+    startWaitMux();
 }
 
 //
@@ -1073,6 +1092,9 @@ void ActiveActiveStateMachine::startMuxWaitTimer(uint32_t factor)
 //
 void ActiveActiveStateMachine::handleMuxWaitTimeout(boost::system::error_code errorCode)
 {
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (mMuxStateMachine.getWaitStateCause() == mux_state::WaitState::WaitStateCause::SwssUpdate) {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "orchagent timed out responding to linkmgrd", mCompositeState);
