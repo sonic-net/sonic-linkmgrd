@@ -554,8 +554,6 @@ void ActiveActiveStateMachine::handlePeerStateChange(
             case link_prober::LinkProberState::Label::PeerUnknown: {
                 if (mLabel == Label::Healthy) {
                     switchPeerMuxState(mux_state::MuxState::Label::Standby);
-                    // notify peer to probe for mux change
-                    mSendPeerProbeCommandFnPtr();
                 }
                 break;
             }
@@ -937,6 +935,11 @@ void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label lab
         enterPeerMuxState(label);
         mMuxPortPtr->setPeerMuxState(label);
         startPeerMuxWaitTimer();
+
+        if (label == mux_state::MuxState::Standby) {
+            // notify peer to probe for mux change
+            mSendPeerProbeCommandFnPtr();
+        }
     }
 }
 
