@@ -934,12 +934,8 @@ void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label lab
         );
         enterPeerMuxState(label);
         mMuxPortPtr->setPeerMuxState(label);
+        mLastSetPeerMuxState = label;
         startPeerMuxWaitTimer();
-
-        if (label == mux_state::MuxState::Standby) {
-            // notify peer to probe for mux change
-            mSendPeerProbeCommandFnPtr();
-        }
     }
 }
 
@@ -1140,6 +1136,12 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
             "xcvrd timed out responding to linkmgrd peer mux state" %
             mMuxStateName[mPeerMuxState]
         );
+    }
+    if (mLastSetPeerMuxState == mux_state::MuxState::Label::Standby) {
+        // notify peer to probe mux because we had toggled peer to standby
+        // and this probe should be handled by the ycable after the toggle
+        // as we have waited for peer wait timeout.
+        mSendPeerProbeCommandFnPtr();
     }
 }
 

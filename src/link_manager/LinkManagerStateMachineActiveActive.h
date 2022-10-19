@@ -647,6 +647,7 @@ private: // testing only
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
+    mux_state::MuxState::Label mLastSetPeerMuxState = mux_state::MuxState::Label::Wait;
     mux_state::MuxState::Label mLastMuxStateNotification = mux_state::MuxState::Label::Unknown;
 
 private:
