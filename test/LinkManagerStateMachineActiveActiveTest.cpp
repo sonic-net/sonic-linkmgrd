@@ -376,11 +376,11 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
-    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
 
     handlePeerMuxState("standby", 1);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 1);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProberPeerUnknown)
