@@ -24,6 +24,7 @@
 #ifndef LINKPROBER_H_
 #define LINKPROBER_H_
 
+#include <bitset>
 #include <memory>
 #include <stdint.h>
 #include <vector>
@@ -47,6 +48,18 @@ namespace link_prober
 using SockFilter = struct sock_filter;
 using SockFilterProg = struct sock_fprog;
 using SockAddrLinkLayer = struct sockaddr_ll;
+
+/**
+ *@enum HeartbeatType
+ *
+ *@brief Received heartbeat type
+ */
+enum HeartbeatType: uint8_t {
+    HEARTBEAT_SELF,
+    HEARTBEAT_PEER,
+
+    Count
+};
 
 /**
  *@class LinkProber
@@ -546,6 +559,7 @@ private:
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
 
+    std::bitset<HeartbeatType::Count> mReceivedHeartbeats = 0;
     boost::function<void ()> mReportHeartbeatReplyReceivedFuncPtr;
     boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;
 
