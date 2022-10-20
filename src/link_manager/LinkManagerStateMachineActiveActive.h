@@ -465,6 +465,24 @@ private: // utility methods to check/modify state
      */
     void initPeerLinkProberState();
 
+    /**
+     * @method startWaitMux
+     *
+     * @brief start waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void startWaitMux() { mWaitMux = true; }
+
+    /**
+     * @method stopWaitMux
+     *
+     * @brief stop waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void stopWaitMux() { mWaitMux = false; }
+
 private:
     /**
      * @brief start a mux probe and wait for mux probe notification(active or standby) from xcvrd
@@ -625,24 +643,6 @@ private: // testing only
      * @return none
      */
     void setSendPeerProbeCommandFnPtr(boost::function<void()> sendPeerProbeCommandFnPtr) { mSendPeerProbeCommandFnPtr = sendPeerProbeCommandFnPtr; }
-
-    /**
-     * @method startWaitMux
-     *
-     * @brief start waiting for mux, either mux set reply or probe reply
-     *
-     * @return none
-     */
-    inline void startWaitMux() { mWaitMux = true; }
-
-    /**
-     * @method stopWaitMux
-     *
-     * @brief stop waiting for mux, either mux set reply or probe reply
-     *
-     * @return none
-     */
-    inline void stopWaitMux() { mWaitMux = false; }
 
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
