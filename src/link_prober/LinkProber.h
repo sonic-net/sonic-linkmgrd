@@ -24,7 +24,6 @@
 #ifndef LINKPROBER_H_
 #define LINKPROBER_H_
 
-#include <bitset>
 #include <memory>
 #include <stdint.h>
 #include <vector>
@@ -54,7 +53,7 @@ using SockAddrLinkLayer = struct sockaddr_ll;
  *
  *@brief Received heartbeat type
  */
-enum HeartbeatType: uint8_t {
+enum class HeartbeatType: uint8_t {
     HEARTBEAT_SELF,
     HEARTBEAT_PEER,
 
@@ -525,22 +524,26 @@ private:
      * 
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveStandby();
+    void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyReceivedActiveActive
      * 
      * @brief report heartbeat reply received to active-active mode link prober state machine
      * 
+     * @param heartbeatType (in) received heartbeat type
+     *
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveActive();
+    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveStandby
      * 
      * @brief report heartbeat reply not received to active-standby mode link prober state machine
      * 
+     * @param heartbeatType (in) received heartbeat type
+     *
      * @return none
      */
     void reportHeartbeatReplyNotReceivedActiveStandby();
@@ -559,8 +562,7 @@ private:
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
 
-    std::bitset<HeartbeatType::Count> mReceivedHeartbeats = 0;
-    boost::function<void ()> mReportHeartbeatReplyReceivedFuncPtr;
+    boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
     boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;
 
     uint16_t mTxSeqNo = 0xffff;
