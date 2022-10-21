@@ -245,6 +245,17 @@ void LinkProber::sendPeerSwitchCommand()
 }
 
 //
+// ---> sendPeerProbeCommand();
+//
+// send peer probe command
+//
+void LinkProber::sendPeerProbeCommand()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    boost::asio::post(mStrand, boost::bind(&LinkProber::handleSendProbeCommand, this));
+}
+
+//
 // ---> handleUpdateEthernetFrame();
 //
 // update Ethernet frame of Tx Buffer
@@ -276,6 +287,20 @@ void LinkProber::handleSendSwitchCommand()
         mLinkProberStateMachinePtr,
         LinkProberStateMachineBase::getSwitchActiveCommandCompleteEvent()
     )));
+}
+
+//
+// ---> handleSendProbeCommand();
+//
+// send probe command to peer ToR
+//
+void LinkProber::handleSendProbeCommand()
+{
+    initTxBufferTlvSendProbe();
+
+    sendHeartbeat();
+
+    initTxBufferTlvSentinel();
 }
 
 //
@@ -313,15 +338,29 @@ void LinkProber::handleTlvCommandRecv(
 )
 {
     if (isPeer) {
-        if (tlvPtr->command == static_cast<uint8_t> (Command::COMMAND_SWITCH_ACTIVE)) {
-            boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-            boost::asio::io_service &ioService = strand.context();
-            ioService.post(strand.wrap(boost::bind(
-                static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>
-                    (&LinkProberStateMachineBase::processEvent),
-                mLinkProberStateMachinePtr,
-                LinkProberStateMachineBase::getSwitchActiveRequestEvent()
-            )));
+        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+        boost::asio::io_service &ioService = strand.context();
+
+        switch (static_cast<Command>(tlvPtr->command)) {
+            case Command::COMMAND_SWITCH_ACTIVE: {
+                boost::asio::post(mStrand, boost::bind(
+                    static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
+                    mLinkProberStateMachinePtr,
+                    LinkProberStateMachineBase::getSwitchActiveRequestEvent()
+                ));
+                break;
+            }
+            case Command::COMMAND_MUX_PROBE: {
+                boost::asio::post(mStrand, boost::bind(
+                    static_cast<void (LinkProberStateMachineBase::*) (MuxProbeRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
+                    mLinkProberStateMachinePtr,
+                    LinkProberStateMachineBase::getMuxProbeRequestEvent()
+                ));
+                break;
+            }
+            default: {
+                break;
+            }
         }
     }
 }
@@ -755,6 +794,20 @@ void LinkProber::initTxBufferTlvSendSwitch()
 {
     resetTxBufferTlv();
     appendTlvCommand(Command::COMMAND_SWITCH_ACTIVE);
+    appendTlvSentinel();
+
+    calculateTxPacketChecksum();
+}
+
+//
+// ---> initTxBufferTlvSendProbe
+//
+// Initialize TX buffer TLVs to send probe command to peer
+//
+void LinkProber::initTxBufferTlvSendProbe()
+{
+    resetTxBufferTlv();
+    appendTlvCommand(Command::COMMAND_MUX_PROBE);
     appendTlvSentinel();
 
     calculateTxPacketChecksum();

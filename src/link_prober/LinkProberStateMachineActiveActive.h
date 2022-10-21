@@ -119,6 +119,17 @@ public:
     void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent) override;
 
     /**
+     *@method processEvent
+     *
+     *@brief process MuxProbeRequestEvent
+     *
+     *@param muxProbeRequestEvent (in)  reference to the MuxProbeRequestEvent event
+     *
+     *@return none
+     */
+    void processEvent(MuxProbeRequestEvent &muxProbeRequestEvent) override;
+
+    /**
      *@method getCurrentPeerState
      *
      *@brief getter for current peer state

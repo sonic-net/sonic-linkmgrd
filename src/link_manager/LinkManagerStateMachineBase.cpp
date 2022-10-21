@@ -286,6 +286,17 @@ void LinkManagerStateMachineBase::handleSwitchActiveRequestEvent()
 }
 
 //
+// ---> handleMuxProbeRequestEvent();
+//
+// handle mux probe request from peer ToR
+//
+void LinkManagerStateMachineBase::handleMuxProbeRequestEvent()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
+
+//
 // ---> handleDefaultRouteStateNotification(const DefaultRoute routeState);
 //
 // handle default route state notification from routeorch

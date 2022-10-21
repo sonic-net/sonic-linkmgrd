@@ -148,6 +148,26 @@ TEST_F(LinkProberTest, handleSendSwitchCommand)
     EXPECT_TRUE(icmpHeader->checksum == 12100);
 }
 
+TEST_F(LinkProberTest, handleSendProbeCommand)
+{
+    initializeSendBuffer();
+
+    iphdr *ipHeader = reinterpret_cast<iphdr *>(getTxBufferData() + sizeof(ether_header));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *>(getTxBufferData() + sizeof(ether_header) + sizeof(iphdr));
+    ipHeader->id = static_cast<uint16_t> (17767);
+    initTxBufferSentinel();
+    EXPECT_TRUE(ipHeader->check == 62919);
+    EXPECT_TRUE(icmpHeader->checksum == 12100);
+
+    initTxBufferTlvSendProbe();
+    EXPECT_TRUE(ipHeader->check == 61895);
+    EXPECT_TRUE(icmpHeader->checksum == 11582);
+
+    initTxBufferSentinel();
+    EXPECT_TRUE(ipHeader->check == 62919);
+    EXPECT_TRUE(icmpHeader->checksum == 12100);
+}
+
 TEST_F(LinkProberTest, UpdateEthernetFrame)
 {
     link_prober::IcmpPayload *icmpPayload = new (
