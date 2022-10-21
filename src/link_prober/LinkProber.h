@@ -49,6 +49,18 @@ using SockFilterProg = struct sock_fprog;
 using SockAddrLinkLayer = struct sockaddr_ll;
 
 /**
+ *@enum HeartbeatType
+ *
+ *@brief Received heartbeat type
+ */
+enum class HeartbeatType: uint8_t {
+    HEARTBEAT_SELF,
+    HEARTBEAT_PEER,
+
+    Count
+};
+
+/**
  *@class LinkProber
  *
  *@brief probes the server sing ICMP ECHPREQUEST packet. The packet payload
@@ -512,22 +524,26 @@ private:
      * 
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveStandby();
+    void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyReceivedActiveActive
      * 
      * @brief report heartbeat reply received to active-active mode link prober state machine
      * 
+     * @param heartbeatType (in) received heartbeat type
+     *
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveActive();
+    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveStandby
      * 
      * @brief report heartbeat reply not received to active-standby mode link prober state machine
      * 
+     * @param heartbeatType (in) received heartbeat type
+     *
      * @return none
      */
     void reportHeartbeatReplyNotReceivedActiveStandby();
@@ -546,7 +562,7 @@ private:
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
 
-    boost::function<void ()> mReportHeartbeatReplyReceivedFuncPtr;
+    boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
     boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;
 
     uint16_t mTxSeqNo = 0xffff;
