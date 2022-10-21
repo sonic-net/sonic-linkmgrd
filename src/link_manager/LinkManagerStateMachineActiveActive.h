@@ -217,6 +217,15 @@ public: // link prober event handlers
      */
     void handleSuspendTimerExpiry() override;
 
+    /**
+     *@method handleMuxProbeRequestEvent
+     *
+     *@brief handle mux probe request from peer ToR
+     *
+     *@return none
+     */
+    void handleMuxProbeRequestEvent() override;
+
 public: // state handlers
     /**
      * @method handleStateChange
@@ -456,6 +465,24 @@ private: // utility methods to check/modify state
      */
     void initPeerLinkProberState();
 
+    /**
+     * @method startWaitMux
+     *
+     * @brief start waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void startWaitMux() { mWaitMux = true; }
+
+    /**
+     * @method stopWaitMux
+     *
+     * @brief stop waiting for mux, either mux set reply or probe reply
+     *
+     * @return none
+     */
+    inline void stopWaitMux() { mWaitMux = false; }
+
 private:
     /**
      * @brief start a mux probe and wait for mux probe notification(active or standby) from xcvrd
@@ -606,14 +633,27 @@ private: // testing only
      */
     void setResetIcmpPacketCountsFnPtr(boost::function<void()> resetIcmpPacketCountsFnPtr) { mResetIcmpPacketCountsFnPtr = resetIcmpPacketCountsFnPtr; }
 
+    /**
+     * @method set
+     *
+     * @brief set mSendPeerProbeCommandFnPtr. This method is used for testing
+     *
+     * @param sendPeerProbeCommandFnPtr (in)           pointer to new sendPeerProbeCommandFnPtr
+     *
+     * @return none
+     */
+    void setSendPeerProbeCommandFnPtr(boost::function<void()> sendPeerProbeCommandFnPtr) { mSendPeerProbeCommandFnPtr = sendPeerProbeCommandFnPtr; }
+
 private: // peer link prober state and mux state
     link_prober::LinkProberState::Label mPeerLinkProberState = link_prober::LinkProberState::Label::PeerWait;
     mux_state::MuxState::Label mPeerMuxState = mux_state::MuxState::Label::Wait;
+    mux_state::MuxState::Label mLastSetPeerMuxState = mux_state::MuxState::Label::Wait;
     mux_state::MuxState::Label mLastMuxStateNotification = mux_state::MuxState::Label::Unknown;
 
 private:
     uint32_t mMuxProbeBackoffFactor = 1;
 
+    bool mWaitMux = false;
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;
@@ -626,6 +666,7 @@ private:
     boost::function<void()> mShutdownTxFnPtr;
     boost::function<void()> mRestartTxFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
+    boost::function<void ()> mSendPeerProbeCommandFnPtr;
 
     DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
 

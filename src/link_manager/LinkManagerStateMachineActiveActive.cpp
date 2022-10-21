@@ -144,6 +144,9 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
+            mSendPeerProbeCommandFnPtr = boost::bind(
+                &link_prober::LinkProber::sendPeerProbeCommand, mLinkProberPtr.get()
+            );
 
             setComponentInitState(LinkProberComponent);
 
@@ -405,6 +408,21 @@ void ActiveActiveStateMachine::handleSuspendTimerExpiry()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
     mResumeTxFnPtr();
+}
+
+//
+// ---> handleMuxProbeRequestEvent();
+//
+// handle mux probe request from peer ToR
+//
+void ActiveActiveStateMachine::handleMuxProbeRequestEvent()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    // if there is no interaction with mux, probe mux
+    if (!mWaitMux) {
+        probeMuxState();
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------
@@ -916,6 +934,7 @@ void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label lab
         );
         enterPeerMuxState(label);
         mMuxPortPtr->setPeerMuxState(label);
+        mLastSetPeerMuxState = label;
         startPeerMuxWaitTimer();
     }
 }
@@ -1021,6 +1040,7 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
         this,
         boost::asio::placeholders::error
     )));
+    startWaitMux();
 }
 
 //
@@ -1031,6 +1051,8 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
 void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
             ms(mCompositeState) == mux_state::MuxState::Label::Error ||
@@ -1059,6 +1081,7 @@ void ActiveActiveStateMachine::startMuxWaitTimer(uint32_t factor)
         this,
         boost::asio::placeholders::error
     )));
+    startWaitMux();
 }
 
 //
@@ -1068,6 +1091,9 @@ void ActiveActiveStateMachine::startMuxWaitTimer(uint32_t factor)
 //
 void ActiveActiveStateMachine::handleMuxWaitTimeout(boost::system::error_code errorCode)
 {
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (mMuxStateMachine.getWaitStateCause() == mux_state::WaitState::WaitStateCause::SwssUpdate) {
             MUXLOGTIMEOUT(mMuxPortConfig.getPortName(), "orchagent timed out responding to linkmgrd", mCompositeState);
@@ -1110,6 +1136,12 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
             "xcvrd timed out responding to linkmgrd peer mux state" %
             mMuxStateName[mPeerMuxState]
         );
+    }
+    if (mLastSetPeerMuxState == mux_state::MuxState::Label::Standby) {
+        // notify peer to probe mux because we had toggled peer to standby
+        // and this probe should be handled by the ycable after the toggle
+        // as we have waited for peer wait timeout.
+        mSendPeerProbeCommandFnPtr();
     }
 }
 

@@ -180,6 +180,22 @@ void LinkProberStateMachineActiveActive::processEvent(SuspendTimerExpiredEvent &
 }
 
 //
+// ---> processEvent(MuxProbeRequestEvent &muxProbeRequestEvent);
+//
+// process LinkProberState mux probe request event
+//
+void LinkProberStateMachineActiveActive::processEvent(MuxProbeRequestEvent &muxProbeRequestEvent)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    boost::asio::post(mStrand, boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleMuxProbeRequestEvent,
+        mLinkManagerStateMachinePtr
+    ));
+}
+
+
+//
 // ---> postLinkManagerPeerEvent(LinkProberState* linkProberState);
 //
 // post LinkProberState peer change event to LinkManager state machine

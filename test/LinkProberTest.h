@@ -58,6 +58,7 @@ public:
     uint16_t getRxPeerSeqNo() {return mLinkProber.mRxPeerSeqNo;};
     bool getSuspendTx() {return mLinkProber.mSuspendTx;};
     void initTxBufferTlvSendSwitch() {mLinkProber.initTxBufferTlvSendSwitch();}
+    void initTxBufferTlvSendProbe() {mLinkProber.initTxBufferTlvSendProbe();}
     void initTxBufferSentinel() {mLinkProber.initTxBufferTlvSentinel();}
 
     boost::asio::io_service mIoService;

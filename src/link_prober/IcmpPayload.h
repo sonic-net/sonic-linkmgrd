@@ -74,6 +74,7 @@ struct Tlv {
 enum class Command: uint8_t {
     COMMAND_NONE,
     COMMAND_SWITCH_ACTIVE,
+    COMMAND_MUX_PROBE,
 
     Count
 };

@@ -46,6 +46,7 @@ public:
     void suspendTxProbes(uint32_t suspendTime_msec);
     void resumeTxProbes();
     void sendPeerSwitchCommand();
+    void sendPeerProbeCommand();
     void resetIcmpPacketCounts();
     void shutdownTxProbes();
     void restartTxProbes();
@@ -53,8 +54,7 @@ public:
     void revertProbeIntervalAfterSwitchComplete();
     void handleSendSwitchCommand();
     void handleSwitchCommandRecv();
-
-
+    void handleMuxProbeCommandRecv();
 
 public:
     uint32_t mInitializeCallCount = 0;
@@ -64,6 +64,7 @@ public:
     uint32_t mSuspendTxProbeCallCount = 0;
     uint32_t mResumeTxProbeCallCount = 0;
     uint32_t mSendPeerSwitchCommand = 0;
+    uint32_t mSendPeerProbeCommand = 0;
     uint32_t mShutdownTxProbeCallCount = 0;
     uint32_t mRestartTxProbeCallCount = 0;
 

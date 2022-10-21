@@ -176,6 +176,15 @@ public:
     void sendPeerSwitchCommand();
 
     /**
+    *@method sendPeerProbeCommand
+    *
+    *@brief send probe command to peer ToR
+    *
+    *@return none
+    */
+    void sendPeerProbeCommand();
+
+    /**
      * @method resetIcmpPacketCounts()
      * 
      * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
@@ -241,6 +250,15 @@ private:
     *@return none
     */
     void handleSendSwitchCommand();
+
+    /**
+    *@method handleSendProbeCommand
+    *
+    *@brief send probe command to peer ToR
+    *
+    *@return none
+    */
+    void handleSendProbeCommand();
 
     /**
     *@method sendHeartbeat
@@ -464,13 +482,22 @@ private:
     size_t appendTlvDummy(size_t paddingSize, int seqNo);
 
     /**
-     * @method initTlvSendSwitch
+     * @method initTxBufferTlvSendSwitch
      * 
      * @brief initialize TX buffer TLVs to send switch command to peer
      * 
      * @return none
      */
     void initTxBufferTlvSendSwitch();
+
+    /**
+     * @method initTxBufferTlvSendProbe
+     *
+     * @brief initialize TX buffer TLVs to send probe command to peer
+     *
+     * @return none
+     */
+    void initTxBufferTlvSendProbe();
 
     /**
      * @method initTxBufferTlvSentinel

@@ -128,6 +128,18 @@ public:
     ~SwitchActiveRequestEvent() = default;
 };
 
+/**
+ *@class MuxProbeRequestEvent
+ *
+ *@brief signals a MuxProbeRequestEvent event to LinkProber state machine
+ */
+class MuxProbeRequestEvent
+{
+public:
+    MuxProbeRequestEvent() = default;
+    ~MuxProbeRequestEvent() = default;
+};
+
 class LinkProberStateMachineActiveStandby;
 class LinkProberStateMachineActiveActive;
 
@@ -267,6 +279,17 @@ public:
      *@return none
      */
     virtual void processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process LinkProberState mux probe request
+     *
+     *@param muxProbeRequestEvent (in)  reference to the MuxProbeRequestEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(MuxProbeRequestEvent &muxProbeRequestEvent);
 
     /**
      *@method handleMackAddressUpdate
@@ -432,6 +455,15 @@ public:
     static SwitchActiveRequestEvent &getSwitchActiveRequestEvent() { return mSwitchActiveRequestEvent; };
 
     /**
+     *@method getMuxProbeRequestEvent
+     *
+     *@brief getter for MuxProbeRequestEvent object
+     *
+     *@return pointer to MuxProbeRequestEvent object
+     */
+    static MuxProbeRequestEvent &getMuxProbeRequestEvent() { return mMuxProbeRequestEvent; };
+
+    /**
      *@method getIcmpPeerActiveEvent
      *
      *@brief getter for IcmpPeerActiveEvent object
@@ -468,6 +500,7 @@ private:
     static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
     static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
     static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
+    static MuxProbeRequestEvent mMuxProbeRequestEvent;
     static IcmpPeerActiveEvent mIcmpPeerActiveEvent;
     static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
 
