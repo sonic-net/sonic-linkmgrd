@@ -36,7 +36,7 @@
 
 #include <sys/types.h>
 
-#define MUX_MAX_ICMP_BUFFER_SIZE    128
+#define MUX_MAX_ICMP_BUFFER_SIZE    256
 
 __BEGIN_DECLS
 
