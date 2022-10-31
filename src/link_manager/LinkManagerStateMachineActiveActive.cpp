@@ -404,11 +404,11 @@ void ActiveActiveStateMachine::handleUseWellKnownMacAddressNotification()
 void ActiveActiveStateMachine::startAdminForwardingStateSyncUpTimer()
 {
     MUXLOGWARNING(mMuxPortConfig.getPortName());
-    mResyncTimer.expire_from_now(boost::posix_timer::milliseconds(
+    mResyncTimer.expires_from_now(boost::posix_time::milliseconds(
         mMuxPortConfig.getAdminForwardingStateSyncUpInterval()
     ));
     mResyncTimer.async_wait(boost::asio::bind_executor(getStrand(),             // wrap() is deprecated, using bind_executor()
-        std::bind(&ActiveActiveStateMachine::handleAdminForwardingStateSyncUp,  // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/io_context__strand/wrap.html
+        boost::bind(&ActiveActiveStateMachine::handleAdminForwardingStateSyncUp,  // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/io_context__strand/wrap.html
             this,
             boost::asio::placeholders::error
     )));
