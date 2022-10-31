@@ -326,7 +326,7 @@ void ActiveActiveStateMachine::handleProbeMuxFailure()
 //
 void ActiveActiveStateMachine::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGWARNING(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    MUXLOGWARNING(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mPeerWaitTimer.cancel();
     enterPeerMuxState(label);
@@ -403,7 +403,7 @@ void ActiveActiveStateMachine::handleUseWellKnownMacAddressNotification()
 ---------------------------------------------------------------------------------------------------------------*/
 void ActiveActiveStateMachine::startAdminForwardingStateSyncUpTimer()
 {
-    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     mResyncTimer.expires_from_now(boost::posix_time::milliseconds(
         mMuxPortConfig.getAdminForwardingStateSyncUpInterval()
     ));
@@ -416,7 +416,7 @@ void ActiveActiveStateMachine::startAdminForwardingStateSyncUpTimer()
 
 void ActiveActiveStateMachine::handleAdminForwardingStateSyncUp(boost::system::error_code errorCode)
 {
-    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (!mWaitMux) 
     {
