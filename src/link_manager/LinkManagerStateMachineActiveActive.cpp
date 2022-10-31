@@ -50,7 +50,8 @@ ActiveActiveStateMachine::ActiveActiveStateMachine(
       ),
       mDeadlineTimer(strand.context()),
       mWaitTimer(strand.context()),
-      mPeerWaitTimer(strand.context())
+      mPeerWaitTimer(strand.context()),
+      mResyncTimer(strand.context())
 {
     assert(muxPortPtr != nullptr);
     mMuxPortPtr->setMuxLinkmgrState(mLabel);
@@ -93,6 +94,8 @@ void ActiveActiveStateMachine::activateStateMachine()
         mStartProbingFnPtr();
 
         updateMuxLinkmgrState();
+
+        startAdminForwardingStateSyncUpTimer();
     }
 }
 
@@ -393,6 +396,34 @@ void ActiveActiveStateMachine::handleUseWellKnownMacAddressNotification()
             mComponentInitState.test(LinkProberComponent)
         );
     }
+}
+
+/*--------------------------------------------------------------------------------------------------------------
+|  soc side admin forwarding state re-sync
+---------------------------------------------------------------------------------------------------------------*/
+void ActiveActiveStateMachine::startAdminForwardingStateSyncUpTimer()
+{
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    mResyncTimer.expire_from_now(boost::posix_timer::milliseconds(
+        mMuxPortConfig.getAdminForwardingStateSyncUpInterval()
+    ));
+    mResyncTimer.async_wait(boost::asio::bind_executor(getStrand(),             // wrap() is deprecated, using bind_executor()
+        std::bind(&ActiveActiveStateMachine::handleAdminForwardingStateSyncUp,  // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/io_context__strand/wrap.html
+            this,
+            boost::asio::placeholders::error
+    )));
+}
+
+void ActiveActiveStateMachine::handleAdminForwardingStateSyncUp(boost::system::error_code errorCode)
+{
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
+
+    if (!mWaitMux) 
+    {
+        probeMuxState();
+    }
+
+    startAdminForwardingStateSyncUpTimer();
 }
 
 /*--------------------------------------------------------------------------------------------------------------
