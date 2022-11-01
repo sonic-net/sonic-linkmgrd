@@ -81,6 +81,13 @@ uint32_t MuxManagerTest::getNegativeStateChangeRetryCount(std::string port)
     return muxPortPtr->mMuxPortConfig.getNegativeStateChangeRetryCount();
 }
 
+uint32_t MuxManagerTest::getLinkProberStatUpdateIntervalCount(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getLinkProberStatUpdateIntervalCount();
+}
+
 uint32_t MuxManagerTest::getTimeoutIpv4_msec(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -832,6 +839,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     uint32_t v6ProveInterval = 700;
     uint32_t positiveSignalCount = 2;
     uint32_t negativeSignalCount = 3;
+    uint32_t pckLossStatUpdateInterval = 900;
     uint32_t suspendTimer = 5;
     bool useWellKnownMac = true;
     bool useTorMacAddress = true; 
@@ -844,6 +852,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"use_well_known_mac", "enable"}}},
         {"LINK_PROBER", "SET", {{"interval_v4", "abc"}}},
         {"LINK_PROBER", "SET", {{"src_mac", "ToRMac"}}},
+        {"LINK_PROBER", "SET", {{"interval_pck_loss_count_update", "900"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
     processMuxLinkmgrConfigNotifiction(entries);
@@ -851,11 +860,19 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     EXPECT_TRUE(getTimeoutIpv4_msec(port) == v4PorbeInterval);
     EXPECT_TRUE(getTimeoutIpv6_msec(port) == v6ProveInterval);
     EXPECT_TRUE(getPositiveStateChangeRetryCount(port) == positiveSignalCount);
-    EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == negativeSignalCount);
+    EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == pckLossStatUpdateInterval);
+    EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == negativeSignalCount);
     EXPECT_TRUE(getLinkWaitTimeout_msec(port) == (negativeSignalCount + 1) * v4PorbeInterval);
     EXPECT_TRUE(common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::warning);
     EXPECT_TRUE(getIfUseWellKnownMac(port) == useWellKnownMac);
     EXPECT_TRUE(getIfUseToRMac(port) == useTorMacAddress);
+
+    std::deque<swss::KeyOpFieldsValuesTuple> entry = {
+        {"LINK_PROBER", "SET", {{"interval_pck_loss_count_update", "1"}}},
+    };
+    processMuxLinkmgrConfigNotifiction(entry);
+
+    EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == 50);
 }
 
 TEST_P(MuxResponseTest, MuxResponse)

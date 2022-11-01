@@ -97,6 +97,17 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mTimeoutIpv6_msec = timeout_msec;};
 
     /**
+    *@method setLinkProberStatUpdateIntervalCount
+    *
+    *@brief setter for link prober stats posting interval
+    *
+    *@param interval_count (in)  interval in heartbeat count
+    *
+    *@return none
+    */
+    inline void setLinkProberStatUpdateIntervalCount(uint32_t interval_count) {mLinkProberStatUpdateIntervalCount = interval_count > 50? interval_count:50;};
+
+    /**
     *@method setPositiveStateChangeRetryCount
     *
     *@brief setter for LinkProber positive state change retry count
