@@ -769,4 +769,23 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberUnknownRecvMu
     VALIDATE_STATE(Unknown, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheck)
+{
+    setMuxActive();
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("standby", 4);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+
+    handleMuxState("active", 2);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
 } /* namespace test */

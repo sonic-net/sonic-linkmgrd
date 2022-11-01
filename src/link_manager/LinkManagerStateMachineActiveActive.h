@@ -542,15 +542,6 @@ private:
     void shutdownOrRestartLinkProberOnDefaultRoute() override;
 
     /**
-     * @method startAdminFowardingStateSyncUpTimer
-     * 
-     * @brief start admin forwarding state sync up timer
-     * 
-     * @return none
-     */
-    void startAdminForwardingStateSyncUpTimer();
-
-    /**
      * @method handleAdminFowardingStateSyncUp
      * 
      * @brief handle admin forwarding state sync up
@@ -559,6 +550,15 @@ private:
      */
     void handleAdminForwardingStateSyncUp(boost::system::error_code errorCode);
 
+public: 
+    /**
+     * @method startAdminFowardingStateSyncUpTimer
+     * 
+     * @brief start admin forwarding state sync up timer
+     * 
+     * @return none
+     */
+    void startAdminForwardingStateSyncUpTimer();
 
 private: // testing only
     friend class mux::MuxPort;
