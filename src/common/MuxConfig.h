@@ -245,6 +245,15 @@ public:
     inline uint32_t getNegativeStateChangeRetryCount() const {return mNegativeStateChangeRetryCount;};
 
     /**
+    *@method getLinkProberStatUpdateIntervalCount
+    *
+    *@brief getter for LinkProber negative state change retry count
+    *
+    *@return state change retry count
+    */
+    inline uint32_t getLinkProberStatUpdateIntervalCount() const {return mLinkProberStatUpdateIntervalCount;};
+
+    /**
     *@method getSuspendTimeout_msec
     *
     *@brief getter for LinkProber suspend timer timeout
@@ -389,6 +398,7 @@ private:
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mPositiveStateChangeRetryCount = 1;
     uint32_t mNegativeStateChangeRetryCount = 3;
+    uint32_t mLinkProberStatUpdateIntervalCount = 300; 
     uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
