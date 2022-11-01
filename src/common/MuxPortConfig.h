@@ -378,6 +378,15 @@ public:
      */
     inline bool ifEnableUseTorMac() {return mMuxConfig.getIfEnableUseTorMac();};
 
+    /**
+     * @method getAdminForwardingStateSyncUpInterval
+     * 
+     * @brief getter of admin forwarding state sync up interval
+     * 
+     * @return sync up interval in msec
+     */
+    uint32_t getAdminForwardingStateSyncUpInterval() {return mAdminForwardingStateSyncUpInterval_msec;};
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
@@ -388,6 +397,7 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
+    uint32_t mAdminForwardingStateSyncUpInterval_msec = 10000;
 
 };
 

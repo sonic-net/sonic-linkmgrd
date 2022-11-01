@@ -541,6 +541,25 @@ private:
      */
     void shutdownOrRestartLinkProberOnDefaultRoute() override;
 
+    /**
+     * @method handleAdminFowardingStateSyncUp
+     * 
+     * @brief handle admin forwarding state sync up
+     * 
+     * @return none
+     */
+    void handleAdminForwardingStateSyncUp(boost::system::error_code errorCode);
+
+public: 
+    /**
+     * @method startAdminFowardingStateSyncUpTimer
+     * 
+     * @brief start admin forwarding state sync up timer
+     * 
+     * @return none
+     */
+    void startAdminForwardingStateSyncUpTimer();
+
 private: // testing only
     friend class mux::MuxPort;
     friend class test::FakeMuxPort;
@@ -657,6 +676,7 @@ private:
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;
+    boost::asio::deadline_timer mResyncTimer;
 
     boost::function<void()> mInitializeProberFnPtr;
     boost::function<void()> mStartProbingFnPtr;
