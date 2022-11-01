@@ -860,8 +860,8 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     EXPECT_TRUE(getTimeoutIpv4_msec(port) == v4PorbeInterval);
     EXPECT_TRUE(getTimeoutIpv6_msec(port) == v6ProveInterval);
     EXPECT_TRUE(getPositiveStateChangeRetryCount(port) == positiveSignalCount);
-    EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == pckLossStatUpdateInterval);
-    EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == negativeSignalCount);
+    EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == negativeSignalCount);
+    EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == pckLossStatUpdateInterval);
     EXPECT_TRUE(getLinkWaitTimeout_msec(port) == (negativeSignalCount + 1) * v4PorbeInterval);
     EXPECT_TRUE(common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::warning);
     EXPECT_TRUE(getIfUseWellKnownMac(port) == useWellKnownMac);
@@ -871,7 +871,6 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"interval_pck_loss_count_update", "1"}}},
     };
     processMuxLinkmgrConfigNotifiction(entry);
-
     EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == 50);
 }
 
