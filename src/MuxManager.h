@@ -123,6 +123,17 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mMuxConfig.setTimeoutIpv6_msec(timeout_msec);};
 
     /**
+    *@method setLinkProberStatUpdateIntervalCount
+    *
+    *@brief setter for link prober stats posting interval
+    *
+    *@param interval_count (in)  interval in heartbeat count
+    *
+    *@return none
+    */
+    inline void setLinkProberStatUpdateIntervalCount(uint32_t interval_count) {mMuxConfig.setLinkProberStatUpdateIntervalCount(interval_count);};
+
+    /**
     *@method setPositiveStateChangeRetryCount
     *
     *@brief setter for LinkProber positive state change retry count

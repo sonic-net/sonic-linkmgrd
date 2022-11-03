@@ -1005,6 +1005,8 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                         mMuxManagerPtr->setUseWellKnownMacActiveActive(v == "enable");
                     } else if (f == "src_mac") {
                         mMuxManagerPtr->processSrcMac(v == "ToRMac");
+                    } else if (f == "interval_pck_loss_count_update") {
+                        mMuxManagerPtr->setLinkProberStatUpdateIntervalCount(boost::lexical_cast<uint32_t> (v));
                     }
 
                     MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %

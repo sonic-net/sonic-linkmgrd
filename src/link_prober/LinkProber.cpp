@@ -500,7 +500,7 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
     mReportHeartbeatReplyNotRecivedFuncPtr();
 
     mIcmpPacketCount++;
-    if (mIcmpPacketCount % mMuxPortConfig.getNegativeStateChangeRetryCount() == 0) {
+    if (mIcmpPacketCount % mMuxPortConfig.getLinkProberStatUpdateIntervalCount() == 0) {
         boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
         boost::asio::io_service &ioService = strand.context();
         ioService.post(strand.wrap(boost::bind(
