@@ -52,6 +52,7 @@ public:
     common::MuxPortConfig::Mode getMode(std::string port);
     uint32_t getPositiveStateChangeRetryCount(std::string port);
     uint32_t getNegativeStateChangeRetryCount(std::string port);
+    uint32_t getLinkProberStatUpdateIntervalCount(std::string port);
     uint32_t getTimeoutIpv4_msec(std::string port);
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
