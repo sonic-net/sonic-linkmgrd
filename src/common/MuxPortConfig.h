@@ -162,6 +162,15 @@ public:
     inline uint32_t getNegativeStateChangeRetryCount() const {return mMuxConfig.getNegativeStateChangeRetryCount();};
 
     /**
+    *@method getLinkProberStatUpdateIntervalCount
+    *
+    *@brief getter for LinkProber negative state change retry count
+    *
+    *@return state change retry count
+    */
+    inline uint32_t getLinkProberStatUpdateIntervalCount() const {return mMuxConfig.getLinkProberStatUpdateIntervalCount();};
+
+    /**
     *@method getSuspendTimeout_msec
     *
     *@brief getter for LinkProber suspend timer timeout
