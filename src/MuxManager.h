@@ -20,6 +20,8 @@
  *  Created on: Oct 4, 2020
  *      Author: Tamer Ahmed
  */
+// #define BOOST_ASIO_ENABLE_HANDLER_TRACKING 1
+#define BOOST_ASIO_STRAND_IMPLEMENTATIONS 1024
 
 #ifndef MUXMANAGER_H_
 #define MUXMANAGER_H_
