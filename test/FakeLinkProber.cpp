@@ -20,9 +20,8 @@
  *  Created on: Oct 23, 2020
  *      Author: tamer
  */
-// #define BOOST_ASIO_ENABLE_HANDLER_TRACKING 1
-#define BOOST_ASIO_STRAND_IMPLEMENTATIONS 1024
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 

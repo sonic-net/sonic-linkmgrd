@@ -21,10 +21,6 @@
  *      Author: tamer
  */
 
-
-// #define BOOST_ASIO_ENABLE_HANDLER_TRACKING 1
-#define BOOST_ASIO_STRAND_IMPLEMENTATIONS 1024
-
 #ifndef LINKPROBER_H_
 #define LINKPROBER_H_
 
@@ -33,6 +29,7 @@
 #include <vector>
 #include <linux/filter.h>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 

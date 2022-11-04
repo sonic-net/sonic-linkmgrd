@@ -20,8 +20,6 @@
  *  Created on: Oct 9, 2020
  *      Author: Tamer Ahmed
  */
-// #define BOOST_ASIO_ENABLE_HANDLER_TRACKING 1
-#define BOOST_ASIO_STRAND_IMPLEMENTATIONS 1024
 
 #ifndef MUXCONFIG_H_
 #define MUXCONFIG_H_
@@ -29,6 +27,7 @@
 #include <string>
 #include <net/ethernet.h>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 
 namespace common
