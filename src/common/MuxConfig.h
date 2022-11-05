@@ -27,6 +27,7 @@
 #include <string>
 #include <net/ethernet.h>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 
 namespace common

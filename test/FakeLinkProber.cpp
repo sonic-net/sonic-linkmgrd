@@ -21,6 +21,7 @@
  *      Author: tamer
  */
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 

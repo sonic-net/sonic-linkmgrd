@@ -29,6 +29,7 @@
 #include <vector>
 #include <linux/filter.h>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
