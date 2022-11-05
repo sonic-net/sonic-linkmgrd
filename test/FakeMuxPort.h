@@ -25,6 +25,8 @@
 #define FAKEMUXPORT_H_
 
 #include <gtest/gtest.h>
+
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 
 #include "MuxPort.h"

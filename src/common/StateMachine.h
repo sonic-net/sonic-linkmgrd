@@ -26,6 +26,7 @@
 
 #include <memory>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 
 #include "common/MuxPortConfig.h"

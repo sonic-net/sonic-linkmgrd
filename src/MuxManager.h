@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 
+#include <common/BoostAsioBehavior.h>
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
 
