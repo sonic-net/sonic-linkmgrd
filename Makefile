@@ -79,7 +79,7 @@ test-targets: $(OBJS) $(USER_OBJS) $(OBJS_LINKMGRD_TEST)
 	@echo 'Invoking: GCC C++ Linker'
 	$(CXX) -pthread -fprofile-generate -lgcov -o "$(LINKMGRD_TEST_TARGET)" $(OBJS) $(OBJS_LINKMGRD_TEST) $(USER_OBJS) $(LIBS) $(LIBS_TEST)
 	@echo 'Executing test target: $@'
-	LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5 ./$(LINKMGRD_TEST_TARGET)
+	LD_PRELOAD=/usr/lib/$(shell uname -m)-linux-gnu/libasan.so.5 ./$(LINKMGRD_TEST_TARGET)
 	$(GCOVR) -r ./ --html --html-details -o $(LINKMGRD_TEST_TARGET)-result.html
 	$(GCOVR) -r ./ --xml-pretty -o $(LINKMGRD_TEST_TARGET)-result.xml
 	@echo 'Finished building target: $@'
