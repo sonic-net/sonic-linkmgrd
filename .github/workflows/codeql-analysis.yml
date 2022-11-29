@@ -58,6 +58,9 @@ jobs:
             libgmock-dev \
             libboost1.71-dev \
             libboost-serialization1.71-dev \
+            libboost-date-time1.71-dev \
+            libboost-thread1.71-dev \
+            libboost-log1.71-dev \
             dh-exec \
             doxygen \
             cdbs \
