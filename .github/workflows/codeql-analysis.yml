@@ -88,7 +88,7 @@ jobs:
         set -x
         sed -i '19 i JOBS := 1' Makefile
         sed -i -e "s/ -flto//g" Makefile
-        sed -i '37 i LIBS += $(nullstring)-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include' Makefile
+        sed -i "37 i LIBS += -L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include" Makefile
         make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
 
     - name: Perform CodeQL Analysis
