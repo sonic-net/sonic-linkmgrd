@@ -260,7 +260,7 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
 //
 void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGWARNING(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    MUXLOGINFO(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mWaitTimer.cancel();
     if (label == mux_state::MuxState::Label::Active || label == mux_state::MuxState::Label::Standby) {
@@ -326,7 +326,7 @@ void ActiveActiveStateMachine::handleProbeMuxFailure()
 //
 void ActiveActiveStateMachine::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGWARNING(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    MUXLOGINFO(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mPeerWaitTimer.cancel();
     enterPeerMuxState(label);
