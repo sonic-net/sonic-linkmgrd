@@ -513,9 +513,8 @@ void DbInterface::handlePostLinkProberMetrics(
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
 
-    if (metrics == link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberUnknownStart) {
-        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[0]);
-        mStateDbLinkProbeStatsTablePtr->hdel(portName, mLinkProbeMetrics[1]);
+    for (auto linkProberMetricsEvent:mLinkProbeMetrics) {
+        mStateDbLinkProbeStatsTablePtr->hdel(portName, linkProberMetricsEvent);
     }
 
     mStateDbLinkProbeStatsTablePtr->hset(portName, mLinkProbeMetrics[static_cast<int> (metrics)], boost::posix_time::to_simple_string(time));
@@ -541,8 +540,11 @@ void DbInterface::handlePostPckLossRatio(
         expectedPacketCount
     );
 
-    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_loss_count", std::to_string(unknownEventCount));
-    mStateDbLinkProbeStatsTablePtr->hset(portName, "pck_expected_count", std::to_string(expectedPacketCount));
+
+    std::vector<swss::FieldValueTuple> fieldValues;
+    fieldValues.push_back(std::make_pair("pck_loss_count", std::to_string(unknownEventCount)));
+    fieldValues.push_back(std::make_pair("pck_expected_count", std::to_string(expectedPacketCount)));
+    mStateDbLinkProbeStatsTablePtr->set(portName, fieldValues);
 }
 
 //
