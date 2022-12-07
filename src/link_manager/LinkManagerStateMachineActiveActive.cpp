@@ -326,7 +326,12 @@ void ActiveActiveStateMachine::handleProbeMuxFailure()
 //
 void ActiveActiveStateMachine::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+
+    MUXLOGDEBUG(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+
+    if (mPeerMuxState != label) {
+        MUXLOGWARNING(boost::format("%s: server side peer forwarding state : %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    }
 
     mPeerWaitTimer.cancel();
     enterPeerMuxState(label);
