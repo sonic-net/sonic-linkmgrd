@@ -326,7 +326,6 @@ void ActiveActiveStateMachine::handleProbeMuxFailure()
 //
 void ActiveActiveStateMachine::handlePeerMuxStateNotification(mux_state::MuxState::Label label)
 {
-
     MUXLOGDEBUG(boost::format("%s: app/state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mPeerMuxState != label) {
