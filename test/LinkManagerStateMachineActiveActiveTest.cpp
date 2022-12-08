@@ -373,6 +373,10 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
 
     VALIDATE_PEER_STATE(PeerWait, Wait);
 
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive, 1);
+    handlePeerMuxState("active", 1);
+    VALIDATE_PEER_STATE(PeerActive, Active);
+
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
