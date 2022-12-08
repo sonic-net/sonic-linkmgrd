@@ -484,7 +484,7 @@ void ActiveActiveStateMachine::handleStateChange(
         // update state db link prober metrics to collect link prober state change data
         if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
             mContinuousLinkProberUnknownEvent = false;
-            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveActiveStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
+            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveActiveStateMachine::LinkProberMetrics::LinkProberActiveStart);
         } 
         
         if (mContinuousLinkProberUnknownEvent == false && state == link_prober::LinkProberState::Label::Unknown) {
