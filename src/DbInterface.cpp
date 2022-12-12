@@ -513,6 +513,8 @@ void DbInterface::handlePostLinkProberMetrics(
         mLinkProbeMetrics[static_cast<int> (metrics)]
     );
 
+    MUXLOGDEBUG("Try to exclude this line on PR coverage check."); //GCOV_EXCL_LINE
+
     for (auto linkProberMetricsEvent:mLinkProbeMetrics) {
         mStateDbLinkProbeStatsTablePtr->hdel(portName, linkProberMetricsEvent);
     }
