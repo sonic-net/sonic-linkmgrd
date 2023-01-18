@@ -21,6 +21,7 @@
  *      Author: Tamer Ahmed
  */
 
+// GCOVR_EXCL_START
 #include <algorithm>
 #include <tuple>
 
@@ -1150,3 +1151,4 @@ void DbInterface::handleSwssNotification()
 }
 
 } /* namespace common */
+// GCOVR_EXCL_STOP
