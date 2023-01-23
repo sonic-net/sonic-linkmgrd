@@ -507,7 +507,6 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         // update state db link prober metrics to collect link prober state change data
         if (mContinuousLinkProberUnknownEvent == true && state != link_prober::LinkProberState::Unknown) {
             mContinuousLinkProberUnknownEvent = false;
-            mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberUnknownEnd);
         } 
         
         if (mContinuousLinkProberUnknownEvent == false && state == link_prober::LinkProberState::Label::Unknown) {
