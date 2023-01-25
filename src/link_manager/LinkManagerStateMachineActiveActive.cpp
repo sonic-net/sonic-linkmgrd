@@ -186,6 +186,7 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
         mResumeTxFnPtr();
         postMuxStateEvent(label);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+        updateMuxLinkmgrState();
     } else {
         if (label == mux_state::MuxState::Unknown) {
             MUXLOGWARNING(
