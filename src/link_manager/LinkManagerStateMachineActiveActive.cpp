@@ -186,6 +186,7 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
         mResumeTxFnPtr();
         postMuxStateEvent(label);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
+        updateMuxLinkmgrState();
     } else {
         if (label == mux_state::MuxState::Unknown) {
             MUXLOGWARNING(
@@ -996,7 +997,7 @@ void ActiveActiveStateMachine::updateMuxLinkmgrState()
     Label label = Label::Unhealthy;
     if (ls(mCompositeState) == link_state::LinkState::Label::Up &&
         ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
-        ms(mCompositeState) != mux_state::MuxState::Label::Standby &&
+        (ms(mCompositeState) == mLastMuxStateNotification || mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) &&
         (mMuxPortConfig.ifEnableDefaultRouteFeature() == false || mDefaultRouteState == DefaultRoute::OK)) {
         label = Label::Healthy;
     }
