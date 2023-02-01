@@ -934,7 +934,8 @@ void ActiveActiveStateMachine::switchMuxState(
 {
     if (forceSwitch ||
         mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
-        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached) {
+        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached ||
+        (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active && label == mux_state::MuxState::Label::Active)) {
         MUXLOGWARNING(
             boost::format("%s: Switching MUX state to '%s'") %
             mMuxPortConfig.getPortName() %
