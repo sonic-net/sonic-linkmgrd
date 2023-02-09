@@ -241,6 +241,8 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
         CompositeState nextState = mCompositeState;
         if (mode == common::MuxPortConfig::Mode::Active && ms(mCompositeState) != mux_state::MuxState::Label::Active) {
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+        } else if (mode == common::MuxPortConfig::Mode::Auto && ms(mCompositeState) == mux_state::MuxState::Label::Unknown) {
+            initLinkProberState(nextState);
         } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         } else {
