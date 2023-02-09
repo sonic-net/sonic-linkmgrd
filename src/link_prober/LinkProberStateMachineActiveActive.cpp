@@ -187,7 +187,6 @@ void LinkProberStateMachineActiveActive::processEvent(SuspendTimerExpiredEvent &
 void LinkProberStateMachineActiveActive::processEvent(MuxProbeRequestEvent &muxProbeRequestEvent)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
-    boost::asio::io_service &ioService = strand.context();
     boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxProbeRequestEvent,
         mLinkManagerStateMachinePtr
