@@ -253,7 +253,6 @@ void LinkProber::sendPeerSwitchCommand()
 //
 void LinkProber::sendPeerProbeCommand()
 {
-    boost::asio::io_service &ioService = mStrand.context();
     boost::asio::post(mStrand, boost::bind(&LinkProber::handleSendProbeCommand, this));
 }
 
@@ -341,7 +340,6 @@ void LinkProber::handleTlvCommandRecv(
 {
     if (isPeer) {
         boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-        boost::asio::io_service &ioService = strand.context();
 
         switch (static_cast<Command>(tlvPtr->command)) {
             case Command::COMMAND_SWITCH_ACTIVE: {
