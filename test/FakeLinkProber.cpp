@@ -162,7 +162,6 @@ void FakeLinkProber::handleSwitchCommandRecv()
 void FakeLinkProber::handleMuxProbeCommandRecv()
 {
     boost::asio::io_service::strand& strand = mLinkProberStateMachine->getStrand();
-    boost::asio::io_service &ioService = strand.context();
     boost::asio::post(strand, boost::bind(
         static_cast<void (link_prober::LinkProberStateMachineBase::*) (link_prober::MuxProbeRequestEvent&)>
             (&link_prober::LinkProberStateMachineBase::processEvent),
