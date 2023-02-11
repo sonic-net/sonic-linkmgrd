@@ -788,4 +788,64 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheck)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandbygRPCError)
+{
+    setMuxActive();
+
+    handleMuxConfig("standby", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Up);
+
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    handleProbeMuxState("unknown", 4);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    handleMuxConfig("auto", 1);
+    VALIDATE_STATE(Wait, Unknown, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    VALIDATE_STATE(Active, Active, Up);
+
+    handleMuxState("unknown", 4);
+    VALIDATE_STATE(Active, Unknown, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyConfigStandbygRPCError)
+{
+    setMuxStandby();
+
+    handleMuxConfig("active", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    VALIDATE_STATE(Unknown, Active, Up);
+
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleProbeMuxState("unknown", 4);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    handleMuxConfig("auto", 1);
+    VALIDATE_STATE(Wait, Unknown, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    VALIDATE_STATE(Unknown, Standby, Up);
+
+    handleMuxState("unknown", 4);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+}
+
 } /* namespace test */

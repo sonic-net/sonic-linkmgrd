@@ -243,6 +243,9 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
         } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+        } else if (mode == common::MuxPortConfig::Mode::Auto && ms(mCompositeState) == mux_state::MuxState::Label::Unknown) {
+            MUXLOGINFO(boost::format("%s: reset link prober state") % mMuxPortConfig.getPortName());
+            initLinkProberState(nextState);
         } else {
             // enforce a state transtion calculation based on current states
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
