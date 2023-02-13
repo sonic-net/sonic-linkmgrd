@@ -706,6 +706,24 @@ void ActiveActiveStateMachine::initializeTransitionFunctionTable()
                                    this,
                                    boost::placeholders::_1
                                );
+
+    mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
+                           [mux_state::MuxState::Label::Wait]
+                           [link_state::LinkState::Label::Down] =
+                               boost::bind(
+                                   &ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkDownTransitionFunction,
+                                   this,
+                                   boost::placeholders::_1
+                               );
+
+    mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
+                           [mux_state::MuxState::Label::Unknown]
+                           [link_state::LinkState::Label::Down] =
+                               boost::bind(
+                                   &ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunction,
+                                   this,
+                                   boost::placeholders::_1
+                               );
 }
 
 //
@@ -829,6 +847,36 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkUpTransitionFunction(
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
     switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+}
+
+//
+// ---> LinkProberUnknownMuxWaitLinkDownTransitionFunction(CompositeState &nextState)
+//
+// transition function when entering {LinkProberUnnown, MuxWait, LinkDown} state
+//
+void ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkDownTransitionFunction(CompositeState &nextState)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+    if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+    } else {
+        startMuxProbeTimer();
+    }
+}
+
+//
+// ---> LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
+//
+// transition function when entering {LinkProberUnnown, MuxUnknown, LinkDown} state
+//
+void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+    if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+    } else {
+        startMuxProbeTimer();
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------
