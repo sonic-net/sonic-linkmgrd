@@ -359,7 +359,7 @@ public: // state transition functions
     /**
      * @method LinkProberUnknownMuxWaitLinkDownTransitionFunction
      * 
-     * @brief transition function when entering {LinkProberUnnown, MuxWait, LinkDown} state
+     * @brief transition function when entering {LinkProberUnknown, MuxWait, LinkDown} state
      * 
      * @param nextState                     reference to composite state
      */
@@ -368,7 +368,7 @@ public: // state transition functions
     /**
      * @method LinkProberUnknownMuxUnknownLinkDownTransitionFunction
      * 
-     * @brief transition function when entering {LinkProberUnnown, MuxUnknown, LinkDown} state
+     * @brief transition function when entering {LinkProberUnknown, MuxUnknown, LinkDown} state
      * 
      * @param nextState                     reference to composite state
      */

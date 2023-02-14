@@ -852,7 +852,7 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkUpTransitionFunction(
 //
 // ---> LinkProberUnknownMuxWaitLinkDownTransitionFunction(CompositeState &nextState)
 //
-// transition function when entering {LinkProberUnnown, MuxWait, LinkDown} state
+// transition function when entering {LinkProberUnknown, MuxWait, LinkDown} state
 //
 void ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkDownTransitionFunction(CompositeState &nextState)
 {
@@ -867,7 +867,7 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxWaitLinkDownTransitionFunctio
 //
 // ---> LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
 //
-// transition function when entering {LinkProberUnnown, MuxUnknown, LinkDown} state
+// transition function when entering {LinkProberUnknown, MuxUnknown, LinkDown} state
 //
 void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState)
 {
