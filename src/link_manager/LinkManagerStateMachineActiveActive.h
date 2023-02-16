@@ -356,6 +356,24 @@ public: // state transition functions
      */
     void LinkProberUnknownMuxWaitLinkUpTransitionFunction(CompositeState &nextState);
 
+    /**
+     * @method LinkProberUnknownMuxWaitLinkDownTransitionFunction
+     * 
+     * @brief transition function when entering {LinkProberUnknown, MuxWait, LinkDown} state
+     * 
+     * @param nextState                     reference to composite state
+     */
+    void LinkProberUnknownMuxWaitLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+     * @method LinkProberUnknownMuxUnknownLinkDownTransitionFunction
+     * 
+     * @brief transition function when entering {LinkProberUnknown, MuxUnknown, LinkDown} state
+     * 
+     * @param nextState                     reference to composite state
+     */
+    void LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState);
+
 private: // utility methods to check/modify state
     /**
      * @method setLabel
