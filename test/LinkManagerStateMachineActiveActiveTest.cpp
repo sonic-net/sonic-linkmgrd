@@ -457,10 +457,34 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState)
     postDefaultRouteEvent("na", 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Up);
 
     postDefaultRouteEvent("ok", 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteStateMuxConfigActive)
+{
+    setMuxActive();
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_FALSE(mMuxConfig.getIfEnableDefaultRouteFeature());
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    postDefaultRouteEvent("ok", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 1);
+
+    handleMuxConfig("active", 2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 2);
+
+    postDefaultRouteEvent("na", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    VALIDATE_STATE(Active, Active, Up);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, LinkmgrdBootupSequenceHeartBeatFirst)

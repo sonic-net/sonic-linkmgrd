@@ -1240,6 +1240,18 @@ void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const Default
 
     mDefaultRouteState = routeState;
     shutdownOrRestartLinkProberOnDefaultRoute();
+
+    if (mComponentInitState.all() &&
+        mMuxPortConfig.getMode() != common::MuxPortConfig::Mode::Active &&
+        mDefaultRouteState == DefaultRoute::NA) {
+        // Add a switch to standby here, so the self ToR should be able to
+        // toggle itself to standby earlier than the peer ToR.
+        CompositeState nextState = mCompositeState;
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+        LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        mCompositeState = nextState;
+    }
+
     updateMuxLinkmgrState();
 }
 
@@ -1255,9 +1267,9 @@ void ActiveActiveStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 
     if (mComponentInitState.all()) {
         if ((mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
-            mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached ||
-            mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby)
-            && mDefaultRouteState != DefaultRoute::OK) {
+             mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Detached ||
+             mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) &&
+            mDefaultRouteState != DefaultRoute::OK) {
             mShutdownTxFnPtr();
         } else {
             // If mux mode is in manual/active mode, we should restart link prober.
