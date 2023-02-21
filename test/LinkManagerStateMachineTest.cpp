@@ -564,6 +564,39 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDown)
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDownMuxStandbyCliActiveCliAuto)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleLinkState("down", 3);
+    VALIDATE_STATE(Standby, Standby, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Unknown, Standby, Down);
+
+    runIoService(1);
+    VALIDATE_STATE(Unknown, Wait, Down);
+
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Unknown, Standby, Down);
+
+    handleMuxConfig("active", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Down);
+
+    handleMuxConfig("auto", 2);
+    VALIDATE_STATE(Wait, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Down);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownPeerOvertakeLink)
 {
     setMuxActive();
