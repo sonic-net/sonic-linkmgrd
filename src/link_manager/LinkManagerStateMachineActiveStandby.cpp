@@ -770,8 +770,17 @@ void ActiveStandbyStateMachine::handleMuxConfigNotification(const common::MuxPor
             mSendSwitchActiveCommandCause = link_manager::ActiveStandbyStateMachine::SwitchCause::ConfigMuxMode;
             mSendPeerSwitchCommandFnPtr();
         } else {
-            mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
-            mMuxPortPtr->probeMuxState();
+            LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, mCompositeState);
+            if (ls(mCompositeState) == link_state::LinkState::Down &&
+                ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
+                CompositeState nextState = mCompositeState;
+                switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby, true);
+                LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+                mCompositeState = nextState;
+            } else {
+                mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
+                mMuxPortPtr->probeMuxState();
+            }
         }
 
         updateMuxLinkmgrState();
