@@ -551,7 +551,7 @@ void ActiveActiveStateMachine::handleStateChange(
         if (ls(mCompositeState) == link_state::LinkState::Down && ls(nextState) == link_state::LinkState::Up) {
             initLinkProberState(nextState);
             initPeerLinkProberState();
-        } else if (ls(mCompositeState) == link_state::LinkState::Up && ls(nextState) == link_state::LinkState::Down && ms(mCompositeState) == mux_state::MuxState::Label::Active) {
+        } else if (ls(mCompositeState) == link_state::LinkState::Up && ls(nextState) == link_state::LinkState::Down && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby);
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
