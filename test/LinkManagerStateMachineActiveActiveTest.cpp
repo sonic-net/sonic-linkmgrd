@@ -328,6 +328,25 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkDown)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkDownMuxUnknownFirsrt)
+{
+    setMuxActive();
+
+    handleProbeMuxState("unknown", 4);
+    VALIDATE_STATE(Active, Unknown, Up);
+
+    postLinkEvent(link_state::LinkState::Label::Down, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Down);
+
+    handleMuxState("unknown", 4);
+    VALIDATE_STATE(Active, Unknown, Down);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 4);
+    VALIDATE_STATE(Unknown, Unknown, Down);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
 {
     setMuxActive();
