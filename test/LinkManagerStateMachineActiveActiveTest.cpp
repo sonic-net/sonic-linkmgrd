@@ -340,10 +340,10 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkDownMuxUnknownFirsr
     EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
     VALIDATE_STATE(Active, Standby, Down);
 
-    handleMuxState("unknown", 4);
-    VALIDATE_STATE(Active, Unknown, Down);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    VALIDATE_STATE(Unknown, Standby, Down);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown, 4);
+    handleMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Down);
 }
 
