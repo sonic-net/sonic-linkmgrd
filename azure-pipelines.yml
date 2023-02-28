@@ -119,6 +119,8 @@ jobs:
 
   steps:
   - script: |
+      set -ex
+      sudo apt-get update
       sudo apt-get install -y \
           libboost1.71-dev \
           libboost-program-options1.71-dev \
@@ -201,6 +203,8 @@ jobs:
 
   steps:
   - script: |
+      set -ex
+      sudo apt-get update
       sudo apt-get install -y \
           libboost1.71-dev \
           libboost-program-options1.71-dev \
