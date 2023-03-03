@@ -930,4 +930,23 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineActivatedLinkDownMux
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineActivatedLinkDownMuxActive)
+{
+    activateStateMachine();
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    VALIDATE_STATE(Unknown, Standby, Down);
+
+    handleMuxState("active", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    VALIDATE_STATE(Unknown, Standby, Down);
+}
+
 } /* namespace test */
