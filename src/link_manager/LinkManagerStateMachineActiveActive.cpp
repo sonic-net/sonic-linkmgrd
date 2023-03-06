@@ -720,6 +720,15 @@ void ActiveActiveStateMachine::initializeTransitionFunctionTable()
                                    this,
                                    boost::placeholders::_1
                                );
+
+    mStateTransitionHandler[link_prober::LinkProberState::Label::Unknown]
+                           [mux_state::MuxState::Label::Active]
+                           [link_state::LinkState::Label::Down] =
+                               boost::bind(
+                                   &ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkDownTransitionFunction,
+                                   this,
+                                   boost::placeholders::_1
+                               );
 }
 
 //
@@ -873,6 +882,17 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunc
     } else {
         startMuxProbeTimer();
     }
+}
+
+//
+// ---> LinkProberUnknownMuxActiveLinkDownTransitionFunction(CompositeState &nextState)
+//
+// transition function when entering {LinkProberUnknown, MuxUnknown, LinkDown} state
+//
+void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkDownTransitionFunction(CompositeState &nextState)
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+    switchMuxState(nextState, mux_state::MuxState::Label::Standby);
 }
 
 /*--------------------------------------------------------------------------------------------------------------
