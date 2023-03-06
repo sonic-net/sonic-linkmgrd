@@ -547,7 +547,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
 //            enterMuxWaitState(nextState);
         } else if (ls(mCompositeState) == link_state::LinkState::Up &&
                    ls(nextState) == link_state::LinkState::Down &&
-                   ms(mCompositeState) == mux_state::MuxState::Label::Active) {
+                   ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             // switch MUX to standby since we are entering LinkDown state
             switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
         } else {
