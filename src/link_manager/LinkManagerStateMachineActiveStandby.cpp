@@ -300,9 +300,10 @@ void ActiveStandbyStateMachine::switchMuxState(
 )
 {
     if (forceSwitch || mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
-        MUXLOGWARNING(boost::format("%s: Switching MUX state to '%s'") %
+        MUXLOGWARNING(boost::format("%s: Switching MUX state to '%s' for casue: %s") %
             mMuxPortConfig.getPortName() %
-            mMuxStateName[label]
+            mMuxStateName[label],
+            mux::DbInterface::mActiveStandbySwitchCause[cause]
         );
 
         // mWaitActiveUpCount is introduced to address asymmetric link drop issue. 
@@ -518,6 +519,9 @@ void ActiveStandbyStateMachine::handleStateChange(MuxStateEvent &event, mux_stat
 
     if (ms(mCompositeState) != mux_state::MuxState::Unknown) {
         mMuxUnknownBackoffFactor = 1;
+
+        mActiveUnknownUpCount = 0;
+        mStandbyUnknownUpCount = 0;
     }
 
     updateMuxLinkmgrState();
@@ -1144,7 +1148,12 @@ void ActiveStandbyStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFuncti
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    enterMuxWaitState(nextState);
+    mActiveUnknownUpCount++;
+    if (mActiveUnknownUpCount == 2) {
+        switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Active);
+    } else {
+        enterMuxWaitState(nextState);
+    }
 }
 
 //
@@ -1158,10 +1167,14 @@ void ActiveStandbyStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunct
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
+    mStandbyUnknownUpCount++;
+    
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
         enterMuxWaitState(nextState);
+    } else if (mStandbyUnknownUpCount == 2) {
+        switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Standby);
     } else {
         startMuxProbeTimer();
     }
