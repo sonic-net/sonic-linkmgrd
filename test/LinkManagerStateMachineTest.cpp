@@ -1275,4 +1275,45 @@ TEST_F(LinkManagerStateMachineTest, EnableDecreaseLinkProberIntervalFeature)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDecreaseIntervalCallCount, 1);
 }
 
+TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
+{
+    // This test case is for scenario when we have a bad mux firmware.
+    // Issue: If a switchover triggered in this case, tunnel route will be added/removed
+    // unexpectedly, and cause traffic drop. 
+    // Expected behavior: linkmgrd should enforce another toggle. 
+
+    setMuxStandby();
+
+    // switchover triggered
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+
+    // switchover failure 
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
+    handleMuxState("unknown", 3);
+
+    runIoService(2);
+    VALIDATE_STATE(Standby, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+
+    // mux probe failure, 2rd toggle triggered based link prober state.
+    handleProbeMuxState("unknown", 5);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
+
+    // if link prober state changes
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
+
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
+}
+
 } /* namespace test */
