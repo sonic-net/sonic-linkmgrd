@@ -300,10 +300,9 @@ void ActiveStandbyStateMachine::switchMuxState(
 )
 {
     if (forceSwitch || mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
-        MUXLOGWARNING(boost::format("%s: Switching MUX state to '%s' for casue: %s") %
+        MUXLOGWARNING(boost::format("%s: Switching MUX state to '%s'") %
             mMuxPortConfig.getPortName() %
-            mMuxStateName[label],
-            mux::DbInterface::mActiveStandbySwitchCause[cause]
+            mMuxStateName[label]
         );
 
         // mWaitActiveUpCount is introduced to address asymmetric link drop issue. 
