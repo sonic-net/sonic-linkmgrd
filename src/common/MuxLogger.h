@@ -27,10 +27,12 @@
 #include <memory>
 
 #include <boost/format.hpp>
+#include <boost/function.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 
+#include "swss/logger.h"
 
 namespace common
 {
@@ -109,14 +111,15 @@ public:
     *
     *@brief initialize MUX logging class
     *
-    *@param prog (in)           program name to be used when logging
-    *@param path (in)           path on file system to MUX logging file
-    *@param level (in)          minimum logging severity level
-    *@param extraLogFile (in)   save log in an extra log file
+    *@param prog (in)               program name to be used when logging
+    *@param path (in)               path on file system to MUX logging file
+    *@param level (in)              minimum logging severity level
+    *@param extraLogFile (in)       save log in an extra log file
+    *@param linkToSwssLogger (in)   output log to swss logger
     *
     *@return none
     */
-    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level, bool extraLogFile);
+    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level, bool extraLogFile, bool linkToSwsslogger=false);
 
     /**
     *@method setLevel
@@ -148,6 +151,8 @@ public:
     boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>&
     getLogger() {return mSeverityLogger;};
 
+    boost::function<bool(boost::log::trivial::severity_level)> mMuxLoggerEarlyStageFilterPtr;
+
 private:
     friend class std::shared_ptr<MuxLogger>;
     friend MuxLoggerPtr std::make_shared<MuxLogger> ();
@@ -160,9 +165,69 @@ private:
     */
     MuxLogger() = default;
 
+    /**
+    *@method addExtraLogFileSink
+    *
+    *@brief Add an extra log file sink
+    *
+    *@return none
+    */
+    void addExtraLogFileSink(std::string &prog, const std::string &logFile);
+
+    /**
+    *@method addSyslogSink
+    *
+    *@brief add boost syslog sink to the logger
+    *
+    *@return none
+    */
     void addSyslogSink(std::string &prog);
 
+    /**
+    *@method addSwssSyslogSink
+    *
+    *@brief add swss syslog sink to the logger
+    *
+    *@return none
+    */
+    void addSwssSyslogSink(std::string &prog);
+
+    /**
+    *@method isLogAcceptedByBoostLogger
+    *
+    *@brief Early stage log level check in log macros to see if log is accepted by native boost logger
+    *
+    *@param level (in)      boost log level
+    * 
+    *@return none
+    */
+    bool isLogAcceptedByBoostLogger(boost::log::trivial::severity_level level);
+
+    /**
+    *@method isLogAcceptedBySwssLogger
+    *
+    *@brief Early stage log level check in log macros to see if log is accepted by swss logger
+    *
+    *@param level (in)      boost log level
+    *
+    *@return none
+    */
+    bool isLogAcceptedBySwssLogger(boost::log::trivial::severity_level level);
+
 private:
+
+    const int mBoostLogLevelMapper[8] = {
+        boost::log::trivial::severity_level::fatal,
+        boost::log::trivial::severity_level::fatal,
+        boost::log::trivial::severity_level::error,
+        boost::log::trivial::severity_level::error,
+        boost::log::trivial::severity_level::warning,
+        boost::log::trivial::severity_level::warning,
+        boost::log::trivial::severity_level::info,
+        boost::log::trivial::severity_level::debug
+    };
+
+    bool mLinkToSwssLogger = false;
     boost::log::trivial::severity_level mLevel = boost::log::trivial::info;
 
     boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level> mSeverityLogger;
@@ -181,7 +246,7 @@ private:
  */
 #define MUXLOG(level, msg) \
     do { \
-        if (level >= common::MuxLogger::getInstance()->getLevel()) { \
+        if (common::MuxLogger::getInstance()->mMuxLoggerEarlyStageFilterPtr(level)) { \
             BOOST_LOG_SEV(common::MuxLogger::getInstance()->getLogger(), level) \
                 << XSTR(__FILENAME__) << ":" << __LINE__ << " " << __FUNCTION__ << ": " \
                 << msg; \
