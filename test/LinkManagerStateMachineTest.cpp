@@ -888,10 +888,10 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
     runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Wait, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 
     // swss notification
     handleMuxState("unknown", 3);
@@ -957,10 +957,10 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
     runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Wait, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 
     // swss notification
     handleMuxState("unknown", 3);
@@ -1284,35 +1284,26 @@ TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
 
     setMuxStandby();
 
-    // switchover triggered
-    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
-    VALIDATE_STATE(Wait, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
-
-    // switchover failure 
-    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
-    handleMuxState("unknown", 3);
-
-    runIoService(2);
+    postMuxEvent(mux_state::MuxState::Unknown, 3);
     VALIDATE_STATE(Standby, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
-    // mux probe failure, 2rd toggle triggered based link prober state.
-    handleProbeMuxState("unknown", 5);
-    VALIDATE_STATE(Wait, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    handleProbeMuxState("unknown", 4);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
 
     // if link prober state changes
-    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
-    handleMuxState("unknown", 3);
-    VALIDATE_STATE(Standby, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+    VALIDATE_STATE(Active, Wait, Up);
 
-    handleProbeMuxState("unknown", 3);
-    VALIDATE_STATE(Wait, Wait, Up);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    postMuxEvent(mux_state::MuxState::Unknown, 3);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    handleProbeMuxState("unknown", 4);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
 }
 
