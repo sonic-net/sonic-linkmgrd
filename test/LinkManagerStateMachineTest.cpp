@@ -1290,6 +1290,7 @@ TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
     handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Standby, Wait, Up);
 
+    runIoService(2);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
 
@@ -1303,6 +1304,7 @@ TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
     handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Active, Wait, Up);
 
+    runIoService(2);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
 }
