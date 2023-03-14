@@ -460,10 +460,14 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
         
         if (state == link_prober::LinkProberState::Label::Active) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberActiveStart);
+
+            mStandbyUnknownUpCount = 0;
         }
          
         if (state == link_prober::LinkProberState::Label::Standby) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::ActiveStandbyStateMachine::LinkProberMetrics::LinkProberStandbyStart);
+
+            mActiveUnknownUpCount = 0;
         }
 
         CompositeState nextState = mCompositeState;
@@ -553,6 +557,9 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
                    ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             // switch MUX to standby since we are entering LinkDown state
             switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
+
+            mActiveUnknownUpCount = 0;
+            mStandbyUnknownUpCount = 0;
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
