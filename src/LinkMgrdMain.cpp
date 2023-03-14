@@ -45,12 +45,12 @@ namespace {
 
     static auto DEFAULT_LOGGING_FILTER_LEVEL = boost::log::trivial::debug;
 
-    void InitializeLogger(std::string execName, boost::log::trivial::severity_level level, bool extraLogFile)
+    void InitializeLogger(std::string execName, boost::log::trivial::severity_level level, bool extraLogFile, bool linkToSwssLogger)
     {
         std::string progName = execName.substr(execName.find_last_of('/') + 1);
         std::string logFile = "/var/log/mux/" + progName + ".log";
 
-        common::MuxLogger::getInstance()->initialize(progName, logFile, level, extraLogFile);
+        common::MuxLogger::getInstance()->initialize(progName, logFile, level, extraLogFile, linkToSwssLogger);
     }
 
 } // end namespace
@@ -70,6 +70,7 @@ int main(int argc, const char* argv[])
     bool extraLogFile = false;
     bool measureSwitchover = false;
     bool defaultRoute = false;
+    bool linkToSwssLogger = false;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
@@ -78,7 +79,7 @@ int main(int argc, const char* argv[])
         ("verbosity,v",
          program_options::value<boost::log::trivial::severity_level>(&level)->value_name("<severity_level>")->
          default_value(DEFAULT_LOGGING_FILTER_LEVEL),
-         "Logging verbosity level.")
+         "Boost logging verbosity level.")
         ("extra_log_file,e",
          program_options::bool_switch(&extraLogFile)->default_value(false),
          "Store logs in an extra log file")
@@ -88,6 +89,11 @@ int main(int argc, const char* argv[])
          ("default_route,d",
          program_options::bool_switch(&defaultRoute)->default_value(false),
          "Disable heartbeat sending and avoid switching to active when default route is missing"
+         )
+        ("link_to_swss_logger,l",
+         program_options::bool_switch(&linkToSwssLogger)->default_value(false),
+         "Link to swss logger instead of using native boost syslog support, this will"
+         "set the boost logging level to TRACE and option verbosity is ignored"
          )
     ;
 
@@ -117,7 +123,7 @@ int main(int argc, const char* argv[])
     }
 
     if (retValue == EXIT_SUCCESS) {
-        InitializeLogger(argv[0], level, extraLogFile);
+        InitializeLogger(argv[0], level, extraLogFile, linkToSwssLogger);
         std::stringstream ss;
         ss << "level: " << level;
         MUXLOGINFO(ss.str());

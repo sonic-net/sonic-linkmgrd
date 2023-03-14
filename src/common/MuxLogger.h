@@ -24,13 +24,16 @@
 #ifndef MUXLOGGER_H_
 #define MUXLOGGER_H_
 
+#include <map>
 #include <memory>
 
 #include <boost/format.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sinks/syslog_backend.hpp>
 
+#include "swss/logger.h"
 
 namespace common
 {
@@ -105,18 +108,43 @@ public:
     static MuxLoggerPtr getInstance();
 
     /**
+     *@method swssPrioNotify
+     *
+     *@brief process syslog priority setting from swssloglevel
+     *
+     *@param component (in)    program name
+     *@param prioStr (in)      syslog log level string
+     *
+     *@return None
+     */
+    static void swssPrioNotify(const std::string& component, const std::string& prioStr);
+
+    /**
+     *@method swssOutputNotify
+     *
+     *@brief process syslog output setting from swssloglevel, only support syslog
+     *
+     *@param component (in)     program name
+     *@param outputStr (in)     syslog log output destination
+     *
+     *@return None
+     */
+    static void swssOutputNotify(const std::string& component, const std::string& outputStr);
+
+    /**
     *@method initialize
     *
     *@brief initialize MUX logging class
     *
-    *@param prog (in)           program name to be used when logging
-    *@param path (in)           path on file system to MUX logging file
-    *@param level (in)          minimum logging severity level
-    *@param extraLogFile (in)   save log in an extra log file
+    *@param prog (in)               program name to be used when logging
+    *@param path (in)               path on file system to MUX logging file
+    *@param level (in)              minimum logging severity level
+    *@param extraLogFile (in)       save log in an extra log file
+    *@param linkToSwssLogger (in)   output log to swss logger
     *
     *@return none
     */
-    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level, bool extraLogFile);
+    void initialize(std::string &prog, std::string &path, boost::log::trivial::severity_level level, bool extraLogFile, bool linkToSwsslogger=false);
 
     /**
     *@method setLevel
@@ -160,9 +188,42 @@ private:
     */
     MuxLogger() = default;
 
+    /**
+    *@method addExtraLogFileSink
+    *
+    *@brief Add an extra log file sink
+    *
+    *@return none
+    */
+    void addExtraLogFileSink(std::string &prog, const std::string &logFile);
+
+    /**
+    *@method addSyslogSink
+    *
+    *@brief add boost syslog sink to the logger
+    *
+    *@return none
+    */
     void addSyslogSink(std::string &prog);
 
+    /**
+    *@method addSwssSyslogSink
+    *
+    *@brief add swss syslog sink to the logger
+    *
+    *@return none
+    */
+    void addSwssSyslogSink(std::string &prog);
+
 private:
+    typedef std::map<boost::log::sinks::syslog::level, boost::log::trivial::severity_level> BoostLogLevelMap;
+    static const BoostLogLevelMap mBoostLogLevelMapper;
+
+    typedef std::map<boost::log::trivial::severity_level, boost::log::sinks::syslog::level> SyslogLevelMap;
+    static const SyslogLevelMap mSyslogLevelMapper;
+
+private:
+    bool mLinkToSwssLogger = false;
     boost::log::trivial::severity_level mLevel = boost::log::trivial::info;
 
     boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level> mSeverityLogger;
