@@ -234,7 +234,7 @@ void DbInterface::handlePostSwitchCause(
         boost::posix_time::ptime time
 )
 {
-    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
+    MUXLOGWARNING(boost::format("%s: post last switch cause %s") %
         portName %
         mActiveStandbySwitchCause[static_cast<int>(cause)]
     );
