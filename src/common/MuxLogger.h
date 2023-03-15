@@ -35,6 +35,10 @@
 
 #include "swss/logger.h"
 
+namespace test {
+class MuxLoggerTest;
+}
+
 namespace common
 {
 class MuxLogger;
@@ -108,30 +112,6 @@ public:
     static MuxLoggerPtr getInstance();
 
     /**
-     *@method swssPrioNotify
-     *
-     *@brief process syslog priority setting from swssloglevel
-     *
-     *@param component (in)    program name
-     *@param prioStr (in)      syslog log level string
-     *
-     *@return None
-     */
-    static void swssPrioNotify(const std::string& component, const std::string& prioStr);
-
-    /**
-     *@method swssOutputNotify
-     *
-     *@brief process syslog output setting from swssloglevel, only support syslog
-     *
-     *@param component (in)     program name
-     *@param outputStr (in)     syslog log output destination
-     *
-     *@return None
-     */
-    static void swssOutputNotify(const std::string& component, const std::string& outputStr);
-
-    /**
     *@method initialize
     *
     *@brief initialize MUX logging class
@@ -176,8 +156,51 @@ public:
     boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>&
     getLogger() {return mSeverityLogger;};
 
+    /**
+    *@method startSwssLogger
+    *
+    *@brief start swss logger
+    *
+    *@return None
+    */
+    virtual void startSwssLogger(const std::string &swssPrio);
+
+    /**
+     *@method swssPrioNotify
+     *
+     *@brief process syslog priority setting from swssloglevel
+     *
+     *@param component (in)    program name
+     *@param prioStr (in)      syslog log level string
+     *
+     *@return None
+     */
+    void swssPrioNotify(std::string component, std::string prioStr);
+
+    /**
+     *@method swssOutputNotify
+     *
+     *@brief process syslog output setting from swssloglevel, only support syslog
+     *
+     *@param component (in)     program name
+     *@param outputStr (in)     syslog log output destination
+     *
+     *@return None
+     */
+    void swssOutputNotify(std::string component, std::string outputStr);
+
+    /**
+    *@method isLinkToSwssLogger
+    *
+    *@brief return if mux logger is linked to swss logger
+    *
+    *@return None
+    */
+    bool isLinkToSwssLogger() { return mLinkToSwssLogger; };
+
 private:
     friend class std::shared_ptr<MuxLogger>;
+    friend class test::MuxLoggerTest;
     friend MuxLoggerPtr std::make_shared<MuxLogger> ();
 
     /**

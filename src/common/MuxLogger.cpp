@@ -96,33 +96,6 @@ const MuxLogger::SyslogLevelMap MuxLogger::mSyslogLevelMapper = {
     { boost::log::trivial::trace, boost::log::sinks::syslog::debug }
 };
 
-void MuxLogger::swssPrioNotify(const std::string& component, const std::string& prioStr)
-{
-    namespace sinks = boost::log::sinks;
-
-    if (swss::Logger::priorityStringMap.find(prioStr) == swss::Logger::priorityStringMap.end()) {
-        MUXLOGFATAL(boost::format("Invalid loglevel %s, ignored.") % prioStr);
-    } else {
-        swss::Logger::Priority swssLogLevel = swss::Logger::priorityStringMap.at(prioStr);
-        swss::Logger::getInstance().setMinPrio(swssLogLevel);
-        MUXLOGFATAL(boost::format("Updated linkmgrd swss log level to: %s") % prioStr);
-
-        sinks::syslog::level syslogLevel = static_cast<sinks::syslog::level>(swssLogLevel);
-        if (mBoostLogLevelMapper.find(syslogLevel) != mBoostLogLevelMapper.end()) {
-            boost::log::trivial::severity_level boostLogLevel = mBoostLogLevelMapper.at(syslogLevel);
-            getInstance()->setLevel(boostLogLevel);
-            MUXLOGFATAL(boost::format("Updated mux log level to: %s") % boostLogLevel);
-        }
-    }
-}
-
-void MuxLogger::swssOutputNotify(const std::string& component, const std::string& outputStr)
-{
-    if (outputStr != "SYSLOG") {
-        MUXLOGFATAL(boost::format("Invalid logoutput %s, ignored.") % outputStr);
-    }
-}
-
 //
 // ---> initialize(std::string &prog,
 //                 std::string &path,
@@ -140,6 +113,8 @@ void MuxLogger::initialize(
 {
     namespace trivial = boost::log::trivial;
 
+    mLevel = level;
+
     boost::log::register_simple_formatter_factory<trivial::severity_level, char> ("Severity");
 
     boost::log::settings settings;
@@ -154,18 +129,10 @@ void MuxLogger::initialize(
 
     if (linkToSwssLogger) {
         // default to "NOTICE" when linking to swss log level
-        swss::Logger::linkToDbWithOutput(
-            "linkmgrd",
-            swssPrioNotify,
-            "NOTICE",
-            swssOutputNotify,
-            "SYSLOG"
-        );
-        swss::Logger::restartLogger();
+        startSwssLogger("NOTICE");
         mLevel = boost::log::trivial::warning;
         addSwssSyslogSink(prog);
     } else {
-        mLevel = level;
         addSyslogSink(prog);
     }
 
@@ -181,10 +148,6 @@ void MuxLogger::initialize(
 //
 void MuxLogger::setLevel(const boost::log::trivial::severity_level level)
 {
-    if (mLinkToSwssLogger) {
-        MUXLOGERROR("Setting boost logger level is not supported when link to swss logger.");
-        return;
-    }
     namespace trivial = boost::log::trivial;
 
     mLevel = level;
@@ -275,5 +238,60 @@ void MuxLogger::addSwssSyslogSink(std::string &prog)
         throw MUX_ERROR(MuxLogger, errMsg.str());
    }
 }
+
+//
+// ---> startSwssLogger(const std::string &swssPrio);
+//
+// start swss logger
+//
+void MuxLogger::startSwssLogger(const std::string &swssPrio)
+{
+    swss::Logger::linkToDbWithOutput(
+        "linkmgrd",
+        [=](std::string component, std::string prioStr) { this->swssPrioNotify(component, prioStr); },
+        swssPrio,
+        [=](std::string component, std::string outputStr) { this->swssOutputNotify(component, outputStr); },
+        "SYSLOG"
+    );
+    swss::Logger::restartLogger();
+}
+
+//
+// ---> swssPrioNotify(const std::string& component, const std::string& prioStr);
+//
+// process syslog priority setting from swssloglevel
+//
+void MuxLogger::swssPrioNotify(std::string component, std::string prioStr)
+{
+    namespace sinks = boost::log::sinks;
+
+    if (swss::Logger::priorityStringMap.find(prioStr) == swss::Logger::priorityStringMap.end()) {
+        MUXLOGFATAL(boost::format("Invalid loglevel %s, ignored.") % prioStr);
+    } else {
+        swss::Logger::Priority swssLogLevel = swss::Logger::priorityStringMap.at(prioStr);
+        swss::Logger::getInstance().setMinPrio(swssLogLevel);
+        MUXLOGFATAL(boost::format("Updated linkmgrd swss log level to: %s") % prioStr);
+
+        sinks::syslog::level syslogLevel = static_cast<sinks::syslog::level>(swssLogLevel);
+        if (mBoostLogLevelMapper.find(syslogLevel) != mBoostLogLevelMapper.end()) {
+            boost::log::trivial::severity_level boostLogLevel = mBoostLogLevelMapper.at(syslogLevel);
+            setLevel(boostLogLevel);
+            MUXLOGFATAL(boost::format("Updated mux log level to: %s") % boostLogLevel);
+        }
+    }
+}
+
+//
+// ---> swssOutputNotify(const std::string& component, const std::string& outputStr);
+//
+// process syslog output setting from swssloglevel, only support syslog
+//
+void MuxLogger::swssOutputNotify(std::string component, std::string outputStr)
+{
+    if (outputStr != "SYSLOG") {
+        MUXLOGFATAL(boost::format("Invalid logoutput %s, ignored.") % outputStr);
+    }
+}
+
 
 } /* namespace common */
