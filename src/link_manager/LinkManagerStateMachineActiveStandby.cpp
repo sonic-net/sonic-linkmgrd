@@ -1155,11 +1155,7 @@ void ActiveStandbyStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFuncti
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
     mActiveUnknownUpCount++;
-    MUXLOGWARNING(boost::format("%s: mActiveUnknownUpCount %d mStandbyUnknownUpCount %d") %
-        mMuxPortConfig.getPortName() %
-        mActiveUnknownUpCount % 
-        mStandbyUnknownUpCount
-    );
+
     if (mActiveUnknownUpCount == 2) {
         switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Active);
     } else {
@@ -1179,11 +1175,7 @@ void ActiveStandbyStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunct
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
     mStandbyUnknownUpCount++;
-    MUXLOGWARNING(boost::format("%s: mActiveUnknownUpCount %d mStandbyUnknownUpCount %d") %
-        mMuxPortConfig.getPortName() %
-        mActiveUnknownUpCount % 
-        mStandbyUnknownUpCount
-    );
+
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
