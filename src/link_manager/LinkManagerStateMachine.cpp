@@ -830,7 +830,7 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
             if (ls(mCompositeState) == link_state::LinkState::Down &&
                 ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
                 CompositeState nextState = mCompositeState;
-                switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby, true);
+                switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby, true);
                 LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
                 mCompositeState = nextState;
             } else {
