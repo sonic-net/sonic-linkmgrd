@@ -1156,7 +1156,7 @@ void ActiveStandbyStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFuncti
 
     mActiveUnknownUpCount++;
 
-    if (mActiveUnknownUpCount == 2) {
+    if (mActiveUnknownUpCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) {
         switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Active);
     } else {
         enterMuxWaitState(nextState);
@@ -1180,7 +1180,7 @@ void ActiveStandbyStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunct
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
         enterMuxWaitState(nextState);
-    } else if (mStandbyUnknownUpCount == 2) {
+    } else if (mStandbyUnknownUpCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) {
         switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Standby);
     } else {
         startMuxProbeTimer();
