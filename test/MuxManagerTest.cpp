@@ -97,11 +97,6 @@ uint32_t MuxManagerTest::getLinkWaitTimeout_msec(std::string port)
     return muxPortPtr->mMuxPortConfig.getLinkWaitTimeout_msec();
 }
 
-bool MuxManagerTest::setUseWellKnownMacActiveActive(bool use)
-{
-    mMuxManagerPtr->setUseWellKnownMacActiveActive(use);
-}
-
 boost::asio::ip::address MuxManagerTest::getBladeIpv4Address(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -314,7 +309,7 @@ void MuxManagerTest::createPort(std::string port)
 void MuxManagerTest::resetUpdateEthernetFrameFn(const std::string &portName)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
-    std::shared_ptr<link_manager::LinkManagerStateMachineBase> linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachinePtr();
+    link_manager::LinkManagerStateMachine* linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachine();
 
     boost::function<void()> fnPtr = NULL;
     linkManagerStateMachine->setUpdateEthernetFrameFnPtr(fnPtr);
