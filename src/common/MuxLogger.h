@@ -194,7 +194,7 @@ public:
     *
     *@brief return if mux logger is linked to swss logger
     *
-    *@return None
+    *@return true if swss logger is linked
     */
     bool isLinkToSwssLogger() { return mLinkToSwssLogger; };
 
