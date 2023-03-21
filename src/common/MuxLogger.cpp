@@ -128,10 +128,10 @@ void MuxLogger::initialize(
     mLinkToSwssLogger = linkToSwssLogger;
 
     if (linkToSwssLogger) {
+        addSwssSyslogSink(prog);
         // default to "NOTICE" when linking to swss log level
         startSwssLogger("NOTICE");
         mLevel = boost::log::trivial::warning;
-        addSwssSyslogSink(prog);
     } else {
         addSyslogSink(prog);
     }
