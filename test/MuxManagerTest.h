@@ -71,6 +71,7 @@ public:
     void warmRestartReconciliation(const std::string &portName);
     void updatePortReconciliationCount(int increment);
     void startWarmRestartReconciliationTimer(uint32_t timeout);
+    void resetUpdateEthernetFrameFn(const std::string &portName);
     void postMetricsEvent(const std::string &portName, mux_state::MuxState::Label label);
     void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
     void initializeThread();

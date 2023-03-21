@@ -306,6 +306,15 @@ void MuxManagerTest::createPort(std::string port)
     EXPECT_TRUE(linkManagerStateMachine->mComponentInitState.test(link_manager::LinkManagerStateMachine::MuxStateComponent) == 1);
 }
 
+void MuxManagerTest::resetUpdateEthernetFrameFn(const std::string &portName)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[portName];
+    link_manager::LinkManagerStateMachine* linkManagerStateMachine = muxPortPtr->getLinkManagerStateMachine();
+
+    boost::function<void()> fnPtr = NULL;
+    linkManagerStateMachine->setUpdateEthernetFrameFnPtr(fnPtr);
+}
+
 TEST_F(MuxManagerTest, AddPort)
 {
     std::string port = "Ethernet0";
@@ -436,6 +445,33 @@ TEST_F(MuxManagerTest, ServerMacAddressException)
     std::array<uint8_t, ETHER_ADDR_LEN> serverMacAfter = getBladeMacAddress(port);
 
     EXPECT_TRUE(serverMacBefore == serverMacAfter);
+}
+
+TEST_F(MuxManagerTest, ServerMacBeforeLinkProberInit)
+{
+    std::string port = "Ethernet0";
+    std::string ipAddress = "192.168.0.1";
+
+    createPort(port);
+    resetUpdateEthernetFrameFn(port);
+
+    std::string mac = "a0:1b:c2:3d:e4:5f";
+    std::array<char, MAX_ADDR_SIZE + 1> macAddress = {0};
+    memcpy(macAddress.data(), mac.c_str(), mac.size());
+    std::array<char, MAX_ADDR_SIZE + 1> serverIpAddress = {0};
+    memcpy(serverIpAddress.data(), ipAddress.c_str(), ipAddress.size());
+
+    processServerMacAddress(port, serverIpAddress, macAddress);
+
+    runIoService();
+
+    std::array<uint8_t, ETHER_ADDR_LEN> serverMac = getBladeMacAddress(port);
+
+    swss::MacAddress swssMacAddress(mac);
+    std::array<uint8_t, ETHER_ADDR_LEN> expectedMac;
+    memcpy(expectedMac.data(), swssMacAddress.getMac(), expectedMac.size());
+
+    EXPECT_TRUE(serverMac == expectedMac);
 }
 
 TEST_F(MuxManagerTest, LinkmgrdConfig)
