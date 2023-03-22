@@ -47,7 +47,7 @@ std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
 std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end", "link_prober_wait_start", "link_prober_active_start", "link_prober_standby_start"};
-std::vector<std::string> DbInterface::mActiveStandbySwitchCause = {"Peer_Heartbeat_Missing" , "Peer_Link_Down" , "Tlv_Switch_Active_Command" , "Link_Down" , "Transceiver_Daemon_Timeout" , "Matching_Hardware_State" , "Config_Mux_Mode"};
+std::vector<std::string> DbInterface::mActiveStandbySwitchCause = {"Peer_Heartbeat_Missing" , "Peer_Link_Down" , "Tlv_Switch_Active_Command" , "Link_Down" , "Transceiver_Daemon_Timeout" , "Matching_Hardware_State" , "Config_Mux_Mode", "Hardware_State_Unknown"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -234,7 +234,7 @@ void DbInterface::handlePostSwitchCause(
         boost::posix_time::ptime time
 )
 {
-    MUXLOGDEBUG(boost::format("%s: post switch cause %s") %
+    MUXLOGWARNING(boost::format("%s: post last switch cause %s") %
         portName %
         mActiveStandbySwitchCause[static_cast<int>(cause)]
     );
