@@ -176,6 +176,8 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
     MUXLOGWARNING(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     mWaitTimer.cancel();
+
+    mLastMuxNotificationType = LastMuxNotificationType::MuxNotificationFromToggle;
     mLastMuxStateNotification = label;
 
     if (mComponentInitState.all()) {
@@ -265,6 +267,9 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
 void ActiveActiveStateMachine::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
 {
     MUXLOGINFO(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+
+    mLastMuxNotificationType = LastMuxNotificationType::MuxNotificationFromProbe;
+    mLastMuxProbeNotification = label;
 
     mWaitTimer.cancel();
     if (label == mux_state::MuxState::Label::Active || label == mux_state::MuxState::Label::Standby) {
@@ -1083,7 +1088,10 @@ void ActiveActiveStateMachine::updateMuxLinkmgrState()
     Label label = Label::Unhealthy;
     if (ls(mCompositeState) == link_state::LinkState::Label::Up &&
         ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
-        (ms(mCompositeState) == mLastMuxStateNotification || mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) &&
+        (ms(mCompositeState) == mLastMuxStateNotification ||
+         mLastMuxStateNotification == mux_state::MuxState::Label::Unknown ||
+         (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
+          mLastMuxProbeNotification == mux_state::MuxState::Label::Unknown)) &&
         (mMuxPortConfig.ifEnableDefaultRouteFeature() == false || mDefaultRouteState == DefaultRoute::OK)) {
         label = Label::Healthy;
     }
