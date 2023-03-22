@@ -516,10 +516,14 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         
         if (state == link_prober::LinkProberState::Label::Active) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberActiveStart);
+
+            mStandbyUnknownUpCount = 0;
         }
          
         if (state == link_prober::LinkProberState::Label::Standby) {
             mMuxPortPtr->postLinkProberMetricsEvent(link_manager::LinkManagerStateMachine::LinkProberMetrics::LinkProberStandbyStart);
+
+            mActiveUnknownUpCount = 0;
         }
 
         CompositeState nextState = mCompositeState;
@@ -572,8 +576,11 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
         }
     }
 
-    if (ms(mCompositeState) != mux_state::MuxState::Unknown) {
+    if (state != mux_state::MuxState::Label::Unknown) {
         mMuxUnknownBackoffFactor = 1;
+
+        mActiveUnknownUpCount = 0;
+        mStandbyUnknownUpCount = 0;
     }
 
     updateMuxLinkmgrState();
@@ -606,6 +613,9 @@ void LinkManagerStateMachine::handleStateChange(LinkStateEvent &event, link_stat
                    ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             // switch MUX to standby since we are entering LinkDown state
             switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
+
+            mActiveUnknownUpCount = 0;
+            mStandbyUnknownUpCount = 0;
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
         }
@@ -1234,7 +1244,13 @@ void LinkManagerStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    enterMuxWaitState(nextState);
+    mActiveUnknownUpCount++;
+
+    if (mActiveUnknownUpCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) {
+        switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Active);
+    } else {
+        enterMuxWaitState(nextState);
+    }
 }
 
 //
@@ -1248,10 +1264,14 @@ void LinkManagerStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunctio
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
+    mStandbyUnknownUpCount++;
+
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
         enterMuxWaitState(nextState);
+    } else if (mStandbyUnknownUpCount == mMuxPortConfig.getNegativeStateChangeRetryCount()) {
+        switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::HarewareStateUnknown, nextState, mux_state::MuxState::Label::Standby);
     } else {
         startMuxProbeTimer();
     }
