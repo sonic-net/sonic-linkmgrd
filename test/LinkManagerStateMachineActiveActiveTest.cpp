@@ -816,9 +816,10 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberUnknownRecvMu
     VALIDATE_STATE(Unknown, Standby, Up);
 }
 
-TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheck)
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheckStandby)
 {
     setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
 
     uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
     uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
@@ -830,9 +831,71 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheck)
 
     handleProbeMuxState("standby", 4);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
 
     handleMuxState("active", 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
     VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheckUnknown)
+{
+    setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("unknown", 4);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Healthy);
+    VALIDATE_STATE(Active, Unknown, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyPeriodicalCheckActive)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("active", 4);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+
+    handleMuxState("standby", 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+    VALIDATE_STATE(Unknown, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyPeriodicalCheckUnknown)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore + 1);
+
+    handleProbeMuxState("Unknown", 4);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxLinkmgrState, link_manager::LinkManagerStateMachineBase::Label::Unhealthy);
+    VALIDATE_STATE(Unknown, Unknown, Up);
 }
 
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandbygRPCError)
