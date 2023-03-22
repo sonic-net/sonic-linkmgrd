@@ -415,6 +415,9 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveCliAuto)
 
     handleMuxConfig("auto");
     VALIDATE_STATE(Active, Active, Up);
+
+    runIoService(2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxAStandbyCliAuto)
@@ -423,6 +426,9 @@ TEST_F(LinkManagerStateMachineTest, MuxAStandbyCliAuto)
 
     handleMuxConfig("auto");
     VALIDATE_STATE(Standby, Standby, Up);
+
+    runIoService(2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxActiveCliManual)

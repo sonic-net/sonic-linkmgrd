@@ -834,8 +834,7 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
                 LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
                 mCompositeState = nextState;
             } else {
-                mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
-                mMuxPortPtr->probeMuxState();
+                startMuxProbeTimer();
             }
         }
 
