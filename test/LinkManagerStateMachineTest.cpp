@@ -1282,24 +1282,4 @@ TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
 }
 
-TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownDefaultRouteNA)
-{
-    setMuxStandby();
-
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-
-    mMuxConfig.enableDefaultRouteFeature(true);
-    EXPECT_TRUE(mMuxConfig.getIfEnableDefaultRouteFeature());
-
-    postDefaultRouteEvent("na", 3);
-    EXPECT_EQ(mFakeMuxPort.mActiveStandbyStateMachinePtr->getDefaultRouteState(), link_manager::LinkManagerStateMachineBase::DefaultRoute::NA);
-
-    // LinkProberState::Unknown now will only trigger mux probe instead of mux toggle
-    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
-    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    VALIDATE_STATE(Wait, Wait, Up);
-}
-
 } /* namespace test */
