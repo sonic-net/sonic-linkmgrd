@@ -205,7 +205,7 @@ void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const 
 //
 void MuxManager::addOrUpdatePeerLinkState(const std::string &portName, const std::string &linkState)
 {
-    MUXLOGWARNING(boost::format("%s: peer link state %s") % portName % linkState);
+    MUXLOGDEBUG(boost::format("%s: peer link state %s") % portName % linkState);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     muxPortPtr->handlePeerLinkState(linkState);
