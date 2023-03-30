@@ -749,9 +749,9 @@ void ActiveActiveStateMachine::LinkProberActiveMuxActiveLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
     if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) {
-        switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
-    } else if (ms(mCompositeState) != mux_state::MuxState::Active) {
-        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+        if (mLastMuxStateNotification != mux_state::MuxState::Label::Standby) {
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+        }
     } else if (mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) {
         // switch active to notify swss
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
@@ -766,7 +766,14 @@ void ActiveActiveStateMachine::LinkProberActiveMuxActiveLinkUpTransitionFunction
 void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) {
+        if (mLastMuxStateNotification != mux_state::MuxState::Label::Standby) {
+            // last siwtch mux state to standby failed, try again
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+        }
+    } else {
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+    }
 }
 
 //
@@ -777,9 +784,11 @@ void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunctio
 void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active && mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
-        // last switch mux state to active failed, try again
-        switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active) {
+        if (mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
+            // last switch mux state to active failed, try again
+            switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+        }
     } else {
         switchMuxState(nextState, mux_state::MuxState::Label::Standby);
     }
@@ -793,9 +802,14 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunctio
 void ActiveActiveStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunction(CompositeState &nextState)
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
-    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active && mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
-        // last switch mux state to active failed, try again
-        switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+    if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active) {
+        if (mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
+            // last switch mux state to active failed, try again
+            switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+        }
+    } else if (mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) {
+        // switch standby to notify swss
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
     }
 }
 
