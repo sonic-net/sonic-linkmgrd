@@ -431,7 +431,11 @@ void MuxPort::warmRestartReconciliation()
 //
 void MuxPort::handleTsaEnable(bool enable)
 {
-    MUXLOGWARNING(boost::format("port: %s, configuring mux mode due to tsa_enable notification from CONFIG DB. ") % mMuxPortConfig.getPortName());
+    MUXLOGWARNING(
+        boost::format("%s: configuring mux mode due to CONFIG DB tsa_enable notification: %d") %
+        mMuxPortConfig.getPortName() %
+        enable
+    );
 
     common::MuxPortConfig::Mode mode = common::MuxPortConfig::Auto;
     if (enable) {
