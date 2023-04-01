@@ -238,6 +238,8 @@ void ActiveActiveStateMachine::handleSwssLinkStateNotification(const link_state:
 //
 void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPortConfig::Mode mode)
 {
+    MUXLOGWARNING(boost::format("%s: mux config mode: %s") % mMuxPortConfig.getPortName() % mode);
+
     mMuxPortConfig.setMode(mode);
     if (mComponentInitState.all()) {
         CompositeState nextState = mCompositeState;
@@ -1282,7 +1284,7 @@ void ActiveActiveStateMachine::handlePeerMuxWaitTimeout(boost::system::error_cod
 //
 void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const DefaultRoute routeState)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: default route state %d") % mMuxPortConfig.getPortName() % static_cast<int>(routeState));
 
     mDefaultRouteState = routeState;
     shutdownOrRestartLinkProberOnDefaultRoute();
