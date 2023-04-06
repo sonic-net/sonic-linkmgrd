@@ -64,13 +64,21 @@ jobs:
   - checkout: self
     clean: true
     submodules: true
+  - script: |
+      sourceBranch=$(Build.SourceBranchName)
+      if [[ "$(Build.Reason)" == "PullRequest" ]];then
+        sourceBranch=$(System.PullRequest.TargetBranch)
+      fi
+      echo "Download artifact branch: $sourceBranch"
+      echo "##vso[task.setvariable variable=sourceBranch]$sourceBranch"
+    displayName: "Get correct artifact downloading branch"
   - task: DownloadPipelineArtifact@2
     inputs:
       source: specific
       project: build
       pipeline: Azure.sonic-buildimage.common_libs
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/$(sourceBranch)'
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib
       patterns: |
@@ -87,10 +95,10 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifact: sonic-swss-common.bullseye.amd64
+      artifact: sonic-swss-common
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
-      path: '$(Build.SourcesDirectory)/sonic-swss-common.bullseye.amd64'
+      runBranch: 'refs/heads/$(sourceBranch)'
+      path: '$(Build.SourcesDirectory)/sonic-swss-common'
     displayName: "Download sonic swss common deb packages"
   - script: |
       sudo dpkg -i sonic-swss-common.bullseye.amd64/libswsscommon_1.0.0_amd64.deb
@@ -153,13 +161,21 @@ jobs:
   - checkout: self
     clean: true
     submodules: true
+  - script: |
+      sourceBranch=$(Build.SourceBranchName)
+      if [[ "$(Build.Reason)" == "PullRequest" ]];then
+        sourceBranch=$(System.PullRequest.TargetBranch)
+      fi
+      echo "Download artifact branch: $sourceBranch"
+      echo "##vso[task.setvariable variable=sourceBranch]$sourceBranch"
+    displayName: "Get correct artifact downloading branch"
   - task: DownloadPipelineArtifact@2
     inputs:
       source: specific
       project: build
       pipeline: Azure.sonic-buildimage.common_libs
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/$(sourceBranch)'
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.arm64
       patterns: |
@@ -178,7 +194,7 @@ jobs:
       pipeline: 9
       artifact: sonic-swss-common.arm64
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.arm64'
     displayName: "Download sonic swss common deb packages"
   - script: |
@@ -237,13 +253,21 @@ jobs:
   - checkout: self
     clean: true
     submodules: true
+  - script: |
+      sourceBranch=$(Build.SourceBranchName)
+      if [[ "$(Build.Reason)" == "PullRequest" ]];then
+        sourceBranch=$(System.PullRequest.TargetBranch)
+      fi
+      echo "Download artifact branch: $sourceBranch"
+      echo "##vso[task.setvariable variable=sourceBranch]$sourceBranch"
+    displayName: "Get correct artifact downloading branch"
   - task: DownloadPipelineArtifact@2
     inputs:
       source: specific
       project: build
       pipeline: Azure.sonic-buildimage.common_libs
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/$(sourceBranch)'
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.armhf
       patterns: |
@@ -262,7 +286,7 @@ jobs:
       pipeline: 9
       artifact: sonic-swss-common.armhf
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.armhf'
     displayName: "Download sonic swss common deb packages"
   - script: |
