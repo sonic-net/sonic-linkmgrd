@@ -17,8 +17,12 @@ MAKE_PID := $(shell echo $$PPID)
 JOB_FLAG := $(filter -j%, $(subst -j ,-j,$(shell ps T | grep "^\s*$(MAKE_PID).*$(MAKE)")))
 JOBS := $(subst -j,,$(JOB_FLAG))
 
-release-targets: CPP_FLAGS := -O3 -Wall -c -fmessage-length=0 -fPIC -flto
-test-targets: CPP_FLAGS = -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
+# keep debug option only
+CPP_FLAGS := $(if $(findstring -g,$(CXXFLAGS)), -g)
+LD_FLAGS := $(if $(findstring -g,$(CXXFLAGS)), -g)
+
+release-targets: CPP_FLAGS := $(CPP_FLAGS) -O3 -Wall -c -fmessage-length=0 -fPIC -flto
+test-targets: CPP_FLAGS := $(CPP_FLAGS) -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
 
 override INCLUDES += -I"$(TOPDIR)/src" -I"/usr/include/libnl3/"
 
@@ -66,7 +70,7 @@ all: sonic-linkmgrd
 release-targets: $(OBJS) $(USER_OBJS) $(OBJS_LINKMGRD)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	$(CXX) -pthread -o "$(LINKMGRD_TARGET)" $(OBJS) $(OBJS_LINKMGRD) $(USER_OBJS) $(LIBS)
+	$(CXX) -pthread -o "$(LINKMGRD_TARGET)" $(OBJS) $(OBJS_LINKMGRD) $(USER_OBJS) $(LIBS) $(LD_FLAGS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -77,7 +81,7 @@ sonic-linkmgrd: clean-targets
 test-targets: $(OBJS) $(USER_OBJS) $(OBJS_LINKMGRD_TEST)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	$(CXX) -pthread -fprofile-generate -lgcov -o "$(LINKMGRD_TEST_TARGET)" $(OBJS) $(OBJS_LINKMGRD_TEST) $(USER_OBJS) $(LIBS) $(LIBS_TEST)
+	$(CXX) -pthread -fprofile-generate -lgcov -o "$(LINKMGRD_TEST_TARGET)" $(OBJS) $(OBJS_LINKMGRD_TEST) $(USER_OBJS) $(LIBS) $(LIBS_TEST) $(LD_FLAGS)
 	@echo 'Executing test target: $@'
 	LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5 ./$(LINKMGRD_TEST_TARGET)
 	$(GCOVR) -r ./ --html --html-details -o $(LINKMGRD_TEST_TARGET)-result.html
