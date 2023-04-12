@@ -17,8 +17,11 @@ MAKE_PID := $(shell echo $$PPID)
 JOB_FLAG := $(filter -j%, $(subst -j ,-j,$(shell ps T | grep "^\s*$(MAKE_PID).*$(MAKE)")))
 JOBS := $(subst -j,,$(JOB_FLAG))
 
-release-targets: CPP_FLAGS := -O3 -Wall -c -fmessage-length=0 -fPIC -flto
-test-targets: CPP_FLAGS = -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
+# keep debug option only
+CPP_FLAGS := $(if $(findstring -g,$(CXXFLAGS)), -g)
+
+release-targets: CPP_FLAGS := $(CPP_FLAGS) -O3 -Wall -c -fmessage-length=0 -fPIC -flto
+test-targets: CPP_FLAGS := $(CPP_FLAGS) -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
 
 override INCLUDES += -I"$(TOPDIR)/src" -I"/usr/include/libnl3/"
 
