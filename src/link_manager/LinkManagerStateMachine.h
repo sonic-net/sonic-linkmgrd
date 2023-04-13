@@ -152,6 +152,7 @@ public:
         TransceiverDaemonTimeout,
         MatchingHardwareState,
         ConfigMuxMode,
+        HarewareStateUnknown,
 
         Count
     };
@@ -1063,6 +1064,8 @@ private:
     boost::function<void ()> mRevertIntervalFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
+    uint32_t mActiveUnknownUpCount = 0;
+    uint32_t mStandbyUnknownUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
     uint32_t mWaitStandbyUpBackoffFactor = 1;
     uint32_t mUnknownActiveUpBackoffFactor = 1;
