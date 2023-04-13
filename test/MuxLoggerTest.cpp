@@ -19,8 +19,6 @@
 #include "common/MuxLogger.h"
 #include "MuxLoggerTest.h"
 
-using ::testing::_;
-
 namespace test
 {
 
