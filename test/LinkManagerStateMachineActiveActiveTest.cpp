@@ -157,7 +157,7 @@ void LinkManagerStateMachineActiveActiveTest::postMuxEvent(mux_state::MuxState::
     }
 }
 
-void LinkManagerStateMachineActiveActiveTest::postLinkEvent(link_state::LinkState::Label label, uint32_t count)
+void LinkManagerStateMachineActiveActiveTest::postLinkEvent(link_state::LinkState::Label label, uint32_t count, bool poll)
 {
     link_state::LinkStateMachine& linkStateMachine = mFakeMuxPort.getLinkStateMachine();
     for (uint8_t i = 0; i < mMuxConfig.getLinkStateChangeRetryCount(); i++) {
@@ -171,15 +171,23 @@ void LinkManagerStateMachineActiveActiveTest::postLinkEvent(link_state::LinkStat
             default:
                 break;
         }
-        runIoService(count);
+        if (poll) {
+            pollIoService(count);
+        } else {
+            runIoService(count);
+        }
     }
 }
 
-void LinkManagerStateMachineActiveActiveTest::handleMuxState(std::string state, uint32_t count)
+void LinkManagerStateMachineActiveActiveTest::handleMuxState(std::string state, uint32_t count, bool poll)
 {
     for (uint8_t i = 0; i < mPositiveUpdateCount; i++) {
         mFakeMuxPort.handleMuxState(state);
-        runIoService(count);
+        if (poll) {
+            pollIoService(count);
+        } else {
+            runIoService(count);
+        }
     }
 }
 
@@ -207,10 +215,14 @@ void LinkManagerStateMachineActiveActiveTest::handleLinkState(std::string linkSt
     }
 }
 
-void LinkManagerStateMachineActiveActiveTest::handleMuxConfig(std::string config, uint32_t count)
+void LinkManagerStateMachineActiveActiveTest::handleMuxConfig(std::string config, uint32_t count, bool poll)
 {
     mFakeMuxPort.handleMuxConfig(config);
-    runIoService(count);
+    if (poll) {
+        pollIoService(count);
+    } else {
+        runIoService(count);
+    }
 }
 
 void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_feature_default_route)
@@ -1093,6 +1105,31 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineActivatedLinkDownMux
     handleMuxState("active", 3);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     VALIDATE_STATE(Unknown, Standby, Down);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineInitEventWithHandleMuxConfigBeforeInit)
+{
+    handleMuxConfig("standby", 0, true);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    postLinkEvent(link_state::LinkState::Up, 0, true);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleMuxState("active", 0, true);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    activateStateMachine();
+    pollIoService();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    VALIDATE_STATE(Active, Standby, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 }
 
 } /* namespace test */

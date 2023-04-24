@@ -36,13 +36,13 @@ public:
     void postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count = 0);
     void postPeerLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count = 0);
     void postMuxEvent(mux_state::MuxState::Label label, uint32_t count = 0);
-    void postLinkEvent(link_state::LinkState::Label label, uint32_t count = 0);
+    void postLinkEvent(link_state::LinkState::Label label, uint32_t count = 0, bool poll = false);
     void postSuspendTimerExpiredEvent(uint32_t count = 0);
-    void handleMuxState(std::string, uint32_t count = 0);
+    void handleMuxState(std::string, uint32_t count = 0, bool poll = false);
     void handlePeerMuxState(std::string, uint32_t count = 0);
     void handleProbeMuxState(std::string, uint32_t count = 0);
     void handleLinkState(std::string linkState, uint32_t count = 0);
-    void handleMuxConfig(std::string config, uint32_t count = 0);
+    void handleMuxConfig(std::string config, uint32_t count = 0, bool poll = false);
     void activateStateMachine(bool enable_feature_default_route=false);
     void setMuxActive();
     void setMuxStandby();
