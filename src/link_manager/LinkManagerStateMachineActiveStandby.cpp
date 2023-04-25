@@ -1139,7 +1139,7 @@ void ActiveStandbyStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunct
         switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing, nextState, mux_state::MuxState::Label::Active);
         mDeadlineTimer.cancel();
     } else {
-        enterMuxWaitState(mCompositeState);
+        enterMuxWaitState(nextState);
     }
     mWaitActiveUpCount = 0;
 }

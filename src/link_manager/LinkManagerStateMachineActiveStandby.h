@@ -847,8 +847,6 @@ private:
 
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
-    DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
-
     link_manager::ActiveStandbyStateMachine::SwitchCause mSendSwitchActiveCommandCause;
 };
 
