@@ -290,6 +290,15 @@ public:
     */
     link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
 
+    /**
+    *@method getDefaultRouteState
+    *
+    *@brief getter for default route state, for testing use only
+    *
+    *@return value of current default route state
+    */
+    DefaultRoute getDefaultRouteState() {return mDefaultRouteState;};
+
 private:
     /**
     *@method setLabel
