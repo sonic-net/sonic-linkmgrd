@@ -533,6 +533,15 @@ public:
     */
     link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
 
+    /**
+    *@method getDefaultRouteState
+    *
+    *@brief getter for default route state, for testing use only
+    *
+    *@return value of current default route state
+    */
+    DefaultRoute getDefaultRouteState() {return mDefaultRouteState;};
+
 private:
     /**
      *@enum anonymous
@@ -633,6 +642,8 @@ private:
     Label mLabel = Label::Uninitialized;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
+
+    DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
 };
 
 } /* namespace link_manager */
