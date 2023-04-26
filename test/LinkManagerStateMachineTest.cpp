@@ -62,7 +62,7 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
 
     for (uint8_t i = 0; i < count; i++) {
         if(mIoService.stopped()) {
-            mIoService.restart();            
+            mIoService.restart();
         }
         mIoService.run_one();
     }
@@ -1319,6 +1319,26 @@ TEST_F(LinkManagerStateMachineTest, CableFirmwareFailure)
     runIoService(2);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::HarewareStateUnknown);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownDefaultRouteNA)
+{
+    setMuxStandby();
+
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    EXPECT_TRUE(mMuxConfig.getIfEnableDefaultRouteFeature());
+
+    postDefaultRouteEvent("na", 3);
+    EXPECT_EQ(mFakeMuxPort.mActiveStandbyStateMachinePtr->getDefaultRouteState(), link_manager::LinkManagerStateMachineBase::DefaultRoute::NA);
+
+    // LinkProberState::Unknown now will only trigger mux probe instead of mux toggle
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Wait, Wait, Up);
 }
 
 } /* namespace test */

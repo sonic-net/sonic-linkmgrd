@@ -715,8 +715,6 @@ private:
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
     boost::function<void ()> mSendPeerProbeCommandFnPtr;
 
-    DefaultRoute mDefaultRouteState = DefaultRoute::Wait;
-
     bool mContinuousLinkProberUnknownEvent = false;
 };
 
