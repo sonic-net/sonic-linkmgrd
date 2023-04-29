@@ -59,34 +59,7 @@ void SwssSyslogBackend::consume(const boost::log::record_view& record, const str
 //
 void SwssSyslogBackend::send(boost_syslog_level level, const string_type& formatted_message)
 {
-    switch (level) {
-        case boost_syslog_level::debug:
-            mSwssLogger.write(swss::Logger::SWSS_DEBUG, formatted_message.c_str());
-            break;
-        case boost_syslog_level::info:
-            mSwssLogger.write(swss::Logger::SWSS_INFO, formatted_message.c_str());
-            break;
-        case boost_syslog_level::notice:
-            mSwssLogger.write(swss::Logger::SWSS_NOTICE, formatted_message.c_str());
-            break;
-        case boost_syslog_level::warning:
-            mSwssLogger.write(swss::Logger::SWSS_WARN, formatted_message.c_str());
-            break;
-        case boost_syslog_level::error:
-            mSwssLogger.write(swss::Logger::SWSS_ERROR, formatted_message.c_str());
-            break;
-        case boost_syslog_level::critical:
-            mSwssLogger.write(swss::Logger::SWSS_CRIT, formatted_message.c_str());
-            break;
-        case boost_syslog_level::alert:
-            mSwssLogger.write(swss::Logger::SWSS_ALERT, formatted_message.c_str());
-            break;
-        case boost_syslog_level::emergency:
-            mSwssLogger.write(swss::Logger::SWSS_EMERG, formatted_message.c_str());
-            break;
-        default:
-            break;
-    }
+    mSwssLogger.write(static_cast<swss::Logger::Priority>(level), formatted_message.c_str());
 }
 
 } /* namespace common */
