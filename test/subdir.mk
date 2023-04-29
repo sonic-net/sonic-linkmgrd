@@ -9,7 +9,8 @@ CPP_SRCS += \
     ./test/MuxManagerTest.cpp \
     ./test/MockLinkManagerStateMachine.cpp \
     ./test/MockLinkProberTest.cpp \
-    ./test/LinkMgrdTestMain.cpp
+    ./test/LinkMgrdTestMain.cpp \
+    ./test/MuxLoggerTest.cpp
 
 OBJS_LINKMGRD_TEST += \
     ./test/FakeDbInterface.o \
@@ -21,7 +22,8 @@ OBJS_LINKMGRD_TEST += \
     ./test/MuxManagerTest.o \
     ./test/MockLinkManagerStateMachine.o \
     ./test/MockLinkProberTest.o \
-    ./test/LinkMgrdTestMain.o
+    ./test/LinkMgrdTestMain.o \
+    ./test/MuxLoggerTest.o
 
 CPP_DEPS += \
     ./test/FakeDbInterface.d \
@@ -33,7 +35,8 @@ CPP_DEPS += \
     ./test/MuxManagerTest.d \
     ./test/MockLinkManagerStateMachine.d \
     ./test/MockLinkProberTest.d \
-    ./test/LinkMgrdTestMain.d
+    ./test/LinkMgrdTestMain.d \
+    ./test/MuxLoggerTest.d
 
 # Each subdirectory must supply rules for building sources it contributes
 test/%.o: test/%.cpp
