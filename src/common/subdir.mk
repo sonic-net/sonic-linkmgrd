@@ -3,19 +3,22 @@ CPP_SRCS += \
     ./src/common/MuxLogger.cpp \
     ./src/common/MuxPortConfig.cpp \
     ./src/common/State.cpp \
-    ./src/common/StateMachine.cpp 
+    ./src/common/StateMachine.cpp \
+    ./src/common/SwssLogBackend.cpp
 
 OBJS += \
     ./src/common/MuxLogger.o \
     ./src/common/MuxPortConfig.o \
     ./src/common/State.o \
-    ./src/common/StateMachine.o 
+    ./src/common/StateMachine.o \
+    ./src/common/SwssLogBackend.o
 
 CPP_DEPS += \
     ./src/common/MuxLogger.d \
     ./src/common/MuxPortConfig.d \
     ./src/common/State.d \
-    ./src/common/StateMachine.d 
+    ./src/common/StateMachine.d \
+    ./src/common/SwssLogBackend.d
 
 
 # Each subdirectory must supply rules for building sources it contributes

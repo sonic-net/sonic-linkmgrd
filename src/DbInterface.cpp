@@ -1030,7 +1030,9 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                 std::string f = fvField(fieldValue);
                 std::string v = fvValue(fieldValue);
                 if (f == "log_verbosity") {
-                    mMuxManagerPtr->updateLogVerbosity(v);
+                    if (!common::MuxLogger::getInstance()->isLinkToSwssLogger()) {
+                        mMuxManagerPtr->updateLogVerbosity(v);
+                    }
                 }
 
                 MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
