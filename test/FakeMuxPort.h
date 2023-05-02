@@ -60,6 +60,7 @@ public:
     link_prober::LinkProberStateMachine& getLinkProberStateMachine() {return getLinkManagerStateMachine()->getLinkProberStateMachine();};
     mux_state::MuxStateMachine& getMuxStateMachine() {return getLinkManagerStateMachine()->getMuxStateMachine();};
     link_state::LinkStateMachine& getLinkStateMachine() {return getLinkManagerStateMachine()->getLinkStateMachine();};
+    link_manager::LinkManagerStateMachine::DefaultRoute getDefaultRouteState() {return getLinkManagerStateMachine()->getDefaultRouteState();};
 
     bool getPendingMuxModeChange() {return getLinkManagerStateMachine()->mPendingMuxModeChange;};
     common::MuxPortConfig::Mode getTargetMuxMode() {return getLinkManagerStateMachine()->mTargetMuxMode;};

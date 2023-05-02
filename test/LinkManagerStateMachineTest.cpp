@@ -1332,7 +1332,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownDefaultRouteNA)
     EXPECT_TRUE(mMuxConfig.getIfEnableDefaultRouteFeature());
 
     postDefaultRouteEvent("na", 3);
-    EXPECT_EQ(mFakeMuxPort.mActiveStandbyStateMachinePtr->getDefaultRouteState(), link_manager::LinkManagerStateMachine::DefaultRoute::NA);
+    EXPECT_EQ(mFakeMuxPort.getDefaultRouteState(), link_manager::LinkManagerStateMachine::DefaultRoute::NA);
 
     // LinkProberState::Unknown now will only trigger mux probe instead of mux toggle
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
