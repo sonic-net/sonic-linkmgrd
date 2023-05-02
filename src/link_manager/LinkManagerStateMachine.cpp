@@ -1228,8 +1228,10 @@ void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunctio
     // Start switching MUX to active state as we lost HB from active ToR
     if (mDefaultRouteState == DefaultRoute::OK) {
         switchMuxState(link_manager::LinkManagerStateMachine::SwitchCause::PeerHeartbeatMissing, nextState, mux_state::MuxState::Label::Active);
+        mDeadlineTimer.cancel();
+    } else {
+        enterMuxWaitState(nextState);
     }
-    mDeadlineTimer.cancel();
     mWaitActiveUpCount = 0;
 }
 
