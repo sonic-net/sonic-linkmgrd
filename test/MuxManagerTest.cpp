@@ -471,7 +471,7 @@ TEST_F(MuxManagerTest, ProcessVlanMacAddressException)
 
 TEST_F(MuxManagerTest, SrcMacAddressUpdate)
 {
-    std::string port = "Etheret0";
+    std::string port = "Ethernet0";
     
     createPort(port);
 
