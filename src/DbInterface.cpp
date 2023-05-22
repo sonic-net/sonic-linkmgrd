@@ -840,7 +840,7 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                     } else if (f == "suspend_timer") {
                         mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
                     } else if (f == "interval_pck_loss_count_update") {
-                        mMuxManagerPtr->setUseWellKnownMacActiveActive(v == "enable");
+                        mMuxManagerPtr->setLinkProberStatUpdateIntervalCount(boost::lexical_cast<uint32_t> (v));
                     } else if (f == "src_mac") {
                         mMuxManagerPtr->processSrcMac(v == "ToRMac");
                     }

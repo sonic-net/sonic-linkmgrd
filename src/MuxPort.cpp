@@ -159,8 +159,8 @@ void MuxPort::handleSrcMacAddressUpdate()
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
-        &link_manager::LinkManagerStateMachineBase::handleSrcMacConfigNotification,
-        mLinkManagerStateMachinePtr.get()
+        &link_manager::LinkManagerStateMachine::handleSrcMacConfigNotification,
+        &mLinkManagerStateMachine
     )));
 }
 
