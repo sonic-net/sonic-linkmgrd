@@ -1132,4 +1132,32 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineInitEventWithHandleM
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineInitEventWithMultipleHandleMuxConfigBeforeInit)
+{
+    handleMuxConfig("active", 0, true);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("standby", 0, true);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    postLinkEvent(link_state::LinkState::Up, 0, true);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleMuxState("unknown", 0, true);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    activateStateMachine();
+    pollIoService();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    VALIDATE_STATE(Active, Standby, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+}
+
 } /* namespace test */
