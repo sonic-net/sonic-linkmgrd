@@ -51,7 +51,8 @@ ActiveActiveStateMachine::ActiveActiveStateMachine(
       mDeadlineTimer(strand.context()),
       mWaitTimer(strand.context()),
       mPeerWaitTimer(strand.context()),
-      mResyncTimer(strand.context())
+      mResyncTimer(strand.context()),
+      mWaitStateMachineInit(strand)
 {
     assert(muxPortPtr != nullptr);
     mMuxPortPtr->setMuxLinkmgrState(mLabel);
@@ -96,6 +97,8 @@ void ActiveActiveStateMachine::activateStateMachine()
         updateMuxLinkmgrState();
 
         startAdminForwardingStateSyncUpTimer();
+
+        mWaitStateMachineInit.notify_all();
     }
 }
 
@@ -253,6 +256,10 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
         updateMuxLinkmgrState();
+    } else {
+        mWaitStateMachineInit.registerWaitHandler(
+            boost::bind(&ActiveActiveStateMachine::handleMuxConfigNotification, this, mode)
+        );
     }
     shutdownOrRestartLinkProberOnDefaultRoute();
 }

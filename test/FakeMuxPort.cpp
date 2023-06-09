@@ -149,6 +149,10 @@ void FakeMuxPort::activateStateMachine()
     if (mMuxPortConfig.ifEnableDefaultRouteFeature() == true){
         mFakeLinkProber->shutdownTxProbes();
     }
+
+    if (mMuxPortConfig.getPortCableType() == common::MuxPortConfig::PortCableType::ActiveActive) {
+        getActiveActiveStateMachinePtr()->mWaitStateMachineInit.notify_all();
+    }
 }
 
 } /* namespace test */

@@ -24,6 +24,7 @@
 #include <vector>
 #include <boost/function.hpp>
 
+#include "common/AsyncEvent.h"
 #include "link_manager/LinkManagerStateMachineBase.h"
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberState.h"
@@ -704,6 +705,8 @@ private:
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mPeerWaitTimer;
     boost::asio::deadline_timer mResyncTimer;
+
+    common::AsyncEvent mWaitStateMachineInit;
 
     boost::function<void()> mInitializeProberFnPtr;
     boost::function<void()> mStartProbingFnPtr;
