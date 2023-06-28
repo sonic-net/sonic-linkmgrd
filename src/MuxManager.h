@@ -175,6 +175,39 @@ public:
     inline void setTorMacAddress(std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxConfig.setTorMacAddress(address);};
 
     /**
+     * @method setVlanMacAddress
+     * 
+     * @brief setter for Vlan Mac Address
+     * 
+     * @param address (in) Vlan mac address 
+     * 
+     * @return none
+     */
+    inline void setVlanMacAddress(std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxConfig.setVlanMacAddress(address);};
+
+    /**
+     * @method setIfUseTorMacAsSrcMac
+     * 
+     * @brief setter for flag whether use ToR MAC address as link prober src MAC 
+     * 
+     * @param useTorMac (in) bool
+     * 
+     * @return none
+     */
+    void setIfUseTorMacAsSrcMac(bool useTorMac) {mMuxConfig.setIfUseTorMacAsSrcMac(useTorMac);};
+
+    /**
+     * @method processSrcMac
+     * 
+     * @brief processs src mac config 
+     * 
+     * @param enable (in) bool 
+     * 
+     * @return none
+     */
+    void processSrcMac(bool useTorMac);
+
+    /**
     *@method setSuspendTimeout_msec
     *
     *@brief setter for LinkProber suspend timer timeout

@@ -465,6 +465,37 @@ private:
     void getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+     * @method getVlanNames
+     * 
+     * @brief  get vlan names
+     * 
+     * @param configDbConnector   config db connector
+     * 
+     * @return none
+     */
+    void getVlanNames(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
+     * @method getVlanMacAddress
+     * 
+     * @brief retrieve Vlan MAC address information
+     * 
+     * @param vlanNames (in) vlan names 
+     * 
+     * @return none
+     */
+    void getVlanMacAddress(std::vector<std::string> &vlanNames);
+
+    /**
+     * @method processVlanMacAddress
+     * 
+     * @brief process Vlan Mac Address
+     * 
+     * @return none 
+     */
+    void processVlanMacAddress(std::string& mac);
+
+    /**
     *@method processLoopback2InterfaceInfo
     *
     *@brief process Loopback2 interface information

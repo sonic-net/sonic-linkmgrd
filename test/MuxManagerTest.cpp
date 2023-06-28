@@ -97,6 +97,13 @@ uint32_t MuxManagerTest::getLinkWaitTimeout_msec(std::string port)
     return muxPortPtr->mMuxPortConfig.getLinkWaitTimeout_msec();
 }
 
+bool MuxManagerTest::getIfUseToRMac(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.ifEnableUseTorMac();
+}
+
 boost::asio::ip::address MuxManagerTest::getBladeIpv4Address(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -123,6 +130,13 @@ std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getTorMacAddress(std::string
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
 
     return muxPortPtr->mMuxPortConfig.getTorMacAddress();
+}
+
+std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getVlanMacAddress(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getVlanMacAddress();
 }
 
 void MuxManagerTest::processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
@@ -161,6 +175,16 @@ void MuxManagerTest::processLoopback2InterfaceInfo(std::vector<std::string> &loo
 void MuxManagerTest::processTorMacAddress(std::string &mac)
 {
     mDbInterfacePtr->processTorMacAddress(mac);
+}
+
+void MuxManagerTest::getVlanMacAddress(std::vector<std::string> &vlanNames)
+{
+    mDbInterfacePtr->getVlanMacAddress(vlanNames);
+}
+
+void MuxManagerTest::processVlanMacAddress(std::string &mac)
+{
+    mDbInterfacePtr->processVlanMacAddress(mac);
 }
 
 void MuxManagerTest::processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
@@ -399,6 +423,69 @@ TEST_F(MuxManagerTest, ToRMacAddressException)
     EXPECT_THROW(processTorMacAddress(mac), common::ConfigNotFoundException);
 }
 
+TEST_F(MuxManagerTest, VlanMacAddress)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    std::string mac = "00:aa:bb:cc:dd:ee";
+    swss::MacAddress swssMacAddress(mac);
+    std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+    memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
+
+    processVlanMacAddress(mac);
+
+    std::array<uint8_t, ETHER_ADDR_LEN> vlanMac = getVlanMacAddress(port);
+
+    EXPECT_TRUE(vlanMac == macAddress);
+}
+
+TEST_F(MuxManagerTest, GetVlanMacAddressException)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == false);
+
+    std::vector<std::string> emptyVlanNameInput;
+    getVlanMacAddress(emptyVlanNameInput);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == true);
+}
+
+TEST_F(MuxManagerTest, ProcessVlanMacAddressException)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == false);
+
+    std::string mac = "invalid mac";
+    processVlanMacAddress(mac);
+
+    EXPECT_TRUE(getIfUseToRMac(port) == true);
+}
+
+TEST_F(MuxManagerTest, SrcMacAddressUpdate)
+{
+    std::string port = "Ethernet0";
+    
+    createPort(port);
+
+    uint32_t updateEthernetFrameCallCountBefore = mFakeLinkProber->mUpdateEthernetFrameCallCount;
+    
+    std::deque<swss::KeyOpFieldsValuesTuple> entries = {
+        {"LINK_PROBER", "SET", {{"src_mac", "ToRMac"}}}
+    };
+    processMuxLinkmgrConfigNotifiction(entries);
+
+    runIoService();
+    EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 1);
+}
+
 TEST_F(MuxManagerTest, ServerMacAddress)
 {
     std::string port = "Ethernet0";
@@ -486,6 +573,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     uint32_t negativeSignalCount = 3;
     uint32_t pckLossStatUpdateInterval = 900;
     uint32_t suspendTimer = 5;
+    bool useTorMacAddress = true; 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
         {"LINK_PROBER", "SET", {{"interval_v4", boost::lexical_cast<std::string> (v4PorbeInterval)}}},
         {"LINK_PROBER", "SET", {{"interval_v6", boost::lexical_cast<std::string> (v6ProveInterval)}}},
@@ -494,6 +582,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"suspend_timer", boost::lexical_cast<std::string> (suspendTimer)}}},
         {"LINK_PROBER", "SET", {{"interval_v4", "abc"}}},
         {"LINK_PROBER", "SET", {{"interval_pck_loss_count_update", "900"}}},
+        {"LINK_PROBER", "SET", {{"src_mac", "ToRMac"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
     processMuxLinkmgrConfigNotifiction(entries);
@@ -511,6 +600,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     };
     processMuxLinkmgrConfigNotifiction(entry);
     EXPECT_TRUE(getLinkProberStatUpdateIntervalCount(port) == 50);
+    EXPECT_TRUE(getIfUseToRMac(port) == useTorMacAddress);
 }
 
 TEST_P(MuxResponseTest, MuxResponse)

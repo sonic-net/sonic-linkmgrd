@@ -178,6 +178,28 @@ public:
     inline void setTorMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mTorMacAddress = address;};
 
     /**
+     * @method setVlanMacAddress
+     * 
+     * @brief setter for Vlan MAC address
+     * 
+     * @param address (in) Vlan MAC address
+     * 
+     * @return none
+     */
+    inline void setVlanMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mVlanMacAddress = address;};
+
+    /**
+     * @method setIfUseTorMacAsSrcMac
+     * 
+     * @brief setter for flag whether use ToR MAC address as link prober src MAC 
+     * 
+     * @param enable (in) bool 
+     * 
+     * @return none
+     */
+    inline void setIfUseTorMacAsSrcMac(bool enable) {mEnableUseTorMac = enable;};
+
+    /**
     *@method setLoopbackIpv4Address
     *
     *@brief setter for Loopback IPv4 address
@@ -279,6 +301,15 @@ public:
     inline const std::array<uint8_t, ETHER_ADDR_LEN>& getTorMacAddress() const {return mTorMacAddress;};
 
     /**
+     * @method getVlanMacAddress
+     * 
+     * @brief getter for Vlan MAC address
+     * 
+     * @return Vlan MAC address
+     */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getVlanMacAddress() const {return mVlanMacAddress;};
+
+    /**
     *@method getLoopbackIpv4Address
     *
     *@brief getter for Loopback IPv4 address
@@ -345,6 +376,15 @@ public:
      */
     inline uint32_t getMuxReconciliationTimeout_sec(){return mMuxReconciliationTimeout_sec;};
 
+    /**
+     * @method getIfEnableUseTorMac
+     * 
+     * @brief check if use ToR MAC address as src MAC for link prober 
+     * 
+     * @return if use ToR MAC 
+     */
+    inline bool getIfEnableUseTorMac() {return mEnableUseTorMac;};
+
 private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
@@ -363,7 +403,10 @@ private:
 
     bool mEnableDefaultRouteFeature = false;
 
+    bool mEnableUseTorMac = false;
+
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
+    std::array<uint8_t, ETHER_ADDR_LEN> mVlanMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");
 };
 

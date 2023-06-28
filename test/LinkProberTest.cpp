@@ -216,6 +216,8 @@ TEST_F(LinkProberTest, UpdateToRMac)
     std::array<uint8_t, ETHER_ADDR_LEN> torMac = {0, 'b', 2, 'd', 4, 'f'};
     mMuxConfig.setTorMacAddress(torMac);
 
+    mMuxConfig.setIfUseTorMacAsSrcMac(true);
+
     boost::asio::ip::address ipAddress = boost::asio::ip::address::from_string("192.168.1.100");
     mFakeMuxPort.setServerIpv4Address(ipAddress);
 
