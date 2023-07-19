@@ -865,14 +865,14 @@ void LinkProber::resetIcmpPacketCounts()
 
 void LinkProber::shutdownTxProbes()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: shutdown probe") % mMuxPortConfig.getPortName());
 
     mShutdownTx = true;
 }
 
 void LinkProber::restartTxProbes()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: restart probe") % mMuxPortConfig.getPortName());
 
     mShutdownTx = false;
 }
