@@ -189,7 +189,7 @@ void LinkProber::startProbing()
 //
 void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
     mSuspendTimer.async_wait(mStrand.wrap(boost::bind(
@@ -208,7 +208,7 @@ void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 //
 void LinkProber::resumeTxProbes()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mSuspendTimer.cancel();
 }
@@ -521,7 +521,7 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
 //
 void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: suspend timeout, resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mSuspendTx = false;
 
@@ -866,14 +866,14 @@ void LinkProber::resetIcmpPacketCounts()
 
 void LinkProber::shutdownTxProbes()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: shutdown ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mShutdownTx = true;
 }
 
 void LinkProber::restartTxProbes()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: restart ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mShutdownTx = false;
 }
