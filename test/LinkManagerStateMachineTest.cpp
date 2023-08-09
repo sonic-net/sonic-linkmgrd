@@ -68,35 +68,42 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
     }
 }
 
-void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
+void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count, uint32_t detect_multiplier)
 {
     switch (label) {
-    case link_prober::LinkProberState::Active:
-        for (uint8_t i = 0; i < mMuxConfig.getPositiveStateChangeRetryCount(); i++) {
-            mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpSelfEvent&>(
-                link_prober::LinkProberStateMachineBase::getIcmpSelfEvent()
-            );
-            runIoService(count);
+        case link_prober::LinkProberState::Active: {
+            detect_multiplier = (detect_multiplier == 0 ? mMuxConfig.getPositiveStateChangeRetryCount() : detect_multiplier);
+            for (uint8_t i = 0; i < detect_multiplier; i++) {
+                mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpSelfEvent&>(
+                    link_prober::LinkProberStateMachineBase::getIcmpSelfEvent()
+                );
+                runIoService(count);
+            }
+            break;
         }
-        break;
-    case link_prober::LinkProberState::Standby:
-        for (uint8_t i = 0; i < mMuxConfig.getPositiveStateChangeRetryCount(); i++) {
-            mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpPeerEvent&>(
-                link_prober::LinkProberStateMachineBase::getIcmpPeerEvent()
-            );
-            runIoService(count);
+        case link_prober::LinkProberState::Standby: {
+            detect_multiplier = (detect_multiplier == 0 ? mMuxConfig.getPositiveStateChangeRetryCount() : detect_multiplier);
+            for (uint8_t i = 0; i < detect_multiplier; i++) {
+                mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpPeerEvent&>(
+                    link_prober::LinkProberStateMachineBase::getIcmpPeerEvent()
+                );
+                runIoService(count);
+            }
+            break;
         }
-        break;
-    case link_prober::LinkProberState::Unknown:
-        for (uint8_t i = 0; i < mMuxConfig.getNegativeStateChangeRetryCount(); i++) {
-            mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpUnknownEvent&>(
-                link_prober::LinkProberStateMachineBase::getIcmpUnknownEvent()
-            );
-            runIoService(count);
+        case link_prober::LinkProberState::Unknown: {
+            detect_multiplier = (detect_multiplier == 0 ? mMuxConfig.getNegativeStateChangeRetryCount() : detect_multiplier);
+            for (uint8_t i = 0; i < detect_multiplier; i++) {
+                mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpUnknownEvent&>(
+                    link_prober::LinkProberStateMachineBase::getIcmpUnknownEvent()
+                );
+                runIoService(count);
+            }
+            break;
         }
-        break;
-    default:
-        break;
+        default: {
+            break;
+        }
     }
 }
 
@@ -1352,35 +1359,81 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownDefaultRouteNA)
     VALIDATE_STATE(Wait, Wait, Up);
 }
 
-TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberStandbyLinkDown)
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberStandbyLinkDownMuxWaitLinkUp)
 {
     setMuxStandby();
-
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Standby, Standby, Up);
 
     handleLinkState("down", 3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Standby, Standby, Down);
 
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Unknown, Standby, Down);
 
     runIoService(1);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Unknown, Wait, Down);
 
     handleLinkState("up");
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Wait, Standby, Up);
 
     runIoService(1);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Wait, Wait, Up);
 
     postLinkProberEvent(link_prober::LinkProberState::Standby);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Standby, Wait, Up);
 
     handleProbeMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Standby, Standby, Up);
 }
+
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberStandbyLinkDownLinkUpResetLinkProberState)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Standby, Standby, Up);
+
+    handleLinkState("down", 3);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Standby, Standby, Down);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2, 2);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Standby, Standby, Down);
+
+    handleLinkState("up");
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Standby, Standby, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2, 1);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Standby, Standby, Up);
+}
+
 
 } /* namespace test */
