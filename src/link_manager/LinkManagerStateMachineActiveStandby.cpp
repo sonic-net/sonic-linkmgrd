@@ -557,7 +557,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
             // start fresh when the link transition from Down to UP state
             // and so the link prober will initially match the MUX state
             // There is a problem with this approach as it will hide link flaps that result in lost heart-beats.
-            initLinkProberState(nextState);
+            initLinkProberState(nextState, true);
 //            enterMuxWaitState(nextState);
         } else if (ls(mCompositeState) == link_state::LinkState::Up &&
                    ls(nextState) == link_state::LinkState::Down &&
