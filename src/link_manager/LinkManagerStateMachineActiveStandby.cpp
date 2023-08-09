@@ -247,8 +247,7 @@ void ActiveStandbyStateMachine::enterLinkProberState(CompositeState &nextState, 
 
     if (forceReset && ps(nextState) == label) {
         // only need to reset the link prober state if the state remains the same
-        link_prober::LinkProberState *currentLinkProberState = dynamic_cast<link_prober::LinkProberState *> (mLinkProberStateMachinePtr->getCurrentState());
-        currentLinkProberState->resetState();
+        mLinkProberStateMachinePtr->resetCurrentState();
     }
 
     ps(nextState) = label;

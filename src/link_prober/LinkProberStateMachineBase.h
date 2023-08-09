@@ -401,6 +401,14 @@ public:
 
 public:
     /**
+     *@method resetCurrentState
+     *
+     *@brief reset current link prober state
+     */
+    void resetCurrentState();
+
+public:
+    /**
      *@method getIcmpSelfEvent
      *
      *@brief getter for IcmpSelfEvent object
