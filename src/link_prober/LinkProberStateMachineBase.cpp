@@ -55,6 +55,17 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
 }
 
 //
+// ---> LinkProberStateMachineBase::resetCurrentState();
+//
+// reset current link prober state
+//
+void LinkProberStateMachineBase::resetCurrentState()
+{
+    LinkProberState *currentLinkProberState = dynamic_cast<LinkProberState *> (getCurrentState());
+    currentLinkProberState->resetState();
+}
+
+//
 // ---> LinkProberStateMachineBase::postLinkProberStateEvent(E &e);
 //
 // post LinkProberState event to the state machine
