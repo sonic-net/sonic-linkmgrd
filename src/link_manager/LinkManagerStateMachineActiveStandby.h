@@ -143,9 +143,11 @@ private:
     *                               entry will be changed to align with state label provided
     *@param label (in)              state to switch to
     *
+    *@param forceReset (in)         force reset the aligned link prober state
+    *
     *@return none
     */
-    inline void enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label);
+    inline void enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label, bool forceReset=false);
 
     /**
     *@method enterMuxState
@@ -460,9 +462,11 @@ private:
     *@param compositeState (in, out)    reference to composite state, the state linkProber
     *                                   entry will be changed to align with MuxState
     *
+    *@param forceReset (in)             force reset the aligned link prober state
+    *
     *@return none
     */
-    void initLinkProberState(CompositeState &compositeState);
+    void initLinkProberState(CompositeState &compositeState, bool forceReset=false);
 
     /**
     *@method LinkProberStandbyMuxActiveLinkUpTransitionFunction
