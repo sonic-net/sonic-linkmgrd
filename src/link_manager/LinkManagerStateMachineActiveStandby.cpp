@@ -237,13 +237,19 @@ void ActiveStandbyStateMachine::setLabel(Label label) {
 };
 
 //
-// ---> enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label);
+// ---> enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label, bool forceReset);
 //
 // force LinkProberState to switch state
 //
-void ActiveStandbyStateMachine::enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label)
+void ActiveStandbyStateMachine::enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label, bool forceReset)
 {
     mLinkProberStateMachinePtr->enterState(label);
+
+    if (forceReset && ps(nextState) == label) {
+        // only need to reset the link prober state if the state remains the same
+        mLinkProberStateMachinePtr->resetCurrentState();
+    }
+
     ps(nextState) = label;
 
     // link prober entering wait indicating switchover is initiated, but a switchover can be skipped if mode == manual.
@@ -550,7 +556,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
             // start fresh when the link transition from Down to UP state
             // and so the link prober will initially match the MUX state
             // There is a problem with this approach as it will hide link flaps that result in lost heart-beats.
-            initLinkProberState(nextState);
+            initLinkProberState(nextState, true);
 //            enterMuxWaitState(nextState);
         } else if (ls(mCompositeState) == link_state::LinkState::Up &&
                    ls(nextState) == link_state::LinkState::Down &&
@@ -1032,27 +1038,27 @@ void ActiveStandbyStateMachine::handleMuxWaitTimeout(boost::system::error_code e
 }
 
 //
-// ---> initLinkProberState(CompositeState &compositeState);
+// ---> initLinkProberState(CompositeState &compositeState, bool forceReset);
 //
 // initialize LinkProberState when configuring the composite state machine
 //
-void ActiveStandbyStateMachine::initLinkProberState(CompositeState &compositeState)
+void ActiveStandbyStateMachine::initLinkProberState(CompositeState &compositeState, bool forceReset)
 {
     switch (ms(compositeState)) {
     case mux_state::MuxState::Label::Active:
-        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Active);
+        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Active, forceReset);
         break;
     case mux_state::MuxState::Label::Standby:
-        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Standby);
+        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Standby, forceReset);
         break;
     case mux_state::MuxState::Label::Unknown:
-        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Unknown);
+        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Unknown, forceReset);
         break;
     case mux_state::MuxState::Label::Error:
-        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait);
+        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait, forceReset);
         break;
     case mux_state::MuxState::Label::Wait:
-        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Unknown);
+        enterLinkProberState(compositeState, link_prober::LinkProberState::Label::Wait, forceReset);
         break;
     default:
         break;
