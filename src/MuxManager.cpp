@@ -571,7 +571,10 @@ void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::err
     }
 
     uint32_t rc = system("sudo config muxcable mode auto all"); // rc > 0 means success
-    MUXLOGDEBUG(boost::format("config mux mode back to auto completed with return code %d") % rc);
+
+    if (rc <= 0) {
+        MUXLOGWARNING(boost::format("config mux mode back to auto failed with return code %d") % rc);
+    }
 
     mDbInterfacePtr->setWarmStartStateReconciled();
 }
