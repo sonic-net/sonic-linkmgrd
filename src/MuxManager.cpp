@@ -570,6 +570,9 @@ void MuxManager::handleWarmRestartReconciliationTimeout(const boost::system::err
         MUXLOGWARNING("Reconciliation timed out after warm restart, set service to reconciled now.");
     }
 
+    int rc = system("sudo config muxcable mode auto all");
+    MUXLOGWARNING(boost::format("config mux mode back to auto completed with return code %d") % rc);
+
     mDbInterfacePtr->setWarmStartStateReconciled();
 }
 
