@@ -54,7 +54,8 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
         {link_prober::LinkProberState::Label::Unknown, mux_state::MuxState::Label::Wait, link_state::LinkState::Label::Down}
     ),
     mDeadlineTimer(strand.context()),
-    mWaitTimer(strand.context())
+    mWaitTimer(strand.context()),
+    mOscillationTimer(strand.context())
 {
     assert(muxPortPtr != nullptr);
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
