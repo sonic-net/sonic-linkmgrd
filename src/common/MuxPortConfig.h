@@ -193,6 +193,15 @@ public:
     inline uint32_t getLinkWaitTimeout_msec() const {return mMuxConfig.getSuspendTimeout_msec();};
 
     /**
+    *@method getOscillationInterval_sec
+    *
+    *@brief getter for mux state oscillation interval
+    *
+    *@return oscillation interval
+    */
+    inline uint32_t getOscillationInterval_sec() const {return mMuxConfig.getOscillationInterval_sec();};
+
+    /**
     *@method getMuxStateChangeRetryCount
     *
     *@brief getter for MuxState state change retry count

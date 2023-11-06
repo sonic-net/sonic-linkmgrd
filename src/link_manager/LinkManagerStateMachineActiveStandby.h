@@ -73,6 +73,7 @@ public:
         MatchingHardwareState,
         ConfigMuxMode,
         HarewareStateUnknown,
+        TimedOscillation,
 
         Count
     };
@@ -455,6 +456,26 @@ private:
     void handleMuxWaitTimeout(boost::system::error_code errorCode);
 
     /**
+    *@method startOscillationTimer
+    *
+    *@brief when there is no icmp heartbeat, start a timer to oscillate between active and standby
+    *
+    *@return none
+    */
+    void startOscillationTimer();
+
+    /**
+    *@method handleOscillationTimeout
+    *
+    *@brief handle when oscillation timer expires
+    *
+    *@param errorCode (in)          timer error code
+    *
+    *@return none
+    */
+    void handleOscillationTimeout(boost::system::error_code errorCode);
+
+    /**
     *@method initLinkProberState
     *
     *@brief initialize LinkProberState when configuring the composite state machine
@@ -826,6 +847,7 @@ private:
 
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
+    boost::asio::deadline_timer mOscillationTimer;
 
     boost::function<void ()> mInitializeProberFnPtr;
     boost::function<void ()> mStartProbingFnPtr;
