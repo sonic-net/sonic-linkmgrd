@@ -49,6 +49,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
+    mMuxConfig.setOscillationInterval_sec(1);
 }
 
 void LinkManagerStateMachineTest::runIoService(uint32_t count)

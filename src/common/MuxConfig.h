@@ -284,6 +284,18 @@ public:
     inline uint32_t getOscillationInterval_sec() const {return mOscillationTimeout_sec;};
 
     /**
+    *@method setOscillationInterval_sec
+    *
+    *@brief setter for mux state oscillation interval
+    *
+    *@param oscillationInterval_sec (in) oscillation interval
+    *
+    *@return none
+    */
+    inline void setOscillationInterval_sec(uint32_t oscillationInterval_sec) {mOscillationTimeout_sec = oscillationInterval_sec;};
+
+
+    /**
     *@method getMuxStateChangeRetryCount
     *
     *@brief getter for MuxState state change retry count
