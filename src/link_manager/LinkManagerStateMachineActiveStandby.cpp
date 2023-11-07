@@ -1065,7 +1065,7 @@ void ActiveStandbyStateMachine::startOscillationTimer()
 //
 void ActiveStandbyStateMachine::handleOscillationTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGWARNING(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (errorCode == boost::system::errc::success &&
         ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
