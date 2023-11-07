@@ -61,6 +61,8 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
     mMuxPortPtr->setMuxLinkmgrState(mLabel);
     initializeTransitionFunctionTable();
+
+    mOscillationTimer.expires_from_now(boost::posix_time::seconds(1)); 
 }
 
 //
@@ -1046,7 +1048,7 @@ void ActiveStandbyStateMachine::handleMuxWaitTimeout(boost::system::error_code e
 void ActiveStandbyStateMachine::startOscillationTimer()
 {
     // Note: This timer is started when Mux state is active and link prober is in wait state.
-    mOscillationTimer.expires_from_now(boost::posix_time::sec(
+    mOscillationTimer.expires_from_now(boost::posix_time::seconds(
         mMuxPortConfig.getOscillationInterval_sec()
     ));
     mOscillationTimer.async_wait(boost::asio::bind_executor(getStrand(), boost::bind(
@@ -1063,7 +1065,7 @@ void ActiveStandbyStateMachine::startOscillationTimer()
 //
 void ActiveStandbyStateMachine::handleOscillationTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGWARNING(mMuxPortConfig.getPortName());
 
     if (errorCode == boost::system::errc::success &&
         ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
@@ -1299,7 +1301,9 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(
         mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
     }
 
-    startOscillationTimer();
+    if (mOscillationTimer.expires_at() < boost::posix_time::microsec_clock::local_time()) {
+        startOscillationTimer();
+    }
 }
 
 //

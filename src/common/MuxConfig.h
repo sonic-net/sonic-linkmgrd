@@ -415,10 +415,9 @@ public:
 
 private:
     uint8_t mNumberOfThreads = 5;
-    uint32_t mOscillationTimeout_sec = 300;
+    uint32_t mOscillationTimeout_sec = 60;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
-    uint32_t mOscillationTimeout_sec = 300;
     uint32_t mPositiveStateChangeRetryCount = 1;
     uint32_t mNegativeStateChangeRetryCount = 3;
     uint32_t mLinkProberStatUpdateIntervalCount = 300; 
