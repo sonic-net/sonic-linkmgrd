@@ -49,7 +49,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
-    mMuxConfig.setOscillationInterval_sec(1);
+    mMuxConfig.setOscillationInterval_sec(1,true);
 }
 
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
@@ -1434,6 +1434,35 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberStandbyLinkDownLinkUpRes
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
     VALIDATE_STATE(Standby, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, TimedOscillation)
+{
+    setMuxStandby();
+
+    // set icmp timeout to be 500ms otherwise it will probe mux state endlessly and get no chance to do timed oscillation
+    mMuxConfig.setTimeoutIpv4_msec(500);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    runIoService(2);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    runIoService(2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::TimedOscillation);
+
+    mMuxConfig.setTimeoutIpv4_msec(10);
 }
 
 

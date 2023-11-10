@@ -289,11 +289,17 @@ public:
     *@brief setter for mux state oscillation interval
     *
     *@param oscillationInterval_sec (in) oscillation interval
+    *@param force (in) force set the oscillation interval
     *
     *@return none
     */
-    inline void setOscillationInterval_sec(uint32_t oscillationInterval_sec) {mOscillationTimeout_sec = oscillationInterval_sec;};
-
+    inline void setOscillationInterval_sec(uint32_t oscillationInterval_sec, bool force=false) {
+        if (force || oscillationInterval_sec > 300) {
+            mOscillationTimeout_sec = oscillationInterval_sec;
+        } else {
+            mOscillationTimeout_sec = 300;
+        }
+    };
 
     /**
     *@method getMuxStateChangeRetryCount
