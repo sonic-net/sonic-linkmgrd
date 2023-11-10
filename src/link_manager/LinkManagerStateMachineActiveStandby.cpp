@@ -54,12 +54,15 @@ ActiveStandbyStateMachine::ActiveStandbyStateMachine(
         {link_prober::LinkProberState::Label::Unknown, mux_state::MuxState::Label::Wait, link_state::LinkState::Label::Down}
     ),
     mDeadlineTimer(strand.context()),
-    mWaitTimer(strand.context())
+    mWaitTimer(strand.context()),
+    mOscillationTimer(strand.context())
 {
     assert(muxPortPtr != nullptr);
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
     mMuxPortPtr->setMuxLinkmgrState(mLabel);
     initializeTransitionFunctionTable();
+
+    mOscillationTimer.expires_from_now(boost::posix_time::seconds(1)); 
 }
 
 //
@@ -1038,6 +1041,41 @@ void ActiveStandbyStateMachine::handleMuxWaitTimeout(boost::system::error_code e
 }
 
 //
+// ---> startOscillationTimer();
+//
+// when there is no icmp heartbeat, start a timer to oscillate between active and standby
+//
+void ActiveStandbyStateMachine::startOscillationTimer()
+{
+    // Note: This timer is started when Mux state is active and link prober is in wait state.
+    mOscillationTimer.expires_from_now(boost::posix_time::seconds(
+        mMuxPortConfig.getOscillationInterval_sec()
+    ));
+    mOscillationTimer.async_wait(boost::asio::bind_executor(getStrand(), boost::bind(
+            &ActiveStandbyStateMachine::handleOscillationTimeout,
+            this,
+            boost::asio::placeholders::error
+    )));
+}
+
+//
+// ---> handleOscillationTimeout(boost::system::error_code errorCode);
+//
+// handle when oscillation timer expires
+//
+void ActiveStandbyStateMachine::handleOscillationTimeout(boost::system::error_code errorCode)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (errorCode == boost::system::errc::success &&
+        ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
+        ms(mCompositeState) == mux_state::MuxState::Label::Active &&
+        ls(mCompositeState) == link_state::LinkState::Label::Up) {
+            switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::TimedOscillation, mCompositeState, mux_state::MuxState::Label::Standby);
+    }
+}
+
+//
 // ---> initLinkProberState(CompositeState &compositeState, bool forceReset);
 //
 // initialize LinkProberState when configuring the composite state machine
@@ -1261,6 +1299,10 @@ void ActiveStandbyStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(
 
     if (mWaitActiveUpCount++ & 0x1) {
         mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
+    }
+
+    if (mOscillationTimer.expires_at() < boost::posix_time::microsec_clock::local_time()) {
+        startOscillationTimer();
     }
 }
 

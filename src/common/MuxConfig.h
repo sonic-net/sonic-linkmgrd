@@ -275,6 +275,33 @@ public:
     inline uint32_t getSuspendTimeout_msec() const {return (mNegativeStateChangeRetryCount + 1) * mTimeoutIpv4_msec;};
 
     /**
+    *@method getOscillationInterval_sec
+    *
+    *@brief getter for mux state oscillation interval
+    *
+    *@return oscillation interval
+    */
+    inline uint32_t getOscillationInterval_sec() const {return mOscillationTimeout_sec;};
+
+    /**
+    *@method setOscillationInterval_sec
+    *
+    *@brief setter for mux state oscillation interval
+    *
+    *@param oscillationInterval_sec (in) oscillation interval
+    *@param force (in) force set the oscillation interval
+    *
+    *@return none
+    */
+    inline void setOscillationInterval_sec(uint32_t oscillationInterval_sec, bool force=false) {
+        if (force || oscillationInterval_sec > 300) {
+            mOscillationTimeout_sec = oscillationInterval_sec;
+        } else {
+            mOscillationTimeout_sec = 300;
+        }
+    };
+
+    /**
     *@method getMuxStateChangeRetryCount
     *
     *@brief getter for MuxState state change retry count
@@ -406,6 +433,7 @@ public:
 
 private:
     uint8_t mNumberOfThreads = 5;
+    uint32_t mOscillationTimeout_sec = 300;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mPositiveStateChangeRetryCount = 1;
