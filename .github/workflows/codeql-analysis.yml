@@ -71,7 +71,8 @@ jobs:
             autoconf-archive \
             uuid-dev \
             libjansson-dev \
-            python
+            python \
+            nlohmann-json3-dev
 
     - name: build-swss-common
       run: |
