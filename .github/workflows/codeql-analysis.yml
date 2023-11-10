@@ -75,6 +75,7 @@ jobs:
 
     - name: build-swss-common
       run: |
+        set -x
         cd ..
         git clone https://github.com/sonic-net/sonic-swss-common
         pushd sonic-swss-common
