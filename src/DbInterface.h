@@ -388,6 +388,15 @@ public:
      */
     virtual void setWarmStartStateReconciled(){swss::WarmStart::setWarmStartState("linkmgrd", swss::WarmStart::RECONCILED);};
 
+    /**
+    *@method getMuxModeConfig
+    *
+    *@brief retrieve mux mode config
+    *
+    *@return port to mux mode map
+    */
+    virtual std::map<std::string, std::string> getMuxModeConfig();
+
 private:
     friend class test::MuxManagerTest;
 
