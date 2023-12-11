@@ -39,6 +39,7 @@ public:
     virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label) override;
     virtual void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label) override;
     virtual void getMuxState(const std::string &portName) override;
+    virtual std::map<std::string, std::string> getMuxModeConfig() override;
     virtual void probeMuxState(const std::string &portName) override;
     virtual void handleProbeForwardingState(const std::string portName) override;
     virtual void setMuxLinkmgrState(
@@ -95,6 +96,7 @@ public:
     uint32_t mSetMuxModeInvokeCount = 0;
     uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
     uint32_t mPostSwitchCauseInvokeCount = 0;
+    uint32_t mGetMuxModeConfigInvokeCount = 0;
 
     link_manager::ActiveStandbyStateMachine::SwitchCause mLastPostedSwitchCause;
     

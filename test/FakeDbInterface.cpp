@@ -132,4 +132,13 @@ void FakeDbInterface::postSwitchCause(
     mLastPostedSwitchCause = cause;
 }
 
+std::map<std::string, std::string> FakeDbInterface::getMuxModeConfig()
+{
+    mGetMuxModeConfigInvokeCount++;
+
+    std::map<std::string, std::string> muxModeConfig;
+    muxModeConfig["Ethernet0"] = "manual";
+    return muxModeConfig;
+}
+
 } /* namespace test */
