@@ -617,7 +617,7 @@ void ActiveStandbyStateMachine::handleGetMuxStateNotification(mux_state::MuxStat
 {
     MUXLOGINFO(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
-    if (mComponentInitState.all() && ms(mCompositeState) != label &&
+    if (mComponentInitState.all() &&
         ms(mCompositeState) != mux_state::MuxState::Wait &&
         ms(mCompositeState) != mux_state::MuxState::Error &&
         ms(mCompositeState) != mux_state::MuxState::Unknown) {
