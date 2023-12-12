@@ -320,6 +320,8 @@ void ActiveStandbyStateMachine::switchMuxState(
             mWaitActiveUpCount = 0;
         }
 
+        mLastSetMuxState = label;
+
         enterMuxState(nextState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
@@ -620,7 +622,8 @@ void ActiveStandbyStateMachine::handleGetMuxStateNotification(mux_state::MuxStat
     if (mComponentInitState.all() &&
         ms(mCompositeState) != mux_state::MuxState::Wait &&
         ms(mCompositeState) != mux_state::MuxState::Error &&
-        ms(mCompositeState) != mux_state::MuxState::Unknown) {
+        ms(mCompositeState) != mux_state::MuxState::Unknown &&
+        (ms(mCompositeState) != label || mLastSetMuxState != label)) {
         // notify swss of mux state change
         MUXLOGWARNING(boost::format("%s: Switching MUX state from '%s' to '%s' to match linkmgrd/xcvrd state") %
             mMuxPortConfig.getPortName() %
