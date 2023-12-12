@@ -1482,11 +1482,10 @@ TEST_F(LinkManagerStateMachineTest, OrchagentRollback)
     VALIDATE_STATE(Standby, Standby, Up);
 
     // extra toggle to make app_db entry in sync with state_db
-    handleGetMuxState("standby", 3);
+    handleGetMuxState("standby", 2);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
-    VALIDATE_STATE(Wait, Wait, Up);
+    VALIDATE_STATE(Standby, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
     handleMuxState("standby", 3);
     handleGetMuxState("standby", 2);
     VALIDATE_STATE(Standby, Standby, Up);
