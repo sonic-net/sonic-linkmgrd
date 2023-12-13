@@ -871,6 +871,8 @@ private:
     bool mPendingMuxModeChange = false;
     common::MuxPortConfig::Mode mTargetMuxMode = common::MuxPortConfig::Mode::Auto;
 
+    mux_state::MuxState::Label mLastSetMuxState = mux_state::MuxState::Label::Wait;
+
     bool mContinuousLinkProberUnknownEvent = false; // When posting unknown_end event, we want to make sure the previous state is unknown.
 
     link_manager::ActiveStandbyStateMachine::SwitchCause mSendSwitchActiveCommandCause;
