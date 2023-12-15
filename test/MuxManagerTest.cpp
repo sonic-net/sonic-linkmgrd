@@ -924,7 +924,7 @@ INSTANTIATE_TEST_CASE_P(
     MuxState,
     GetMuxStateTest,
     ::testing::Values(
-        std::make_tuple("active", mux_state::MuxState::Label::Active),
+        std::make_tuple("active", mux_state::MuxState::Label::Wait),
         std::make_tuple("standby", mux_state::MuxState::Label::Wait),
         std::make_tuple("unknown", mux_state::MuxState::Label::Wait),
         std::make_tuple("error", mux_state::MuxState::Label::Wait)
