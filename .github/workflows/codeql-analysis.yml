@@ -71,12 +71,10 @@ jobs:
             autoconf-archive \
             uuid-dev \
             libjansson-dev \
-            python \
-            nlohmann-json3-dev
+            python
 
     - name: build-swss-common
       run: |
-        set -x
         cd ..
         git clone https://github.com/sonic-net/sonic-swss-common
         pushd sonic-swss-common
