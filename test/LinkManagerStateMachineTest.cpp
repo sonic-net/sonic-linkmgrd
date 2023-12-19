@@ -1435,5 +1435,33 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberStandbyLinkDownLinkUpRes
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, OrchagentRollback)
+{
+    setMuxStandby();
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("active", 4);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    // orchagent rollback, toggle is not successful.
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Standby, Standby, Up);
+
+    // extra toggle to make app_db entry in sync with state_db
+    handleGetMuxState("standby", 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    handleMuxState("standby", 3);
+    handleGetMuxState("standby", 2);
+    VALIDATE_STATE(Standby, Standby, Up);
+
+    // no 3rd toggle
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+}
 
 } /* namespace test */

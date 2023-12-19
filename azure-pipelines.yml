@@ -82,8 +82,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib
       patterns: |
-        target/debs/buster/libyang-*.deb
-        target/debs/buster/libyang_*.deb
+        target/debs/bullseye/libyang-*.deb
+        target/debs/bullseye/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
@@ -179,8 +179,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.arm64
       patterns: |
-        target/debs/buster/libyang-*.deb
-        target/debs/buster/libyang_*.deb
+        target/debs/bullseye/libyang-*.deb
+        target/debs/bullseye/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
@@ -271,8 +271,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.armhf
       patterns: |
-        target/debs/buster/libyang-*.deb
-        target/debs/buster/libyang_*.deb
+        target/debs/bullseye/libyang-*.deb
+        target/debs/bullseye/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
