@@ -78,6 +78,8 @@ jobs:
         cd ..
         git clone https://github.com/sonic-net/sonic-swss-common
         pushd sonic-swss-common
+        git checkout $GITHUB_BASE_REF
+        git reset HEAD --hard
         ./autogen.sh
         fakeroot dpkg-buildpackage -us -uc -b
         popd
