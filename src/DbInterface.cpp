@@ -61,6 +61,7 @@ DbInterface::DbInterface(mux::MuxManager *muxManager, boost::asio::io_service *i
 {
 }
 
+// GCOVR_EXCL_START
 
 //
 // ---> getMuxState(const std::string &portName);
@@ -1596,5 +1597,7 @@ void DbInterface::handleSwssNotification()
     mBarrier.wait();
     mMuxManagerPtr->terminate();
 }
+
+// GCOVR_EXCL_STOP
 
 } /* namespace common */
