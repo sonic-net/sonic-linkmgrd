@@ -117,6 +117,9 @@ inline void FakeMuxPort::initLinkProberActiveStandby()
     getActiveStandbyStateMachinePtr()->setProbePeerTorFnPtr(
         boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
     );
+    getActiveStandbyStateMachinePtr()->setDetectLinkFnPtr(
+        boost::bind(&FakeLinkProber::detectLink, mFakeLinkProber.get())
+    );
     getActiveStandbyStateMachinePtr()->setSuspendTxFnPtr(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
     );

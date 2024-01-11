@@ -168,6 +168,26 @@ public:
     void probePeerTor();
 
     /**
+    *@method detectLink
+    *
+    *@brief detect link status
+    *
+    *@param probeCount (in) HB count
+    *
+    *@return none
+    */
+    void detectLink(uint32_t probeCount);
+
+    /**
+    *@method detectLink
+    *
+    *@brief detect link status
+    *
+    *@return none
+    */
+    void detectLink();
+
+    /**
     *@method sendPeerSwitchCommand
     *
     *@brief send switch command to peer ToR
