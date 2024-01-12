@@ -286,9 +286,11 @@ private:
     *
     *@brief send ICMP ECHOREQUEST packet
     *
+    *@param forceSend (in)  Force sending heartbeat, used in link detect only
+    *
     *@return none
     */
-    void sendHeartbeat();
+    void sendHeartbeat(bool forceSend = false);
 
     /**
     *@method handleTlvCommandRecv

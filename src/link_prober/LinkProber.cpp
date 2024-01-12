@@ -230,7 +230,8 @@ void LinkProber::updateEthernetFrame()
 //
 void LinkProber::probePeerTor()
 {
-    detectLink(1);
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, false)));
 }
 
 //
@@ -243,7 +244,7 @@ void LinkProber::detectLink(uint32_t probeCount)
     boost::asio::io_service &ioService = mStrand.context();
     for (uint32_t i = 0; i < probeCount; ++i)
     {
-        ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this)));
+        ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, true)));
     }
 }
 
@@ -332,14 +333,13 @@ void LinkProber::handleSendProbeCommand()
 //
 // send ICMP ECHOREQUEST packet
 //
-void LinkProber::sendHeartbeat()
+void LinkProber::sendHeartbeat(bool forceSend)
 {
     MUXLOGTRACE(mMuxPortConfig.getPortName());
 
     updateIcmpSequenceNo();
-    
     // check if suspend timer is running
-    if ((!mSuspendTx) && (!mShutdownTx)) {
+    if (forceSend || ((!mSuspendTx) && (!mShutdownTx))) {
         boost::system::error_code errorCode;
         mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
 
