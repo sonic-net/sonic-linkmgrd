@@ -493,6 +493,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
     if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
         mResumeTxFnPtr();
+        mUnknownActiveUpBackoffFactor = 1;
     }
 
     updateMuxLinkmgrState();
