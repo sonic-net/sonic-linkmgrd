@@ -329,7 +329,7 @@ void LinkProber::handleSendProbeCommand()
 }
 
 //
-// ---> sendHeartbeat()
+// ---> sendHeartbeat(bool forceSend)
 //
 // send ICMP ECHOREQUEST packet
 //
