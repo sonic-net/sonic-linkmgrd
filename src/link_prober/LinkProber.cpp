@@ -235,29 +235,18 @@ void LinkProber::probePeerTor()
 }
 
 //
-// ---> detectLink(uint32_t probeCount);
-//
-// send HBs to detect the link status
-//
-void LinkProber::detectLink(uint32_t probeCount)
-{
-    boost::asio::io_service &ioService = mStrand.context();
-    for (uint32_t i = 0; i < probeCount; ++i)
-    {
-        ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, true)));
-    }
-}
-
-//
 // ---> detectLink();
 //
 // send HBs to detect the link status
 //
 void LinkProber::detectLink()
 {
-    detectLink(mMuxPortConfig.getPositiveStateChangeRetryCount());
+    boost::asio::io_service &ioService = mStrand.context();
+    for (uint32_t i = 0; i < mMuxPortConfig.getPositiveStateChangeRetryCount(); ++i)
+    {
+        ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, true)));
+    }
 }
-
 
 //
 // ---> sendPeerSwitchCommand();
