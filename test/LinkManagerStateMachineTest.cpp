@@ -1494,4 +1494,39 @@ TEST_F(LinkManagerStateMachineTest, OrchagentRollback)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 }
 
+TEST_F(LinkManagerStateMachineTest, ProbeLinkInSuspendTimeout)
+{
+    setMuxActive();
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 0);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 0);
+
+    postSuspendTimerExpiredEvent(2);
+    VALIDATE_STATE(Unknown, Wait, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+
+    // peer doesn't take the link
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+
+    // link resumes, take back the link and resume heartbeat
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+}
+
 } /* namespace test */

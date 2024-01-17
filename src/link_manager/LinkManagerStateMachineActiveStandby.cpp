@@ -366,6 +366,9 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
             mProbePeerTorFnPtr = boost::bind(
                 &link_prober::LinkProber::probePeerTor, mLinkProberPtr.get()
             );
+            mDetectLinkFnPtr = boost::bind(
+                &link_prober::LinkProber::detectLink, mLinkProberPtr.get()
+            );
             mSuspendTxFnPtr = boost::bind(
                 &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
             );
@@ -490,6 +493,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
     if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
         mResumeTxFnPtr();
+        mUnknownActiveUpBackoffFactor = 1;
     }
 
     updateMuxLinkmgrState();
@@ -829,6 +833,8 @@ void ActiveStandbyStateMachine::handleSuspendTimerExpiry()
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+        // detect if link/server recovers
+        mDetectLinkFnPtr();
     } else {
         mUnknownActiveUpBackoffFactor = 1;
     }
