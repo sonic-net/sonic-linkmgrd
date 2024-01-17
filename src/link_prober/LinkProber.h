@@ -168,6 +168,15 @@ public:
     void probePeerTor();
 
     /**
+    *@method detectLink
+    *
+    *@brief detect link status
+    *
+    *@return none
+    */
+    void detectLink();
+
+    /**
     *@method sendPeerSwitchCommand
     *
     *@brief send switch command to peer ToR
@@ -266,9 +275,11 @@ private:
     *
     *@brief send ICMP ECHOREQUEST packet
     *
+    *@param forceSend (in)  Force sending heartbeat, used in link detect only
+    *
     *@return none
     */
-    void sendHeartbeat();
+    void sendHeartbeat(bool forceSend = false);
 
     /**
     *@method handleTlvCommandRecv
