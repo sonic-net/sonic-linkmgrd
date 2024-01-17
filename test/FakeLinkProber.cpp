@@ -106,6 +106,13 @@ void FakeLinkProber::probePeerTor()
     mProbePeerTorCallCount++;
 }
 
+void FakeLinkProber::detectLink()
+{
+    MUXLOGINFO("");
+
+    mDetectLinkCallCount++;
+}
+
 void FakeLinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
     MUXLOGINFO("");
