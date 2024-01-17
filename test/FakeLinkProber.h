@@ -43,6 +43,7 @@ public:
     void startProbing();
     void updateEthernetFrame();
     void probePeerTor();
+    void detectLink();
     void suspendTxProbes(uint32_t suspendTime_msec);
     void resumeTxProbes();
     void sendPeerSwitchCommand();
@@ -62,6 +63,7 @@ public:
     uint32_t mUpdateEthernetFrameCallCount = 0;
     uint32_t mProbePeerTorCallCount = 0;
     uint32_t mSuspendTxProbeCallCount = 0;
+    uint32_t mDetectLinkCallCount = 0;
     uint32_t mResumeTxProbeCallCount = 0;
     uint32_t mSendPeerSwitchCommand = 0;
     uint32_t mSendPeerProbeCommand = 0;
