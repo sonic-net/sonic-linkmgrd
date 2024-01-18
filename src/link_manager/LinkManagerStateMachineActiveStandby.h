@@ -735,6 +735,17 @@ private:
     void setProbePeerTorFnPtr(boost::function<void ()> probePeerTorFnPtr) {mProbePeerTorFnPtr = probePeerTorFnPtr;};
 
     /**
+    *@method setDetectLinkFnPtr
+    *
+    *@brief set new DetectLinkFnPtr for the state machine. This method is used for testing
+    *
+    *@param detectLinkFnPtr (in)  pointer to new DetectLinkFnPtr
+    *
+    *@return none
+    */
+    void setDetectLinkFnPtr(boost::function<void ()> detectLinkFnPtr) {mDetectLinkFnPtr = detectLinkFnPtr;};
+
+    /**
     *@method setSuspendTxFnPtr
     *
     *@brief set new SuspendTXFnPtr for the state machine. This method is used for testing
@@ -830,6 +841,7 @@ private:
     boost::function<void ()> mInitializeProberFnPtr;
     boost::function<void ()> mStartProbingFnPtr;
     boost::function<void ()> mProbePeerTorFnPtr;
+    boost::function<void ()> mDetectLinkFnPtr;
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
