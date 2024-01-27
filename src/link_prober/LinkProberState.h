@@ -35,6 +35,10 @@ class IcmpUnknownEvent;
 class SuspendTimerExpiredEvent;
 class IcmpPeerActiveEvent;
 class IcmpPeerUnknownEvent;
+class LinkProberSelfUpEvent;
+class LinkProberSelfDownEvent;
+class LinkProberPeerUpEvent;
+class LinkProberPeerDownEvent;
 
 /**
  *@class LinkProberState
@@ -57,8 +61,18 @@ public:
         PeerWait,
         PeerActive,
         PeerUnknown,
+
+        // session states
+        SelfInit,
+        SelfUp,
+        SelfDown,
+        PeerInit,
+        PeerUp,
+        PeerDown,
         Count
     };
+
+    static std::vector<std::string> mLinkProberStateName;
 
 public:
     /**
@@ -151,6 +165,50 @@ public:
     *@return pointer to next LinkProberState
     */
     virtual LinkProberState* handleEvent(IcmpPeerUnknownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle LinkProberSelfUpEvent from LinkProber
+    *
+    *@param event (in)  reference to LinkProberSelfUpEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(LinkProberSelfUpEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle LinkProberSelfDownEvent from LinkProber
+    *
+    *@param event (in)  reference to LinkProberSelfDownEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(LinkProberSelfDownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle LinkProberPeerUpEvent from LinkProber
+    *
+    *@param event (in)  reference to LinkProberPeerUpEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(LinkProberPeerUpEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle LinkProberPeerDownEvent from LinkProber
+    *
+    *@param event (in)  reference to LinkProberPeerDownEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(LinkProberPeerDownEvent &event);
 
     /**
     *@method getStateLabel

@@ -96,6 +96,28 @@ public:
     void enterState(LinkProberState::Label label) override;
 
     /**
+     *@method processEvent
+     *
+     *@brief process LinkProberPeerUpEvent
+     *
+     *@param linkProberPeerUpEvent (in)  reference to the LinkProberPeerUpEvent event
+     *
+     *@return none
+     */
+    void processEvent(LinkProberPeerUpEvent &linkProberPeerUpEvent) override;
+
+    /**
+     *@method processEvent
+     *
+     *@brief process LinkProberPeerDownEvent
+     *
+     *@param linkProberPeerDownEvent (in)  reference to the LinkProberPeerDownEvent event
+     *
+     *@return none
+     */
+    void processEvent(LinkProberPeerDownEvent &linkProberPeerDownEvent) override;
+
+    /**
     *@method processEvent
     *
     *@brief process LinkProberState suspend timer expiry event

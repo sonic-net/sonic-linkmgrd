@@ -24,6 +24,12 @@
 #include "link_prober/StandbyState.h"
 #include "link_prober/UnknownState.h"
 #include "link_prober/WaitState.h"
+#include "link_prober/SelfInitState.h"
+#include "link_prober/SelfUpState.h"
+#include "link_prober/SelfDownState.h"
+#include "link_prober/PeerInitState.h"
+#include "link_prober/PeerUpState.h"
+#include "link_prober/PeerDownState.h"
 
 namespace link_manager
 {
@@ -140,8 +146,57 @@ public:
     ~MuxProbeRequestEvent() = default;
 };
 
+/**
+ *@class LinkProberSelfUpEvent
+ *
+ *@brief signals a LinkProberSelfUpEvent event to LinkProber state machine
+ */
+class LinkProberSelfUpEvent
+{
+public:
+    LinkProberSelfUpEvent() = default;
+    ~LinkProberSelfUpEvent() = default;
+};
+
+/**
+ *@class LinkProberSelfDownEvent
+ *
+ *@brief signals a LinkProberSelfDownEvent event to LinkProber state machine
+ */
+class LinkProberSelfDownEvent
+{
+public:
+    LinkProberSelfDownEvent() = default;
+    ~LinkProberSelfDownEvent() = default;
+};
+
+/**
+ *@class LinkProberPeerUpEvent
+ *
+ *@brief signals a LinkProberPeerUpEvent event to LinkProber state machine
+ */
+class LinkProberPeerUpEvent
+{
+public:
+    LinkProberPeerUpEvent() = default;
+    ~LinkProberPeerUpEvent() = default;
+};
+
+/**
+ *@class LinkProberPeerDownEvent
+ *
+ *@brief signals a LinkProberPeerDownEvent event to LinkProber state machine
+ */
+class LinkProberPeerDownEvent
+{
+public:
+    LinkProberPeerDownEvent() = default;
+    ~LinkProberPeerDownEvent() = default;
+};
+
 class LinkProberStateMachineActiveStandby;
 class LinkProberStateMachineActiveActive;
+class LinkProberSessionStateMachine;
 
 /**
  *@class LinkProberStateMachineBase
@@ -224,6 +279,28 @@ public:
      */
     template <typename T>
     void processEvent(T &t);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process LinkProberPeerUpEvent
+     *
+     *@param linkProberPeerUpEvent (in)  reference to the LinkProberPeerUpEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(LinkProberPeerUpEvent &linkProberPeerUpEvent);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process LinkProberPeerDownEvent
+     *
+     *@param linkProberPeerDownEvent (in)  reference to the LinkProberPeerDownEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(LinkProberPeerDownEvent &linkProberPeerDownEvent);
 
     /**
      *@method processEvent
@@ -399,6 +476,60 @@ public:
     */
     PeerWaitState* getPeerWaitState() {return &mPeerWaitState;};
 
+    /**
+    *@method getSelfInitState
+    *
+    *@brief getter for SelfInitState object
+    *
+    *@return pointer to SelfInitState object
+    */
+    SelfInitState* getSelfInitState() {return &mSelfInitState;};
+
+    /**
+    *@method getSelfUpState
+    *
+    *@brief getter for SelfUpState object
+    *
+    *@return pointer to SelfUpState object
+    */
+    SelfUpState* getSelfUpState() {return &mSelfUpState;};
+
+    /**
+    *@method getSelfDownState
+    *
+    *@brief getter for SelfDownState object
+    *
+    *@return pointer to SelfDownState object
+    */
+    SelfDownState* getSelfDownState() {return &mSelfDownState;};
+
+    /**
+    *@method getPeerInitState
+    *
+    *@brief getter for PeerInitState object
+    *
+    *@return pointer to PeerInitState object
+    */
+    PeerInitState* getPeerInitState() {return &mPeerInitState;};
+
+    /**
+    *@method getPeerUpState
+    *
+    *@brief getter for PeerUpState object
+    *
+    *@return pointer to PeerUpState object
+    */
+    PeerUpState* getPeerUpState() {return &mPeerUpState;};
+
+    /**
+    *@method getPeerDownState
+    *
+    *@brief getter for PeerDownState object
+    *
+    *@return pointer to PeerDownState object
+    */
+    PeerDownState* getPeerDownState() {return &mPeerDownState;};
+
 public:
     /**
      *@method resetCurrentState
@@ -489,6 +620,42 @@ public:
      */
     static IcmpPeerUnknownEvent &getIcmpPeerUnknownEvent() { return mIcmpPeerUnknownEvent; }
 
+    /**
+     *@method getLinkProberSelfUpEvent
+     *
+     *@brief getter for LinkProberSelfUpEvent object
+     *
+     *@return pointer to LinkProberSelfUpEvent object
+     */
+    static LinkProberSelfUpEvent &getLinkProberSelfUpEvent() { return mLinkProberSelfUpEvent; }
+
+    /**
+     *@method getLinkProberSelfDownEvent
+     *
+     *@brief getter for LinkProberSelfDownEvent object
+     *
+     *@return pointer to LinkProberSelfDownEvent object
+     */
+    static LinkProberSelfDownEvent &getLinkProberSelfDownEvent() { return mLinkProberSelfDownEvent; }
+
+    /**
+     *@method getLinkProberPeerUpEvent
+     *
+     *@brief getter for LinkProberPeerUpEvent object
+     *
+     *@return pointer to LinkProberPeerUpEvent object
+     */
+    static LinkProberPeerUpEvent &getLinkProberPeerUpEvent() { return mLinkProberPeerUpEvent; }
+
+    /**
+     *@method getLinkProberPeerDownEvent
+     *
+     *@brief getter for LinkProberPeerDownEvent object
+     *
+     *@return pointer to LinkProberPeerDownEvent object
+     */
+    static LinkProberPeerDownEvent &getLinkProberPeerDownEvent() { return mLinkProberPeerDownEvent; }
+
 private:
     /**
      *@method postLinkManagerEvent
@@ -511,10 +678,15 @@ private:
     static MuxProbeRequestEvent mMuxProbeRequestEvent;
     static IcmpPeerActiveEvent mIcmpPeerActiveEvent;
     static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
+    static LinkProberSelfUpEvent mLinkProberSelfUpEvent;
+    static LinkProberSelfDownEvent mLinkProberSelfDownEvent;
+    static LinkProberPeerUpEvent mLinkProberPeerUpEvent;
+    static LinkProberPeerDownEvent mLinkProberPeerDownEvent;
 
 private:
     friend class LinkProberStateMachineActiveStandby;
     friend class LinkProberStateMachineActiveActive;
+    friend class LinkProberSessionStateMachine;
 
 private:
     link_manager::LinkManagerStateMachineBase *mLinkManagerStateMachinePtr;
@@ -525,6 +697,14 @@ private:
     PeerActiveState mPeerActiveState;
     PeerUnknownState mPeerUnknownState;
     PeerWaitState mPeerWaitState;
+
+    // session states
+    SelfInitState mSelfInitState;
+    SelfUpState mSelfUpState;
+    SelfDownState mSelfDownState;
+    PeerInitState mPeerInitState;
+    PeerUpState mPeerUpState;
+    PeerDownState mPeerDownState;
 };
 } // namespace link_prober
 

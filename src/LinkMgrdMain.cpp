@@ -71,6 +71,7 @@ int main(int argc, const char* argv[])
     bool measureSwitchover = false;
     bool defaultRoute = false;
     bool linkToSwssLogger = false;
+    bool simulateLfdOffload = false;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
@@ -94,6 +95,10 @@ int main(int argc, const char* argv[])
          program_options::bool_switch(&linkToSwssLogger)->default_value(false),
          "Link to swss logger instead of using native boost syslog support, this will"
          "set the boost logging level to TRACE and option verbosity is ignored"
+         )
+        ("simulate_lfd_offload,s",
+         program_options::bool_switch(&simulateLfdOffload)->default_value(false),
+         "Simulate LFD offload by posting link prober state change notification to Redis"
          )
     ;
 
@@ -139,7 +144,7 @@ int main(int argc, const char* argv[])
         }
 
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
-        muxManagerPtr->initialize(measureSwitchover, defaultRoute);
+        muxManagerPtr->initialize(measureSwitchover, defaultRoute, simulateLfdOffload);
         muxManagerPtr->run();
         muxManagerPtr->deinitialize();
     }

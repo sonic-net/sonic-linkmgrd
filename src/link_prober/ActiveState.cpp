@@ -108,6 +108,67 @@ LinkProberState* ActiveState::handleEvent(IcmpUnknownEvent &event)
 }
 
 //
+// ---> handleEvent(LinkProberSelfUpEvent &event);
+//
+// handle LinkProberSelfUpEvent from LinkProber
+//
+LinkProberState* ActiveState::handleEvent(LinkProberSelfUpEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getActiveState());
+
+    return nextState;
+
+}
+
+//
+// ---> handleEvent(LinkProberSelfDownEvent &event);
+//
+// handle LinkProberSelfDownEvent from LinkProber
+//
+LinkProberState* ActiveState::handleEvent(LinkProberSelfDownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(LinkProberPeerUpEvent &event);
+//
+// handle LinkProberPeerUpEvent from LinkProber
+//
+LinkProberState* ActiveState::handleEvent(LinkProberPeerUpEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getStandbyState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(LinkProberPeerDownEvent &event);
+//
+// handle LinkProberPeerDownEvent from LinkProber
+//
+LinkProberState* ActiveState::handleEvent(LinkProberPeerDownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getActiveState());
+
+    return nextState;
+}
+
+//
 // ---> resetState();
 //
 // reset current state attributes

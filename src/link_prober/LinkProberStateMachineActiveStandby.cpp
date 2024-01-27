@@ -78,6 +78,56 @@ void LinkProberStateMachineActiveStandby::enterState(LinkProberState::Label labe
 }
 
 //
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerUpEvent &t);
+//
+// process LinkProberState LinkProberPeerUpEvent
+//
+void LinkProberStateMachineActiveStandby::processEvent(LinkProberPeerUpEvent &linkProberPeerUpEvent)
+{
+    LinkProberState *currentState = dynamic_cast<LinkProberState *> (getCurrentState());
+    LinkProberState *nextState = currentState->handleEvent(linkProberPeerUpEvent);
+    if (__builtin_expect((nextState == nullptr), 1)) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentState->getStateLabel()
+        );
+    } else {
+        if (nextState != currentState) {
+            postLinkManagerEvent(nextState);
+        }
+        setCurrentState(nextState);
+    }
+}
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerDownEvent &t);
+//
+// process LinkProberState LinkProberPeerDownEvent
+//
+void LinkProberStateMachineActiveStandby::processEvent(LinkProberPeerDownEvent &linkProberPeerDownEvent)
+{
+    LinkProberState *currentState = dynamic_cast<LinkProberState *> (getCurrentState());
+    LinkProberState *nextState = currentState->handleEvent(linkProberPeerDownEvent);
+    if (__builtin_expect((nextState == nullptr), 1)) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentState->getStateLabel()
+        );
+    } else {
+        if (nextState != currentState) {
+            postLinkManagerEvent(nextState);
+        }
+        setCurrentState(nextState);
+    }
+}
+
+//
 // ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
 //
 // process LinkProberState suspend timer expiry event

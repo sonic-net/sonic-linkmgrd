@@ -30,8 +30,6 @@ using ::testing::Mock;
 namespace test
 {
 LinkProberMockTest::LinkProberMockTest()
-    : mMuxPortConfig(mMuxConfig, mPortName, mServerId, common::MuxPortConfig::PortCableType::DefaultType),
-      mStrand(mIoService)
 {
     boost::uuids::random_generator gen;
     mPeerGuid = gen();
@@ -39,40 +37,26 @@ LinkProberMockTest::LinkProberMockTest()
     mMuxConfig.setNegativeStateChangeRetryCount(1);
 }
 
-void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableType)
+void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableType, bool simulateOffload)
 {
-    mMuxPortConfig.setPortCableType(portCableType);
-    mLinkManagerStateMachinePtr = std::make_shared<MockLinkManagerStateMachine>(
-        mStrand,
-        mMuxPortConfig
-    );
-    switch (portCableType) {
-        case common::MuxPortConfig::PortCableType::ActiveStandby: {
-            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveStandby>(
-                mLinkManagerStateMachinePtr.get(),
-                mStrand,
-                mMuxPortConfig,
-                link_prober::LinkProberState::Label::Unknown
-            );
-            break;
-        }
-        case common::MuxPortConfig::PortCableType::ActiveActive: {
-            mLinkProberStateMachinePtr = std::make_shared<link_prober::LinkProberStateMachineActiveActive>(
-                mLinkManagerStateMachinePtr.get(),
-                mStrand,
-                mMuxPortConfig,
-                link_prober::LinkProberState::Label::Unknown
-            );
-            break;
-        }
-        default: {
-            break;
-        }
-    }
-    mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
-        mMuxPortConfig,
+    mMuxConfig.enableSimulateLfdOffload(simulateOffload);
+    mDbInterfacePtr = std::make_shared<FakeDbInterface>(&mIoService);
+    mMuxPortPtr = std::make_shared<MockMuxPort>(
+        mDbInterfacePtr,
+        mMuxConfig,
+        mPortName,
+        mServerId,
         mIoService,
-        mLinkProberStateMachinePtr.get()
+        portCableType
+    );
+    mLinkManagerStateMachinePtr = std::dynamic_pointer_cast<MockLinkManagerStateMachine>(mMuxPortPtr->getLinkManagerStateMachinePtr());
+    mLinkProberStateMachinePtr = mMuxPortPtr->getLinkProberStateMachinePtr();
+    mLinkProberSessionStateMachinePtr = mMuxPortPtr->getLinkProberSessionStateMachinePtr();
+    mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
+        const_cast<common::MuxPortConfig&>(mMuxPortPtr->getMuxPortConfig()),
+        mIoService,
+        mLinkProberStateMachinePtr.get(),
+        mLinkProberSessionStateMachinePtr.get()
     );
     link_prober::IcmpPayload::generateGuid();
     initializeSendBuffer();
@@ -84,6 +68,7 @@ void LinkProberMockTest::TearDown()
     // mLinkProberStateMachinePtr.reset();
     // mLinkManagerStateMachinePtr.reset();
     Mock::VerifyAndClearExpectations(mLinkManagerStateMachinePtr.get());
+    Mock::VerifyAndClearExpectations(mMuxPortPtr.get());
 
     mIoService.stop();
 }
@@ -218,6 +203,85 @@ TEST_F(LinkProberMockTest, LinkProberActiveStandby)
     handleTimeout();
     runIoService();
 
+    sendHeartbeat();
+
+    handleTimeout();
+    runIoService();
+
+    TearDown();
+}
+
+TEST_F(LinkProberMockTest, LinkProberSessionState)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveStandby, true);
+
+    auto muxPortPtr = getMuxPortPtr();
+    auto linkProberSessionStateMachinePtr = getLinkProberSessionStateMachinePtr();
+
+    InSequence seq;
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getSelfSessionId(), link_prober::LinkProberState::Label::SelfUp)
+    );
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getPeerSessionId(), link_prober::LinkProberState::Label::PeerUp)
+    );
+
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getPeerSessionId(), link_prober::LinkProberState::Label::PeerDown)
+    );
+
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getPeerSessionId(), link_prober::LinkProberState::Label::PeerUp)
+    );
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getSelfSessionId(), link_prober::LinkProberState::Label::SelfDown)
+    );
+
+    EXPECT_CALL(
+        *muxPortPtr,
+        postLinkProberSessionStateNotificationToDb(linkProberSessionStateMachinePtr->getPeerSessionId(), link_prober::LinkProberState::Label::PeerDown)
+    );
+
+    // first probe, receive replies for both self and peer, self up and peer up
+    sendHeartbeat();
+
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+
+    receivePeerIcmpReply();
+    handleRecv();
+    runIoService();
+
+    handleTimeout();
+    runIoService();
+
+    // second probe, receive reply for self, self up and peer down
+    sendHeartbeat();
+
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+
+    handleTimeout();
+    runIoService();
+
+    // third probe, receive reply for peer, self down and peer up
+    sendHeartbeat();
+
+    receivePeerIcmpReply();
+    handleRecv();
+    runIoService();
+
+    handleTimeout();
+    runIoService();
+
+    // fourth probe, receive nothing, self down and peer down
     sendHeartbeat();
 
     handleTimeout();

@@ -121,7 +121,8 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
             mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
                 mMuxPortConfig,
                 getStrand().context(),
-                mLinkProberStateMachinePtr.get()
+                mLinkProberStateMachinePtr.get(),
+                mLinkProberSessionStateMachinePtr.get()
             );
             mInitializeProberFnPtr = boost::bind(
                 &link_prober::LinkProber::initialize, mLinkProberPtr.get()

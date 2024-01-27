@@ -22,6 +22,7 @@
 
 #include "common/MuxLogger.h"
 #include "link_manager/LinkManagerStateMachineBase.h"
+#include "MuxPort.h"
 
 namespace test
 {
@@ -32,6 +33,7 @@ public:
     MockLinkManagerStateMachine() = delete;
 
     MockLinkManagerStateMachine(
+        mux::MuxPort *muxPortPtr,
         boost::asio::io_service::strand &strand,
         common::MuxPortConfig &muxPortConfig
     );

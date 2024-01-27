@@ -19,11 +19,12 @@
 namespace test
 {
 MockLinkManagerStateMachine::MockLinkManagerStateMachine(
+    mux::MuxPort *muxPortPtr,
     boost::asio::io_service::strand &strand,
     common::MuxPortConfig &muxPortConfig
 )
     : LinkManagerStateMachineBase(
-          nullptr,
+          muxPortPtr,
           strand,
           muxPortConfig,
           {link_prober::LinkProberState::Label::Unknown,

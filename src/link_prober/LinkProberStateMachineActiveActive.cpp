@@ -229,4 +229,55 @@ void LinkProberStateMachineActiveActive::handlePckLossRatioUpdate(const uint64_t
     ));
 }
 
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerUpEvent &t);
+//
+// process LinkProberState LinkProberPeerUpEvent
+//
+void LinkProberStateMachineActiveActive::processEvent(LinkProberPeerUpEvent &linkProberPeerUpEvent)
+{
+    LinkProberState *currentPeerState = getCurrentPeerState();
+    LinkProberState *nextPeerState = currentPeerState->handleEvent(linkProberPeerUpEvent);
+    if (__builtin_expect((nextPeerState == nullptr), 1)) {
+
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
+    }
+}
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerDownEvent &t);
+//
+// process LinkProberState LinkProberPeerDownEvent
+//
+void LinkProberStateMachineActiveActive::processEvent(LinkProberPeerDownEvent &linkProberPeerDownEvent)
+{
+    LinkProberState *currentPeerState = getCurrentPeerState();
+    LinkProberState *nextPeerState = currentPeerState->handleEvent(linkProberPeerDownEvent);
+    if (__builtin_expect((nextPeerState == nullptr), 1)) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
+    }
+}
+
 } /* namespace link_prober */

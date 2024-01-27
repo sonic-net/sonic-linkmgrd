@@ -542,6 +542,8 @@ public:
     */
     DefaultRoute getDefaultRouteState() {return mDefaultRouteState;};
 
+    std::shared_ptr<link_prober::LinkProberSessionStateMachine> getLinkProberSessionStateMachinePtr() {return mLinkProberSessionStateMachinePtr;};
+
 private:
     /**
      *@enum anonymous
@@ -638,6 +640,7 @@ private:
     std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
     mux_state::MuxStateMachine mMuxStateMachine;
     link_state::LinkStateMachine mLinkStateMachine;
+    std::shared_ptr<link_prober::LinkProberSessionStateMachine> mLinkProberSessionStateMachinePtr = nullptr;
 
     Label mLabel = Label::Uninitialized;
 

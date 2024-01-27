@@ -29,6 +29,22 @@
 namespace link_prober
 {
 
+std::vector<std::string> LinkProberState::mLinkProberStateName = {
+    "Active",
+    "Standby",
+    "Unknown",
+    "Wait",
+    "PeerWait",
+    "PeerActive",
+    "PeerUnknown",
+    "Init",
+    "Up",
+    "Down",
+    "Init",
+    "Up",
+    "Down"
+};
+
 //
 // ---> LinkProberState(LinkProberStateMachineBase &stateMachine, common::MuxPortConfig &muxPortConfig);
 //
@@ -70,6 +86,30 @@ LinkProberState* LinkProberState::handleEvent(IcmpPeerActiveEvent &event)
 }
 
 LinkProberState* LinkProberState::handleEvent(IcmpPeerUnknownEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState * LinkProberState::handleEvent(LinkProberSelfUpEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState * LinkProberState::handleEvent(LinkProberSelfDownEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState * LinkProberState::handleEvent(LinkProberPeerUpEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState * LinkProberState::handleEvent(LinkProberPeerDownEvent &event)
 {
     MUXLOGERROR(getMuxPortConfig().getPortName());
     return nullptr;

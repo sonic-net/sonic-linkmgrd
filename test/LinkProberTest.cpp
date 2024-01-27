@@ -43,7 +43,8 @@ LinkProberTest::LinkProberTest() :
     mLinkProber(const_cast<common::MuxPortConfig&> (
         mFakeMuxPort.getMuxPortConfig()),
         mIoService,
-        mFakeMuxPort.getLinkProberStateMachinePtr()
+        mFakeMuxPort.getLinkProberStateMachinePtr(),
+        nullptr
     )
 {
     mMuxConfig.setTimeoutIpv4_msec(1);

@@ -58,7 +58,8 @@ jobs:
           libnl-3-dev \
           libnl-route-3-dev \
           libnl-genl-3-200 \
-          libnl-nf-3-200
+          libnl-nf-3-200 \
+          nlohmann-json3-dev
 
     displayName: "Install dependencies"
   - checkout: self
