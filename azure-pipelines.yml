@@ -98,6 +98,7 @@ jobs:
       artifact: sonic-swss-common
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
+      allowPartiallySucceededBuilds: true
       path: '$(Build.SourcesDirectory)/sonic-swss-common'
     displayName: "Download sonic swss common deb packages"
   - script: |
@@ -195,6 +196,7 @@ jobs:
       artifact: sonic-swss-common.arm64
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
+      allowPartiallySucceededBuilds: true
       path: '$(Build.SourcesDirectory)/sonic-swss-common.arm64'
     displayName: "Download sonic swss common deb packages"
   - script: |
@@ -287,6 +289,7 @@ jobs:
       artifact: sonic-swss-common.armhf
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
+      allowPartiallySucceededBuilds: true
       path: '$(Build.SourcesDirectory)/sonic-swss-common.armhf'
     displayName: "Download sonic swss common deb packages"
   - script: |
