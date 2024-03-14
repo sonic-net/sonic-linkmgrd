@@ -578,6 +578,10 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
 
             mActiveUnknownUpCount = 0;
             mStandbyUnknownUpCount = 0;
+
+            mWaitActiveUpCount = 0;
+            mWaitStandbyUpBackoffFactor = 1;
+            mUnknownActiveUpBackoffFactor = 1;
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
