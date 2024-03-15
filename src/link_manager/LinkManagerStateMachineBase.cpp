@@ -64,6 +64,16 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
         default:
             break;
     }
+
+    mMuxPortPtr->setLinkProberStateMachinePtr(mLinkProberStateMachinePtr.get());
+    if (mMuxPortConfig.getIfEnableSimulateLfdOffload()) {
+        mLinkProberSessionStateMachinePtr = std::make_shared<link_prober::LinkProberSessionStateMachine>(
+            this, mMuxPortPtr, strand, mMuxPortConfig,
+            link_prober::LinkProberState::Label::SelfInit,
+            link_prober::LinkProberState::Label::PeerInit
+        );
+    }
+
 }
 
 //

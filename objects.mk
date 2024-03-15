@@ -10,7 +10,8 @@ LIBS := \
     -lboost_program_options \
     -lboost_filesystem \
     -lnl-3 \
-    -lnl-route-3
+    -lnl-route-3 \
+    -lhiredis
 
 LIBS_TEST := \
     -lgtest_main \

@@ -76,7 +76,7 @@ void MuxManager::setUseWellKnownMacActiveActive(bool useWellKnownMac)
 //
 // initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db
 //
-void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature_default_route)
+void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature_default_route, bool enable_simulate_lfd_offload)
 {
     for (uint8_t i = 0; (mMuxConfig.getNumberOfThreads() > 2) &&
                         (i < mMuxConfig.getNumberOfThreads() - 2); i++) {
@@ -84,6 +84,8 @@ void MuxManager::initialize(bool enable_feature_measurement, bool enable_feature
             boost::bind(&boost::asio::io_service::run, &mIoService)
         );
     }
+
+    mMuxConfig.enableSimulateLfdOffload(enable_simulate_lfd_offload);
 
     mDbInterfacePtr->initialize();
 
@@ -445,6 +447,9 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
                     muxPortPtr->setServerMacAddress(address);
                 }
             }
+            if (mMuxConfig.getIfEnableSimulateLfdOffload()) {
+                // register the dispatch table
+            }
             mPortMap.insert({portName, muxPortPtr});
         }
         else {
@@ -595,6 +600,38 @@ void MuxManager::handleTsaEnableNotification(bool enable)
     while (portMapIterator != mPortMap.end()) {
         portMapIterator->second->handleTsaEnable(enable);
         portMapIterator ++;
+    }
+}
+
+//
+// ---> getMuxPortPtr(const std::string &sessionId)
+//
+// get the mux port that the link prober session belongs to
+//
+inline std::shared_ptr<MuxPort> MuxManager::getMuxPortPtr(const std::string &sessionId)
+{
+    auto pos = sessionId.find('|');
+    if (pos != std::string::npos) {
+        std::string portName = sessionId.substr(0, pos);
+
+        PortMapIterator portMapIterator = mPortMap.find(portName);
+        if (portMapIterator != mPortMap.end()) {
+            return portMapIterator->second;
+        }
+    }
+    return nullptr;
+}
+
+//
+// ---> handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState)
+//
+// handle the link prober session state notification from ASIC DB
+//
+void MuxManager::handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState)
+{
+    auto muxPortPtr = getMuxPortPtr(sessionId);
+    if (muxPortPtr) {
+        muxPortPtr->handleLinkProberSessionStateNotification(sessionId, sessionState);
     }
 }
 

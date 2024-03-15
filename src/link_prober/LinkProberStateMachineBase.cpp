@@ -36,6 +36,10 @@ SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
 MuxProbeRequestEvent LinkProberStateMachineBase::mMuxProbeRequestEvent;
 IcmpPeerActiveEvent LinkProberStateMachineBase::mIcmpPeerActiveEvent;
 IcmpPeerUnknownEvent LinkProberStateMachineBase::mIcmpPeerUnknownEvent;
+LinkProberSelfUpEvent LinkProberStateMachineBase::mLinkProberSelfUpEvent;
+LinkProberSelfDownEvent LinkProberStateMachineBase::mLinkProberSelfDownEvent;
+LinkProberPeerUpEvent LinkProberStateMachineBase::mLinkProberPeerUpEvent;
+LinkProberPeerDownEvent LinkProberStateMachineBase::mLinkProberPeerDownEvent;
 
 LinkProberStateMachineBase::LinkProberStateMachineBase(
     link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
@@ -50,7 +54,13 @@ LinkProberStateMachineBase::LinkProberStateMachineBase(
     mWaitState(*this, muxPortConfig),
     mPeerActiveState(*this, muxPortConfig),
     mPeerUnknownState(*this, muxPortConfig),
-    mPeerWaitState(*this, muxPortConfig)
+    mPeerWaitState(*this, muxPortConfig),
+    mSelfInitState(*this, muxPortConfig),
+    mSelfUpState(*this, muxPortConfig),
+    mSelfDownState(*this, muxPortConfig),
+    mPeerInitState(*this, muxPortConfig),
+    mPeerUpState(*this, muxPortConfig),
+    mPeerDownState(*this, muxPortConfig)
 {
 }
 
@@ -123,6 +133,38 @@ template
 void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerUnknownEvent>(IcmpPeerUnknownEvent &event);
 
 //
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(LinkProberSelfUpEvent &e);
+//
+// post LinkProberState LinkProberSelfUpEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<LinkProberSelfUpEvent>(LinkProberSelfUpEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(LinkProberSelfDownEvent &e);
+//
+// post LinkProberState LinkProberSelfDownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<LinkProberSelfDownEvent>(LinkProberSelfDownEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(LinkProberPeerUpEvent &e);
+//
+// post LinkProberState LinkProberPeerUpEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<LinkProberPeerUpEvent>(LinkProberPeerUpEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(LinkProberPeerDownEvent &e);
+//
+// post LinkProberState LinkProberPeerDownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<LinkProberPeerDownEvent>(LinkProberPeerDownEvent &event);
+
+//
 // ---> LinkProberStateMachineBase::processEvent(T &t);
 //
 // process LinkProberState event
@@ -171,6 +213,42 @@ void LinkProberStateMachineBase::processEvent<IcmpPeerEvent&>(IcmpPeerEvent &eve
 //
 template
 void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberSelfUpEvent &t);
+//
+// process LinkProberState LinkProberSelfUpEvent
+//
+template
+void LinkProberStateMachineBase::processEvent(LinkProberSelfUpEvent &linkProberSelfUpEvent);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberSelfDownEvent &t);
+//
+// process LinkProberState LinkProberSelfDownEvent
+//
+template
+void LinkProberStateMachineBase::processEvent(LinkProberSelfDownEvent &linkProberSelfDownEvent);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerUpEvent &t);
+//
+// process LinkProberState LinkProberPeerUpEvent
+//
+void LinkProberStateMachineBase::processEvent(LinkProberPeerUpEvent &linkProberPeerUpEvent)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> LinkProberStateMachineBase::processEvent(LinkProberPeerDownEvent &t);
+//
+// process LinkProberState LinkProberPeerDownEvent
+//
+void LinkProberStateMachineBase::processEvent(LinkProberPeerDownEvent &linkProberPeerDownEvent)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+}
 
 //
 // ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);

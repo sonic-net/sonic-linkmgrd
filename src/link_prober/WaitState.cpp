@@ -122,6 +122,81 @@ LinkProberState* WaitState::handleEvent(IcmpUnknownEvent &event)
 }
 
 //
+// ---> handleEvent(LinkProberSelfUpEvent &event);
+//
+// handle LinkProberSelfUpEvent from LinkProber
+//
+LinkProberState* WaitState::handleEvent(LinkProberSelfUpEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getActiveState());
+
+    return nextState;
+
+}
+
+//
+// ---> handleEvent(LinkProberSelfDownEvent &event);
+//
+// handle LinkProberSelfDownEvent from LinkProber
+//
+LinkProberState* WaitState::handleEvent(LinkProberSelfDownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getWaitState());
+    common::MuxPortConfig::PortCableType portCableType = stateMachine->getMuxPortConfig().getPortCableType();
+
+    switch (portCableType) {
+        case common::MuxPortConfig::PortCableType::ActiveActive:
+            nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
+            break;
+        case common::MuxPortConfig::PortCableType::ActiveStandby:
+            resetState();
+            break;
+        default:
+            break;
+    }
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(LinkProberPeerUpEvent &event);
+//
+// handle LinkProberPeerUpEvent from LinkProber
+//
+LinkProberState* WaitState::handleEvent(LinkProberPeerUpEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getStandbyState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(LinkProberPeerDownEvent &event);
+//
+// handle LinkProberPeerDownEvent from LinkProber
+//
+LinkProberState* WaitState::handleEvent(LinkProberPeerDownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getWaitState());
+
+    resetState();
+
+    return nextState;
+}
+
+//
 // ---> resetState();
 //
 // reset current state attributes

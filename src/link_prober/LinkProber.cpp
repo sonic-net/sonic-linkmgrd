@@ -66,11 +66,13 @@ SockFilter LinkProber::mIcmpFilter[] = {
 LinkProber::LinkProber(
     common::MuxPortConfig &muxPortConfig,
     boost::asio::io_service &ioService,
-    LinkProberStateMachineBase *linkProberStateMachinePtr
+    LinkProberStateMachineBase *linkProberStateMachinePtr,
+    LinkProberSessionStateMachine *linkProberSessionStateMachinePtr
 ) :
     mMuxPortConfig(muxPortConfig),
     mIoService(ioService),
     mLinkProberStateMachinePtr(linkProberStateMachinePtr),
+    mLinkProberSessionStateMachinePtr(linkProberSessionStateMachinePtr),
     mStrand(mIoService),
     mDeadlineTimer(mIoService),
     mSuspendTimer(mIoService),
@@ -94,33 +96,46 @@ LinkProber::LinkProber(
         throw MUX_ERROR(BadAlloc, errMsg.str());
     }
 
-    switch (mMuxPortConfig.getPortCableType()) {
-        case common::MuxPortConfig::PortCableType::ActiveActive: {
-            mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyReceivedActiveActive,
-                this,
-                boost::placeholders::_1
-            );
-            mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyNotReceivedActiveActive,
-                this
-            );
-            break;
-        }
-        case common::MuxPortConfig::PortCableType::ActiveStandby: {
-            mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyReceivedActiveStandby,
-                this,
-                boost::placeholders::_1
-            );
-            mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyNotReceivedActiveStandby,
-                this
-            );
-            break;
-        }
-        default: {
-            break;
+    if (mMuxPortConfig.getIfEnableSimulateLfdOffload()) {
+        assert(mLinkProberSessionStateMachinePtr != nullptr);
+        mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
+            &LinkProber::reportHeartbeatReplyReceivedSession,
+            this,
+            boost::placeholders::_1
+        );
+        mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
+            &LinkProber::reportHeartbeatReplyNotReceivedSession,
+            this
+        );
+    } else {
+        switch (mMuxPortConfig.getPortCableType()) {
+            case common::MuxPortConfig::PortCableType::ActiveActive: {
+                mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
+                    &LinkProber::reportHeartbeatReplyReceivedActiveActive,
+                    this,
+                    boost::placeholders::_1
+                );
+                mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
+                    &LinkProber::reportHeartbeatReplyNotReceivedActiveActive,
+                    this
+                );
+                break;
+            }
+            case common::MuxPortConfig::PortCableType::ActiveStandby: {
+                mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
+                    &LinkProber::reportHeartbeatReplyReceivedActiveStandby,
+                    this,
+                    boost::placeholders::_1
+                );
+                mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
+                    &LinkProber::reportHeartbeatReplyNotReceivedActiveStandby,
+                    this
+                );
+                break;
+            }
+            default: {
+                break;
+            }
         }
     }
 }
@@ -1003,6 +1018,37 @@ void LinkProber::reportHeartbeatReplyNotReceivedActiveActive()
     }
     if (mTxSeqNo != mRxPeerSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
+    }
+}
+
+//
+// ---> reportHeartbeatReplyReceivedSession(HeartbeatType heartbeatType)
+//
+// report heartbeat reply received to link prober session state machine
+//
+void LinkProber::reportHeartbeatReplyReceivedSession(HeartbeatType heartbeatType)
+{
+    if (heartbeatType == HeartbeatType::HEARTBEAT_SELF && mTxSeqNo == mRxSelfSeqNo) {
+        mLinkProberSessionStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpSelfEvent());
+    }
+    if (heartbeatType == HeartbeatType::HEARTBEAT_PEER && mTxSeqNo == mRxPeerSeqNo) {
+        mLinkProberSessionStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerActiveEvent());
+    }
+}
+
+//
+// ---> reportHeartbeatReplyNotReceivedSession
+//
+// report heartbeat reply not received to link prober session state machine
+//
+void LinkProber::reportHeartbeatReplyNotReceivedSession()
+{
+    if (mTxSeqNo != mRxSelfSeqNo) {
+        mLinkProberSessionStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpUnknownEvent());
+        mIcmpUnknownEventCount++;
+    }
+    if (mTxSeqNo != mRxPeerSeqNo) {
+        mLinkProberSessionStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
     }
 }
 
