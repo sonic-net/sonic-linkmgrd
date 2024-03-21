@@ -567,6 +567,9 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
             // There is a problem with this approach as it will hide link flaps that result in lost heart-beats.
             initLinkProberState(nextState, true);
 //            enterMuxWaitState(nextState);
+
+            // reset mux probing backoff factor when link goes up
+            mMuxUnknownBackoffFactor = 1;
         } else if (ls(mCompositeState) == link_state::LinkState::Up &&
                    ls(nextState) == link_state::LinkState::Down &&
                    ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
@@ -575,6 +578,10 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
 
             mActiveUnknownUpCount = 0;
             mStandbyUnknownUpCount = 0;
+
+            mWaitActiveUpCount = 0;
+            mWaitStandbyUpBackoffFactor = 1;
+            mUnknownActiveUpBackoffFactor = 1;
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
