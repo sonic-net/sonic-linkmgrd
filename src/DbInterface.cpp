@@ -1083,6 +1083,30 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                     v
                 );
             }
+        } else if (key == "TIMED_OSCILLATION") {
+            std::string operation = kfvOp(entry);
+            std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+            for (auto &fieldValue: fieldValues) {
+                std::string f = fvField(fieldValue);
+                std::string v = fvValue(fieldValue);
+                if (f == "oscillation_enabled") {
+                        if (v == "true") {
+                            mMuxManagerPtr->setOscillationEnabled(true);
+                        } else if (v == "false"){
+                            mMuxManagerPtr->setOscillationEnabled(false);
+                        }
+                } else if (f == "interval_sec") {
+                    mMuxManagerPtr->setOscillationInterval_sec(boost::lexical_cast<uint32_t> (v));
+                }
+
+                MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
+                    key %
+                    operation %
+                    f %
+                    v
+                );
+            }
         }
     }
 }
