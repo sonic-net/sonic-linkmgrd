@@ -698,7 +698,7 @@ INSTANTIATE_TEST_CASE_P(
     ::testing::Values(
         std::make_tuple("1200", 1200),
         std::make_tuple("1", 300),
-        std::make_tuple("invalid", 300),
+        std::make_tuple("invalid", 300)
     )
 );
 
