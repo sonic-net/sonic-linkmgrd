@@ -687,8 +687,6 @@ TEST_P(OscillationIntervalTest, OscillationInterval)
     };
     processMuxLinkmgrConfigNotifiction(entries);
 
-    runIoService();
-
     EXPECT_TRUE(getOscillationInterval_sec(port) == std::get<1>(GetParam()));
 }
 
@@ -711,8 +709,6 @@ TEST_F(MuxManagerTest, OscillationDisabled)
         {"TIMED_OSCILLATION", "SET", {{"oscillation_enabled", "false"}}}
     };
     processMuxLinkmgrConfigNotifiction(entries);
-
-    runIoService();
 
     EXPECT_TRUE(getOscillationEnabled(port) == false);
 }
