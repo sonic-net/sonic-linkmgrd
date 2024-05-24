@@ -683,7 +683,7 @@ TEST_P(OscillationIntervalTest, OscillationInterval)
     createPort(port);
 
     std::deque<swss::KeyOpFieldsValuesTuple> entries = {
-        {"TIMED_OSCILLATION", "SET", {{"oscillation_interval", std::get<0>(GetParam())}}}
+        {"TIMED_OSCILLATION", "SET", {{"interval_sec", std::get<0>(GetParam())}}}
     };
     processMuxLinkmgrConfigNotifiction(entries);
 
