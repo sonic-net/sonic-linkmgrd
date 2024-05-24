@@ -1097,7 +1097,11 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                             mMuxManagerPtr->setOscillationEnabled(false);
                         }
                 } else if (f == "interval_sec") {
-                    mMuxManagerPtr->setOscillationInterval_sec(boost::lexical_cast<uint32_t> (v));
+                    try {
+                        mMuxManagerPtr->setOscillationInterval_sec(boost::lexical_cast<uint32_t> (v));
+                    } catch (boost::bad_lexical_cast const &badLexicalCast) {
+                        MUXLOGWARNING(boost::format("bad lexical cast: %s") % badLexicalCast.what());
+                    }
                 }
 
                 MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
