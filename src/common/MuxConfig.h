@@ -98,6 +98,17 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mTimeoutIpv6_msec = timeout_msec;};
 
     /**
+    *@method setOscillationEnabled
+    *
+    *@brief setter for enabling/disabling mux state oscillation
+    *
+    *@param enable (in)  enable/disable mux state oscillation
+    *
+    *@return none
+    */
+    inline void setOscillationEnabled(bool enable) {mEnableTimedOscillationWhenNoHeartbeat = enable;};
+
+    /**
     *@method setLinkProberStatUpdateIntervalCount
     *
     *@brief setter for link prober stats posting interval
@@ -275,6 +286,15 @@ public:
     inline uint32_t getSuspendTimeout_msec() const {return (mNegativeStateChangeRetryCount + 1) * mTimeoutIpv4_msec;};
 
     /**
+    *@method getIfOscillationEnabled
+    *
+    *@brief getter for oscillation flag
+    *
+    *@return oscillation flag
+    */
+    inline bool getIfOscillationEnabled() const {return mEnableTimedOscillationWhenNoHeartbeat;};
+
+    /**
     *@method getOscillationInterval_sec
     *
     *@brief getter for mux state oscillation interval
@@ -433,7 +453,6 @@ public:
 
 private:
     uint8_t mNumberOfThreads = 5;
-    uint32_t mOscillationTimeout_sec = 300;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mPositiveStateChangeRetryCount = 1;
@@ -442,6 +461,9 @@ private:
     uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
+
+    bool mEnableTimedOscillationWhenNoHeartbeat = true;
+    uint32_t mOscillationTimeout_sec = 300;
 
     bool mEnableSwitchoverMeasurement = false;
     uint32_t mDecreasedTimeoutIpv4_msec = 10;

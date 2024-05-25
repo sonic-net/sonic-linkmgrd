@@ -479,6 +479,20 @@ void MuxManagerTest::resetUpdateEthernetFrameFn(const std::string &portName)
     }
 }
 
+uint32_t MuxManagerTest::getOscillationInterval_sec(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getOscillationInterval_sec();
+}
+
+bool MuxManagerTest::getOscillationEnabled(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getIfOscillationEnabled();
+}
+
 TEST_F(MuxManagerTest, UpdatePortCableTypeActiveStandby)
 {
     std::string port = MuxManagerTest::PortName;
@@ -661,6 +675,42 @@ TEST_F(MuxManagerTest, SrcMacAddressUpdate)
 
     runIoService();
     EXPECT_TRUE(mFakeLinkProber->mUpdateEthernetFrameCallCount == updateEthernetFrameCallCountBefore + 1);
+}
+
+TEST_P(OscillationIntervalTest, OscillationInterval)
+{
+    std::string port = "Ethernet0";
+    createPort(port);
+
+    std::deque<swss::KeyOpFieldsValuesTuple> entries = {
+        {"TIMED_OSCILLATION", "SET", {{"interval_sec", std::get<0>(GetParam())}}}
+    };
+    processMuxLinkmgrConfigNotifiction(entries);
+
+    EXPECT_TRUE(getOscillationInterval_sec(port) == std::get<1>(GetParam()));
+}
+
+INSTANTIATE_TEST_CASE_P(
+    OscillationInterval,
+    OscillationIntervalTest,
+    ::testing::Values(
+        std::make_tuple("1200", 1200),
+        std::make_tuple("1", 300),
+        std::make_tuple("invalid", 300)
+    )
+);
+
+TEST_F(MuxManagerTest, OscillationDisabled)
+{
+    std::string port = "Ethernet0";
+    createPort(port);
+
+    std::deque<swss::KeyOpFieldsValuesTuple> entries = {
+        {"TIMED_OSCILLATION", "SET", {{"oscillation_enabled", "false"}}}
+    };
+    processMuxLinkmgrConfigNotifiction(entries);
+
+    EXPECT_TRUE(getOscillationEnabled(port) == false);
 }
 
 TEST_F(MuxManagerTest, ServerMacAddress)

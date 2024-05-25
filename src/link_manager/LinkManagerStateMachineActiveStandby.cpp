@@ -1083,7 +1083,8 @@ void ActiveStandbyStateMachine::handleOscillationTimeout(boost::system::error_co
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    if (errorCode == boost::system::errc::success &&
+    if (mMuxPortConfig.getIfOscillationEnabled() &&
+        errorCode == boost::system::errc::success &&
         ps(mCompositeState) == link_prober::LinkProberState::Label::Wait &&
         ms(mCompositeState) == mux_state::MuxState::Label::Active &&
         ls(mCompositeState) == link_state::LinkState::Label::Up) {
