@@ -71,4 +71,4 @@ Currently the state transition depends on 3 components (`LinkProber`, `MuxState`
 
 ## Test
 
-When missing valid default route and this feature is enabled, some dualtor_io tests are expected to fail. We consider this as a testing environment failure, not an image failure. 
+When missing valid default route and this feature is enabled, some dualtor_io tests are expected to fail. We consider this as a testing environment failure, not an image failure.  
