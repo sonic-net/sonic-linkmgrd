@@ -39,6 +39,8 @@ public:
     virtual ~LinkManagerStateMachineTest() = default;
 
     void runIoService(uint32_t count = 0);
+    void runIoServiceThreaded(uint32_t count = 3);
+    void stopIoServiceThreaded();
     void postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count = 0, uint32_t detect_multiplier = 0);
     void postMuxEvent(mux_state::MuxState::Label label, uint32_t count = 0);
     void postLinkEvent(link_state::LinkState::Label label, uint32_t count = 0);
@@ -58,6 +60,8 @@ public:
 
 public:
     boost::asio::io_service mIoService;
+    boost::asio::io_service::work mWork;
+    boost::thread_group mThreadGroup;
     common::MuxConfig mMuxConfig;
     std::shared_ptr<FakeDbInterface> mDbInterfacePtr;
     std::string mPortName = "EtherTest01";
