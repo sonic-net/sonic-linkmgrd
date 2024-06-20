@@ -24,6 +24,7 @@
 #ifndef LINKMANAGERSTATEMACHINETEST_H_
 #define LINKMANAGERSTATEMACHINETEST_H_
 
+#include <memory>
 #include "gtest/gtest.h"
 
 #include "FakeMuxPort.h"
@@ -60,7 +61,7 @@ public:
 
 public:
     boost::asio::io_service mIoService;
-    boost::asio::io_service::work mWork;
+    std::unique_ptr<boost::asio::io_service::work> mWork;
     boost::thread_group mThreadGroup;
     common::MuxConfig mMuxConfig;
     std::shared_ptr<FakeDbInterface> mDbInterfacePtr;

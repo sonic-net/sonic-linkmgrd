@@ -37,7 +37,6 @@ namespace test
 {
 
 LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
-    mWork(mIoService),
     mDbInterfacePtr(std::make_shared<FakeDbInterface> (&mIoService)),
     mFakeMuxPort(
         mDbInterfacePtr,
@@ -73,6 +72,7 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
 
 void LinkManagerStateMachineTest::runIoServiceThreaded(uint32_t count)
 {
+    mWork = std::make_unique<boost::asio::io_service::work>(mIoService);
     for (uint8_t i = 0; i < count; i++) {
         mThreadGroup.create_thread(boost::bind(&boost::asio::io_service::run, &mIoService));
     }
@@ -80,6 +80,7 @@ void LinkManagerStateMachineTest::runIoServiceThreaded(uint32_t count)
 
 void LinkManagerStateMachineTest::stopIoServiceThreaded()
 {
+    mWork.reset();
     mIoService.stop();
     mThreadGroup.join_all();
 }
@@ -1564,7 +1565,7 @@ TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
             ++check;
         }
 
-        EXPECT_EQ(mFakeMuxPort.getDefaultRoute(), link_manager::LinkManagerStateMachineBase::DefaultRoute::OK);
+        EXPECT_EQ(mFakeMuxPort.getDefaultRouteState(), link_manager::LinkManagerStateMachineBase::DefaultRoute::OK);
         EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, i + 1);
         EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, i + 1);
     }
