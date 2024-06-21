@@ -369,12 +369,11 @@ void MuxPort::handleDefaultRouteState(const std::string &routeState)
         state = link_manager::LinkManagerStateMachineBase::DefaultRoute::NA;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleDefaultRouteStateNotification,
         mLinkManagerStateMachinePtr.get(),
         state
-    )));
+    ));
 }
 
 // 
