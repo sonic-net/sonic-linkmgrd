@@ -23,6 +23,7 @@
 
 #include "LinkManagerStateMachineTest.h"
 #include "link_prober/LinkProberStateMachineBase.h"
+#include "common/MuxLogger.h"
 
 #define VALIDATE_STATE(p, m, l) \
     do { \
@@ -67,6 +68,21 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
         }
         mIoService.run_one();
     }
+}
+
+void LinkManagerStateMachineTest::runIoServiceThreaded(uint32_t count)
+{
+    mWork = std::make_unique<boost::asio::io_service::work>(mIoService);
+    for (uint8_t i = 0; i < count; i++) {
+        mThreadGroup.create_thread(boost::bind(&boost::asio::io_service::run, &mIoService));
+    }
+}
+
+void LinkManagerStateMachineTest::stopIoServiceThreaded()
+{
+    mWork.reset();
+    mIoService.stop();
+    mThreadGroup.join_all();
 }
 
 void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count, uint32_t detect_multiplier)
@@ -1527,6 +1543,33 @@ TEST_F(LinkManagerStateMachineTest, ProbeLinkInSuspendTimeout)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+}
+
+TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
+{
+    mFakeMuxPort.activateStateMachine();
+    runIoServiceThreaded(3);
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    for (int i = 0; i < 10000; ++i)
+    {
+        MUXLOGDEBUG(boost::format("Iteration %d") % i);
+        mFakeMuxPort.handleDefaultRouteState("na");
+        mFakeMuxPort.handleDefaultRouteState("ok");
+
+        int check = 0;
+        while (((mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount < i + 1) ||
+                (mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount < i + 1)) && (check < 10))
+        {
+            usleep(1000);
+            ++check;
+        }
+
+        EXPECT_EQ(mFakeMuxPort.getDefaultRouteState(), link_manager::LinkManagerStateMachineBase::DefaultRoute::OK);
+        EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, i + 1);
+        EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, i + 1);
+    }
+    stopIoServiceThreaded();
 }
 
 } /* namespace test */
