@@ -26,6 +26,7 @@
 #include "common/MuxLogger.h"
 #include "FakeMuxPort.h"
 #include "FakeLinkProber.h"
+#include "FakeLinkManagerStateMachine.h"
 
 namespace test
 {
@@ -36,7 +37,8 @@ FakeMuxPort::FakeMuxPort(
     std::string &portName,
     uint16_t serverId,
     boost::asio::io_service &ioService,
-    common::MuxPortConfig::PortCableType portCableType
+    common::MuxPortConfig::PortCableType portCableType,
+    bool useFakeLinkManagerStateMachine
 )
     : mux::MuxPort(
           dbInterface,
@@ -57,15 +59,29 @@ FakeMuxPort::FakeMuxPort(
       )
 {
     mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
-    switch (portCableType) {
-        case common::MuxPortConfig::PortCableType::ActiveStandby:
-            initLinkProberActiveStandby();
-            break;
-        case common::MuxPortConfig::PortCableType::ActiveActive:
-            initLinkProberActiveActive();
-            break;
-        default:
-            break;
+    if (useFakeLinkManagerStateMachine)
+    {
+        resetLinkManagerStateMachinePtr(
+            new FakeLinkManagerStateMachine(
+                this,
+                mStrand,
+                mMuxPortConfig
+            )
+        );
+        mFakeLinkManagerStateMachinePtr = std::dynamic_pointer_cast<FakeLinkManagerStateMachine>(getLinkManagerStateMachinePtr());
+    }
+    else
+    {
+        switch (portCableType) {
+            case common::MuxPortConfig::PortCableType::ActiveStandby:
+                initLinkProberActiveStandby();
+                break;
+            case common::MuxPortConfig::PortCableType::ActiveActive:
+                initLinkProberActiveActive();
+                break;
+            default:
+                break;
+        }
     }
 }
 

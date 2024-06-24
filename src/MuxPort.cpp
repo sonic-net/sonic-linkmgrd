@@ -96,12 +96,11 @@ void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
 {
     MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleSwssBladeIpv4AddressUpdate,
         mLinkManagerStateMachinePtr.get(),
         address
-    )));
+    ));
 }
 
 //
@@ -113,12 +112,11 @@ void MuxPort::handleSoCIpv4AddressUpdate(boost::asio::ip::address address)
 {
     MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleSwssSoCIpv4AddressUpdate,
         mLinkManagerStateMachinePtr.get(),
         address
-    )));
+    ));
 }
 
 //
@@ -135,12 +133,11 @@ void MuxPort::handleLinkState(const std::string &linkState)
         label = link_state::LinkState::Label::Up;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleSwssLinkStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 //
@@ -157,12 +154,11 @@ void MuxPort::handlePeerLinkState(const std::string &linkState)
         label = link_state::LinkState::Label::Down;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handlePeerLinkStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 //
@@ -174,12 +170,11 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleGetServerMacAddressNotification,
         mLinkManagerStateMachinePtr.get(),
         address
-    )));
+    ));
 }
 
 //
@@ -191,11 +186,10 @@ void MuxPort::handleUseWellKnownMacAddress()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleUseWellKnownMacAddressNotification,
         mLinkManagerStateMachinePtr.get()
-    )));
+    ));
 }
 
 //
@@ -207,11 +201,10 @@ void MuxPort::handleSrcMacAddressUpdate()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleSrcMacConfigNotification,
         mLinkManagerStateMachinePtr.get()
-    )));
+    ));
 }
 
 //
@@ -232,12 +225,11 @@ void MuxPort::handleGetMuxState(const std::string &muxState)
         label = mux_state::MuxState::Label::Error;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleGetMuxStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 //
@@ -289,12 +281,11 @@ void MuxPort::handleMuxState(const std::string &muxState)
         label = mux_state::MuxState::Label::Error;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 //
@@ -321,12 +312,11 @@ void MuxPort::handleMuxConfig(const std::string &config)
         mode = common::MuxPortConfig::Detached;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
         mLinkManagerStateMachinePtr.get(),
         mode
-    )));
+    ));
 }
 
 //
@@ -347,12 +337,11 @@ void MuxPort::handlePeerMuxState(const std::string &peerMuxState)
         label = mux_state::MuxState::Label::Error;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handlePeerMuxStateNotification,
         mLinkManagerStateMachinePtr.get(),
         label
-    )));
+    ));
 }
 
 // 
@@ -441,12 +430,11 @@ void MuxPort::handleTsaEnable(bool enable)
         mode = common::MuxPortConfig::Standby;
     }
 
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(
+    boost::asio::post(mStrand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxConfigNotification,
         mLinkManagerStateMachinePtr.get(),
         mode
-    )));
+    ));
 }
 
 } /* namespace mux */
