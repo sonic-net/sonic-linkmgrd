@@ -475,9 +475,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
             mStandbyUnknownUpCount = 0;
 
-            if (mOscillationTimerAlive) {
-                cancelOscillationTimer();
-            }
+            tryCancelOscillationTimerIfAlive();
         }
          
         if (state == link_prober::LinkProberState::Label::Standby) {
@@ -485,9 +483,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkProberEvent &event, link_p
 
             mActiveUnknownUpCount = 0;
 
-            if (mOscillationTimerAlive) {
-                cancelOscillationTimer();
-            }
+            tryCancelOscillationTimerIfAlive();
         }
 
         CompositeState nextState = mCompositeState;
@@ -548,8 +544,8 @@ void ActiveStandbyStateMachine::handleStateChange(MuxStateEvent &event, mux_stat
         mStandbyUnknownUpCount = 0;
     }
 
-    if (state == mux_state::MuxState::Label::Standby && mOscillationTimerAlive) {
-        cancelOscillationTimer();
+    if (state == mux_state::MuxState::Label::Standby) {
+        tryCancelOscillationTimerIfAlive();
     }
 
     updateMuxLinkmgrState();
@@ -593,9 +589,7 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
             mWaitStandbyUpBackoffFactor = 1;
             mUnknownActiveUpBackoffFactor = 1;
 
-            if (mOscillationTimerAlive) {
-                cancelOscillationTimer();
-            }
+            tryCancelOscillationTimerIfAlive();
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
         }
@@ -1091,15 +1085,17 @@ void ActiveStandbyStateMachine::startOscillationTimer()
 }
 
 //
-// ---> cancelOscillationTimer();
+// ---> tryCancelOscillationTimerIfAlive();
 //
-// cancel the oscillation timer
+// cancel the oscillation timer if it is alive
 //
-void ActiveStandbyStateMachine::cancelOscillationTimer()
+void ActiveStandbyStateMachine::tryCancelOscillationTimerIfAlive()
 {
-    MUXLOGINFO(boost::format("%s: cancel the oscillation timer") % mMuxPortConfig.getPortName());
-    mOscillationTimerAlive = false;
-    mOscillationTimer.cancel();
+    if (mOscillationTimerAlive) {
+        MUXLOGINFO(boost::format("%s: cancel the oscillation timer") % mMuxPortConfig.getPortName());
+        mOscillationTimerAlive = false;
+        mOscillationTimer.cancel();
+    }
 }
 
 //

@@ -465,13 +465,13 @@ private:
     void startOscillationTimer();
 
     /**
-    *@method cancelOscillationTimer
+    *@method tryCancelOscillationTimerIfAlive
     *
-    *@brief cancel the oscillation timer
+    *@brief cancel the oscillation timer if it is alive
     *
     *@return none
     */
-    inline void cancelOscillationTimer();
+    inline void tryCancelOscillationTimerIfAlive();
 
     /**
     *@method handleOscillationTimeout
