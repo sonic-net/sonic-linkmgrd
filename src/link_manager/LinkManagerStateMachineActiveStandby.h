@@ -465,6 +465,15 @@ private:
     void startOscillationTimer();
 
     /**
+    *@method tryCancelOscillationTimerIfAlive
+    *
+    *@brief cancel the oscillation timer if it is alive
+    *
+    *@return none
+    */
+    inline void tryCancelOscillationTimerIfAlive();
+
+    /**
     *@method handleOscillationTimeout
     *
     *@brief handle when oscillation timer expires
@@ -859,6 +868,7 @@ private:
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mWaitTimer;
     boost::asio::deadline_timer mOscillationTimer;
+    bool mOscillationTimerAlive = false;
 
     boost::function<void ()> mInitializeProberFnPtr;
     boost::function<void ()> mStartProbingFnPtr;
