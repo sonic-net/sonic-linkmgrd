@@ -21,6 +21,9 @@
  *      Author: Tamer Ahmed
  */
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
+
 #include "LinkManagerStateMachineTest.h"
 #include "link_prober/LinkProberStateMachineBase.h"
 #include "common/MuxLogger.h"
@@ -50,7 +53,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
-    mMuxConfig.setOscillationInterval_sec(1,true);
+    mMuxConfig.setOscillationInterval_sec(2, true);
 }
 
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
@@ -1468,7 +1471,7 @@ TEST_F(LinkManagerStateMachineTest, TimedOscillation)
     handleMuxState("active", 3);
     VALIDATE_STATE(Wait, Active, Up);
 
-    runIoService(2);
+    runIoService(1);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("active", 3);
@@ -1477,6 +1480,38 @@ TEST_F(LinkManagerStateMachineTest, TimedOscillation)
     runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::TimedOscillation);
+
+    mMuxConfig.setTimeoutIpv4_msec(10);
+}
+
+TEST_F(LinkManagerStateMachineTest, TimedOscillationMuxProbeStandbyCancel)
+{
+    setMuxStandby();
+
+    // set icmp timeout to be 500ms otherwise it will probe mux state endlessly and get no chance to do timed oscillation
+    mMuxConfig.setTimeoutIpv4_msec(500);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    runIoService(1);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    boost::this_thread::sleep(boost::posix_time::seconds(2));
+
+    // 3 mux probe active notifiations + 1 oscillation timeout + 1 mux probe timeout
+    handleProbeMuxState("active", 5);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
 
     mMuxConfig.setTimeoutIpv4_msec(10);
 }
