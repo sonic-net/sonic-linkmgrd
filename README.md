@@ -66,5 +66,4 @@ foo(
     parameter2,
     parameter3
 );
-
 ```
