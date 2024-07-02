@@ -34,6 +34,8 @@
 #include "swss/dbconnector.h"
 #include "swss/producerstatetable.h"
 #include "swss/subscriberstatetable.h"
+#include "swss/notificationproducer.h"
+#include "swss/notificationconsumer.h"
 #include "swss/warm_restart.h"
 
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
@@ -55,6 +57,8 @@ namespace mux
 #define STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME   "HW_MUX_CABLE_TABLE_PEER"
 
 #define STATE_MUX_SWITCH_CAUSE_TABLE_NAME "MUX_SWITCH_CAUSE"
+#define LINK_PROBER_SESSION_STATE_CHANGE_NOTIFICATION_CHANNEL "LINK_PROBER_NOTIFICATIONS"
+#define LINK_PROBER_SESSION_STATE_CHANGE_NOTIFICATION "link_prober_session_state_change"
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
@@ -165,6 +169,19 @@ public:
     *@return none
     */
     void setPeerMuxState(const std::string &portName, mux_state::MuxState::Label label);
+
+    /**
+    *@method setLinkProberSessionState
+    *
+    *@brief set link prober session state in ASIC DB to simulate offload
+    *
+    *@param portName (in)   MUX/port name
+    *@param sessionId (in)  link prober session id
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    void setLinkProberSessionState(const std::string portName, const std::string &sessionId, link_prober::LinkProberState::Label label);
 
     /**
     *@method probeMuxState
@@ -422,6 +439,18 @@ private:
     *@return none
     */
     virtual void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label);
+
+    /**
+    *@method handleSetLinkProberSessionState
+    *
+    *@brief set link prober session state in ASIC DB to simulate offload
+    *
+    *@param sessionId (in)  link prober session id
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    void handleSetLinkProberSessionState(const std::string &sessionId, link_prober::LinkProberState::Label label);
 
     /**
     *@method handleProbeMuxState
@@ -817,6 +846,26 @@ private:
     void handleMuxStateNotifiction(swss::SubscriberStateTable &statedbPortTable);
 
     /**
+    *@method processLinkProberSessionStateNotification
+    *
+    *@brief process link prober session state notification
+    *
+    *@param entries (in) reference to link prober session state notification
+    *
+    *@return none
+    */
+    inline void processLinkProberSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+    *@method handleLinkProberSessionStateNotification
+    *
+    *@brief handle link prober session state notification
+    *
+    *@return none
+    */
+    void handleLinkProberSessionStateNotification(swss::NotificationConsumer &linkProberNotificationChannel);
+
+    /**
     *@method handleSwssNotification
     *
     *@brief main thread method for handling SWSS notification
@@ -867,6 +916,7 @@ private:
 
 private:
     static std::vector<std::string> mMuxState;
+    static std::vector<std::string> mLinkProberState;
     static std::vector<std::string> mMuxLinkmgrState;
     static std::vector<std::string> mMuxMetrics;
     static std::vector<std::string> mLinkProbeMetrics;
@@ -878,6 +928,7 @@ private:
 
     std::shared_ptr<swss::DBConnector> mAppDbPtr;
     std::shared_ptr<swss::DBConnector> mStateDbPtr;
+    std::shared_ptr<swss::DBConnector> mAsicDbPtr;
     std::shared_ptr<swss::Table> mMuxStateTablePtr;
 
     // for communicating with orchagent
@@ -896,6 +947,8 @@ private:
     std::shared_ptr<swss::Table> mStateDbLinkProbeStatsTablePtr;
     // for writing mux switch reason to state db 
     std::shared_ptr<swss::Table> mStateDbSwitchCauseTablePtr;
+    // for writing link prober session state change notification
+    std::shared_ptr<swss::NotificationProducer> mAsicDbNotificationChannelPtr;
 
     std::shared_ptr<boost::thread> mSwssThreadPtr;
 

@@ -451,6 +451,24 @@ public:
      */
     inline uint32_t getMuxReconciliationTimeout_sec(){return mMuxReconciliationTimeout_sec;};
 
+    /**
+    *@method enableSimulateLfdOffload
+    *
+    *@brief setter for simulate lfd offload enable flag
+    *
+    *@return enable simulate lfd offload flag
+    */
+    inline void enableSimulateLfdOffload(bool enableSimulateLfdOffload) { mEnableSimulateLfdOffload = enableSimulateLfdOffload; };
+
+    /**
+    *@method getIfEnableSimulateLfdOffload
+    *
+    *@brief getter for simulate lfd offload enable flag
+    *
+    *@return enable simulate lfd offload flag
+    */
+    inline bool getIfEnableSimulateLfdOffload() { return mEnableSimulateLfdOffload; };
+
 private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
@@ -472,6 +490,7 @@ private:
 
     bool mEnableDefaultRouteFeature = false;
     bool mUseWellKnownMacActiveActive = true;
+    bool mEnableSimulateLfdOffload = false;
 
     bool mEnableUseTorMac = false;
 

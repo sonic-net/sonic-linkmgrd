@@ -406,6 +406,15 @@ public:
     inline bool ifEnableUseTorMac() {return mMuxConfig.getIfEnableUseTorMac();};
 
     /**
+    *@method getIfEnableSimulateLfdOffload
+    *
+    *@brief getter for enable simulate LFD offload flag
+    *
+    *@return enable simulate LFD offload flag
+    */
+    inline bool getIfEnableSimulateLfdOffload() { return mMuxConfig.getIfEnableSimulateLfdOffload(); }
+
+    /**
      * @method getAdminForwardingStateSyncUpInterval
      * 
      * @brief getter of admin forwarding state sync up interval

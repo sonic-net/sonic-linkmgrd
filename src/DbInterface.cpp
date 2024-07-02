@@ -33,6 +33,7 @@
 #include "swss/netlink.h"
 #include "swss/macaddress.h"
 #include "swss/select.h"
+#include "swss/json.hpp"
 
 #include "DbInterface.h"
 #include "MuxManager.h"
@@ -42,8 +43,11 @@
 
 namespace mux
 {
+using json = nlohmann::json;
+
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
+std::vector<std::string> DbInterface::mLinkProberState = {"Active", "Standby", "Unknown", "Wait", "PeerWait", "PeerActive", "PeerUnknown", "Init", "Up", "Down", "Init", "Up", "Down"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
 std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end", "link_prober_wait_start", "link_prober_active_start", "link_prober_standby_start"};
@@ -109,6 +113,23 @@ void DbInterface::setPeerMuxState(const std::string &portName, mux_state::MuxSta
         &DbInterface::handleSetPeerMuxState,
         this,
         portName,
+        label
+    ));
+}
+
+//
+// ---> setLinkProberSessionState(const std::string portName, const std::string &sessionId, link_prober::LinkProberState::Label label);
+//
+// set link prober session state in ASIC DB to simulate offload
+//
+void DbInterface::setLinkProberSessionState(const std::string portName, const std::string &sessionId, link_prober::LinkProberState::Label label)
+{
+    MUXLOGDEBUG(boost::format("%s: setting link prober session %s state to %s") % portName % sessionId % mLinkProberState[label]);
+
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handleSetLinkProberSessionState,
+        this,
+        sessionId,
         label
     ));
 }
@@ -309,6 +330,7 @@ void DbInterface::initialize()
     try {
         mAppDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
         mStateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
+        mAsicDbPtr = std::make_shared<swss::DBConnector>("ASIC_DB", 0);
 
         mAppDbMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
             mAppDbPtr.get(), APP_MUX_CABLE_TABLE_NAME
@@ -335,6 +357,9 @@ void DbInterface::initialize()
             mStateDbPtr.get(),  STATE_MUX_SWITCH_CAUSE_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
+        mAsicDbNotificationChannelPtr = std::make_shared<swss::NotificationProducer> (
+            mAsicDbPtr.get(), LINK_PROBER_SESSION_STATE_CHANGE_NOTIFICATION_CHANNEL
+        );
 
         mSwssThreadPtr = std::make_shared<boost::thread> (&DbInterface::handleSwssNotification, this);
     }
@@ -419,6 +444,30 @@ void DbInterface::handleSetPeerMuxState(const std::string portName, mux_state::M
     if (label <= mux_state::MuxState::Label::Unknown) {
         mAppDbPeerMuxTablePtr->hset(portName, "state", mMuxState[label]);
     }
+}
+
+//
+// ---> handleSetLinkProberSessionState(const std::string &sessionId, link_prober::LinkProberState::Label label);
+//
+// set link prober session state in ASIC DB to simulate offload
+//
+void DbInterface::handleSetLinkProberSessionState(const std::string &sessionId, link_prober::LinkProberState::Label label)
+{
+    std::string notification;
+    std::vector<swss::FieldValueTuple> entries;
+
+    json j = json::array();
+    json item;
+    item["link_prober_session_id"] = sessionId;
+    item["session_state"] = mLinkProberState[label];
+    j.push_back(item);
+    notification = j.dump();
+
+    mAsicDbNotificationChannelPtr->send(
+        LINK_PROBER_SESSION_STATE_CHANGE_NOTIFICATION,
+        notification,
+        entries
+    );
 }
 
 //
@@ -1420,6 +1469,39 @@ void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbP
 }
 
 //
+// ---> handleLinkProberSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// handle link prober session state notification
+//
+void DbInterface::handleLinkProberSessionStateNotification(swss::NotificationConsumer &linkProberNotificationChannel)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    linkProberNotificationChannel.pops(entries);
+    processLinkProberSessionStateNotification(entries);
+}
+
+//
+// ---> processLinkProberSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process link prober session state notification
+//
+void DbInterface::processLinkProberSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry : entries) {
+        std::string data = kfvKey(entry);
+
+        json j = json::parse(data);
+        for (uint32_t i = 0; i < j.size(); ++i) {
+            mMuxManagerPtr->handleLinkProberSessionStateNotification(
+                j[i]["link_prober_session_id"],
+                j[i]["session_state"]
+            );
+        }
+    }
+}
+
+//
 // ---> processDefaultRouteStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
 // 
 // process default route state notification from orchagent
@@ -1529,6 +1611,7 @@ void DbInterface::handleSwssNotification()
     std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
     std::shared_ptr<swss::DBConnector> appDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
     std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
+    std::shared_ptr<swss::DBConnector> asicDbPtr = std::make_shared<swss::DBConnector> ("ASIC_DB", 0);
 
     // For reading Link Prober configurations from the MUX linkmgr table name
     swss::SubscriberStateTable configDbMuxLinkmgrTable(configDbPtr.get(), CFG_MUX_LINKMGR_TABLE_NAME);
@@ -1551,6 +1634,8 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
     // for getting peer's admin forwarding state
     swss::SubscriberStateTable stateDbPeerMuxTable(stateDbPtr.get(), STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME);
+    // for getting simulated link prober notifications
+    swss::NotificationConsumer linkProberNotificationChannel(asicDbPtr.get(), LINK_PROBER_SESSION_STATE_CHANGE_NOTIFICATION_CHANNEL);
 
     getTorMacAddress(configDbPtr);
     getVlanNames(configDbPtr);
@@ -1579,6 +1664,9 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&stateDbMuxInfoTable);
     swssSelect.addSelectable(&stateDbPeerMuxTable);
     swssSelect.addSelectable(&netlinkNeighbor);
+    if (mMuxManagerPtr->getMuxConfig().getIfEnableSimulateLfdOffload()) {
+        swssSelect.addSelectable(&linkProberNotificationChannel);
+    }
 
     while (mPollSwssNotifcation) {
         swss::Selectable *selectable;
@@ -1614,6 +1702,8 @@ void DbInterface::handleSwssNotification()
             handlePeerLinkStateNotification(stateDbMuxInfoTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbPeerMuxTable)) {
             handlePeerMuxStateNotification(stateDbPeerMuxTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&linkProberNotificationChannel)) {
+            handleLinkProberSessionStateNotification(linkProberNotificationChannel);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

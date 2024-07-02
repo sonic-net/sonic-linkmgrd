@@ -90,6 +90,10 @@ MuxPort::MuxPort(
             break;
     }
     assert(mLinkManagerStateMachinePtr.get() != nullptr);
+
+    if (mMuxPortConfig.getIfEnableSimulateLfdOffload()) {
+        initLinkProberSessions();
+    }
 }
 
 void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
@@ -447,6 +451,67 @@ void MuxPort::handleTsaEnable(bool enable)
         mLinkManagerStateMachinePtr.get(),
         mode
     )));
+}
+
+//
+// ---> initLinkProberSessions();
+//
+// initializes the link prober sessions
+//
+void MuxPort::initLinkProberSessions()
+{
+    mSelfSessionId = mLinkManagerStateMachinePtr->getLinkProberSessionStateMachinePtr()->getSelfSessionId();
+    mPeerSessionId = mLinkManagerStateMachinePtr->getLinkProberSessionStateMachinePtr()->getPeerSessionId();
+}
+
+//
+// ---> handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState);
+//
+// handle link prober session state notification
+//
+void MuxPort::handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState)
+{
+    MUXLOGWARNING(boost::format("%s: session %s, session state: %s") % mMuxPortConfig.getPortName() % sessionId % sessionState);
+
+    if (sessionId == mSelfSessionId) {
+        if (sessionState == "Up") {
+            mLinkProberStateMachinePtr->postLinkProberStateEvent(
+                link_prober::LinkProberStateMachineBase::getLinkProberSelfUpEvent()
+            );
+        } else if (sessionState == "Down") {
+            mLinkProberStateMachinePtr->postLinkProberStateEvent(
+                link_prober::LinkProberStateMachineBase::getLinkProberSelfDownEvent()
+            );
+        } else {
+            MUXLOGERROR(
+                boost::format("%s: unrecognized link prober session state: %s") %
+                mMuxPortConfig.getPortName() %
+                sessionState
+            );
+        }
+    } else if (sessionId == mPeerSessionId) {
+        if (sessionState == "Up") {
+            mLinkProberStateMachinePtr->postLinkProberStateEvent(
+                link_prober::LinkProberStateMachineBase::getLinkProberPeerUpEvent()
+            );
+        } else if (sessionState == "Down") {
+            mLinkProberStateMachinePtr->postLinkProberStateEvent(
+                link_prober::LinkProberStateMachineBase::getLinkProberPeerDownEvent()
+            );
+        } else {
+            MUXLOGERROR(
+                boost::format("%s: unrecognized link prober session state: %s") %
+                mMuxPortConfig.getPortName() %
+                sessionState
+            );
+        }
+    } else {
+        MUXLOGERROR(
+            boost::format("%s: unrecognized link prober session id: %s") %
+            mMuxPortConfig.getPortName() %
+            sessionId
+        );
+    }
 }
 
 } /* namespace mux */

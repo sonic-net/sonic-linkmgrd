@@ -36,6 +36,7 @@
 #include "DbInterface.h"
 
 namespace test {
+class MockMuxPort;
 class MuxManagerTest;
 class FakeMuxPort;
 }
@@ -146,6 +147,23 @@ public:
     *@return label of MUX state
     */
     void probeMuxState();
+
+    /**
+     *@method postLinkProberSessionStateNotificationToDb
+     *
+     *@brief posts a link prober session state notification to the DB
+     *
+     *@param sessionId (in)    link prober session id
+     *@param label (in)    .   link prober session state label
+     *
+     *@return none
+     */
+    virtual inline void postLinkProberSessionStateNotificationToDb(
+        const std::string &sessionId,
+        link_prober::LinkProberState::Label label
+    ) {
+        mDbInterfacePtr->setLinkProberSessionState(mMuxPortConfig.getPortName(), sessionId, label);
+    };
 
     /**
     *@method setMuxLinkmgrState
@@ -419,7 +437,38 @@ public:
      */
     void handleTsaEnable(bool enable);
 
+    /**
+     *@method handleLinkProberSessionStateNotification
+     *
+     *@brief handle link prober session state notification
+     *
+     *@param sessionId (in)     link prober session id
+     *@param sessionState (in)  link prober session state
+     */
+    void handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState);
+
+    /**
+     *@method setLinkProberStateMachinePtr
+     *
+     *@brief setter for link prober state machine pointer
+     *
+     *@param linkProberStateMachinePtr (in)  pointer to link prober state machine
+     *
+     *@return none
+     */
+    void setLinkProberStateMachinePtr(link_prober::LinkProberStateMachineBase *linkProberStateMachinePtr) { mLinkProberStateMachinePtr = linkProberStateMachinePtr; };
+
+    /**
+     *@method getLinkProberStateMachinePtr
+     *
+     *@brief getter for link prober state machine pointer
+     *
+     *@return pointer to link prober state machine
+     */
+    link_prober::LinkProberStateMachineBase *getLinkProberStateMachinePtr() { return mLinkProberStateMachinePtr; };
+
 protected:
+    friend class test::MockMuxPort;
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;
     /**
@@ -441,11 +490,24 @@ protected:
     void setComponentInitState(uint8_t component) {mLinkManagerStateMachinePtr->setComponentInitState(component);};
 
 private:
+    /**
+     *@method initLinkProberSessions
+     *
+     *@brief initializes the link prober sessions
+     *
+     *@return none
+     */
+    void initLinkProberSessions();
+
+private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 
     std::shared_ptr<link_manager::LinkManagerStateMachineBase> mLinkManagerStateMachinePtr;
+    link_prober::LinkProberStateMachineBase *mLinkProberStateMachinePtr = nullptr;
+    std::string mSelfSessionId;
+    std::string mPeerSessionId;
 };
 
 } /* namespace mux */

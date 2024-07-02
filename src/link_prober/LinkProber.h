@@ -36,6 +36,7 @@
 #include "IcmpPayload.h"
 #include "LinkProberStateMachineActiveActive.h"
 #include "LinkProberStateMachineActiveStandby.h"
+#include "LinkProberSessionStateMachine.h"
 #include "common/MuxPortConfig.h"
 
 namespace test {
@@ -97,11 +98,13 @@ public:
     *@param muxPortConfig (in)          reference to MuxPortConfig object
     *@param ioService (in)              reference to boost io_service object
     *@param linkProberStateMachinePtr (in) reference to LinkProberStateMachineBase object
+    *@param linkProberSessionStateMachinePtr (in) reference to LinkProberSessionStateMachine object
     */
     LinkProber(
         common::MuxPortConfig &muxPortConfig,
         boost::asio::io_service &ioService,
-        LinkProberStateMachineBase *linkProberStateMachinePtr
+        LinkProberStateMachineBase *linkProberStateMachinePtr,
+        LinkProberSessionStateMachine *linkProberSessionStateMachinePtr
     );
 
     /**
@@ -566,15 +569,26 @@ private:
     void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType);
 
     /**
-     * @method reportHeartbeatReplyReceivedActiveActive
-     * 
-     * @brief report heartbeat reply received to active-active mode link prober state machine
-     * 
-     * @param heartbeatType (in) received heartbeat type
+     *@method reportHeartbeatReplyReceivedActiveActive
+     *
+     *@brief report heartbeat reply received to active-active mode link prober state machine
+     *
+     *@param heartbeatType (in) received heartbeat type
+     *
+     *@return none
+     */
+    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
+
+    /**
+     *@method reportHeartbeatReplyReceivedSession
+     *
+     *@brief report heartbeat reply received to link prober session state machine
+     *
+     *@param heartbeatType (in) received heartbeat type
      *
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
+    void reportHeartbeatReplyReceivedSession(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveStandby
@@ -596,10 +610,20 @@ private:
      */
     void reportHeartbeatReplyNotReceivedActiveActive();
 
+    /**
+     * @method reportHeartbeatReplyNotReceivedSession
+     * 
+     * @brief report heartbeat reply not received to link prober session state machine
+     * 
+     * @return none
+     */
+    void reportHeartbeatReplyNotReceivedSession();
+
 private:
     common::MuxPortConfig &mMuxPortConfig;
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
+    LinkProberSessionStateMachine *mLinkProberSessionStateMachinePtr;
 
     boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
     boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;

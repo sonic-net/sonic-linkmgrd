@@ -350,7 +350,8 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
             mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
                 mMuxPortConfig,
                 getStrand().context(),
-                mLinkProberStateMachinePtr.get()
+                mLinkProberStateMachinePtr.get(),
+                mLinkProberSessionStateMachinePtr.get()
             );
             mInitializeProberFnPtr = boost::bind(
                 &link_prober::LinkProber::initialize, mLinkProberPtr.get()

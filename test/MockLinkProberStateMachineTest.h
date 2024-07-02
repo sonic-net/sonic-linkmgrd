@@ -14,13 +14,10 @@
  *  limitations under the License.
  */
 
-#ifndef MOCKLINKPROBERTEST_H_
-#define MOCKLINKPROBERTEST_H_
-
-#include <boost/uuid/uuid.hpp>
+#ifndef MOCKLINKPROBERSTATEMACHINETEST_H_
+#define MOCKLINKPROBERSTATEMACHINETEST_H_
 
 #include "common/MuxPortConfig.h"
-#include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachineActiveStandby.h"
 #include "link_prober/LinkProberStateMachineActiveActive.h"
 
@@ -30,32 +27,19 @@
 
 namespace test
 {
-class LinkProberMockTest : public ::testing::Test
+class LinkProberStateMachineMockTest : public ::testing::Test
 {
 public:
-    LinkProberMockTest();
-    virtual ~LinkProberMockTest() = default;
+    LinkProberStateMachineMockTest();
+    virtual ~LinkProberStateMachineMockTest() = default;
     void SetUp(common::MuxPortConfig::PortCableType portCableType, bool simulateOffload = false);
     void TearDown() override;
     void runIoService(uint32_t count = 0);
-    void initializeSendBuffer() { mLinkProberPtr->initializeSendBuffer(); }
-    void updateIcmpSequenceNo() { mLinkProberPtr->updateIcmpSequenceNo(); }
-    void sendHeartbeat() { mLinkProberPtr->updateIcmpSequenceNo(); }
-    boost::asio::posix::stream_descriptor& getStream() const { return mLinkProberPtr->mStream; }
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getTxBuffer() { return mLinkProberPtr->mTxBuffer; }
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getRxBuffer() { return mLinkProberPtr->mRxBuffer; }
-    std::size_t getTxPacketSize() { return mLinkProberPtr->mTxPacketSize; }
-    const std::size_t getPacketHeaderSize() { return mLinkProberPtr->mPacketHeaderSize; }
     std::shared_ptr<MockMuxPort> getMuxPortPtr() { return mMuxPortPtr; }
     std::shared_ptr<MockLinkManagerStateMachine> getLinkManagerStateMachinePtr() { return mLinkManagerStateMachinePtr; }
     std::shared_ptr<link_prober::LinkProberStateMachineBase> getLinkProberStateMachinePtr() { return mLinkProberStateMachinePtr; }
     std::shared_ptr<link_prober::LinkProberSessionStateMachine> getLinkProberSessionStateMachinePtr() { return mLinkProberSessionStateMachinePtr; }
-    std::shared_ptr<link_prober::LinkProber> getLinkProberPtr() { return mLinkProberPtr; }
-    void computeChecksum(icmphdr* icmpHeader, size_t size) { mLinkProberPtr->computeChecksum(icmpHeader, size); }
-    void handleRecv() { mLinkProberPtr->handleRecv(boost::system::error_code(), getTxPacketSize()); }
-    void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotRecivedFuncPtr(); }
-    void receiveSelfIcmpReply();
-    void receivePeerIcmpReply();
+    void handleLinkProberSessionStateNotification(link_prober::LinkProberState::Label label, uint32_t count = 0);
 
 private:
     void buildIcmpReply();
@@ -70,9 +54,6 @@ private:
     std::shared_ptr<MockLinkManagerStateMachine> mLinkManagerStateMachinePtr;
     std::shared_ptr<link_prober::LinkProberStateMachineBase> mLinkProberStateMachinePtr;
     std::shared_ptr<link_prober::LinkProberSessionStateMachine> mLinkProberSessionStateMachinePtr;
-    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr;
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mBuffer;
-    boost::uuids::uuid mPeerGuid;
 };
 } // namespace test
 

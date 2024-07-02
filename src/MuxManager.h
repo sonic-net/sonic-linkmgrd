@@ -279,7 +279,7 @@ public:
     * 
     * @return none
     */
-    void initialize(bool enable_feature_measurement, bool enable_feature_default_route);
+    void initialize(bool enable_feature_measurement, bool enable_feature_default_route, bool enable_simulate_lfd_offload);
 
     /**
     *@method deinitialize
@@ -495,6 +495,27 @@ public:
      */
     void handleTsaEnableNotification(bool enable);
 
+    /**
+    *@method handleLinkProberSessionStateNotification
+    *
+    *@brief handle the link prober session state notification from ASIC DB
+    *
+    *@param sessionId (in)   link prober session id
+    *@param sessionState (in)   link prober session state
+    *
+    *@return reference to the mux config
+    */
+    void handleLinkProberSessionStateNotification(const std::string &sessionId, const std::string &sessionState);
+
+    /**
+    *@method getMuxConfig
+    *
+    *@brief getter for the mux config
+    *
+    *@return reference to the mux config
+    */
+    common::MuxConfig &getMuxConfig() {return mMuxConfig;};
+
 private:
     /**
     *@method getMuxPortCableType
@@ -506,6 +527,17 @@ private:
     *@return port cable type
     */
     inline common::MuxPortConfig::PortCableType getMuxPortCableType(const std::string &portName);
+
+    /**
+    *@method getMuxPortPtr
+    *
+    *@brief get the mux port that the link prober session belongs to
+    *
+    *@param sessionId (in)   link prober session id
+    *
+    *@return pointer to the mux port
+    */
+    inline std::shared_ptr<MuxPort> getMuxPortPtr(const std::string &sessionId);
 
     /**
     *@method getMuxPortPtrOrThrow
