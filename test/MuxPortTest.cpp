@@ -47,6 +47,7 @@ void MuxPortTest::stopIoServiceThreaded()
 {
     mWork.reset();
     mIoService.stop();
+    mThreadGroup.join_all();
 }
 
 void MuxPortTest::SetUp()
@@ -215,7 +216,6 @@ TEST_F(MuxPortTest, TestPeerLinkStateNotificationHandler)
         mFakeMuxPort.handlePeerLinkState("down");
         called += 2;
 
-        uint32_t check = 0;
         while (fakeLinkManagerStateMachinePtr->mPeerLinkStateNotificationHandlerCalled < called)
         {
             usleep(1000);
@@ -236,7 +236,6 @@ TEST_F(MuxPortTest, TestPeerMuxStateNotificationHandler)
         mFakeMuxPort.handlePeerMuxState("standby");
         called += 2;
 
-        uint32_t check = 0;
         while (fakeLinkManagerStateMachinePtr->mPeerMuxStateNotificationHandlerCalled < called)
         {
             usleep(1000);
@@ -257,7 +256,6 @@ TEST_F(MuxPortTest, TestMuxConfigNotificationHandler)
         mFakeMuxPort.handleMuxConfig("standby");
         called += 2;
 
-        uint32_t check = 0;
         while (fakeLinkManagerStateMachinePtr->mMuxConfigNotificationHandlerCalled < called)
         {
             usleep(1000);
@@ -279,7 +277,6 @@ TEST_F(MuxPortTest, TestDefaultRouteStateNotificationHandler)
         mFakeMuxPort.handleDefaultRouteState("ok");
         called += 2;
 
-        uint32_t check = 0;
         while (fakeLinkManagerStateMachinePtr->mDefaultRouteStateNotificationHandlerCalled < called)
         {
             usleep(1000);
