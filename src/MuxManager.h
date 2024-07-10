@@ -124,6 +124,28 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mMuxConfig.setTimeoutIpv6_msec(timeout_msec);};
 
     /**
+    *@method setOscillationEnabled
+    *
+    *@brief setter for enable/disable oscillation
+    *
+    *@param enable (in)  true to enable oscillation
+    *
+    *@return none
+    */
+    inline void setOscillationEnabled(bool enable) {mMuxConfig.setOscillationEnabled(enable);};
+
+    /**
+    *@method setOscillationInterval_sec
+    *
+    *@brief setter for oscillation interval in sec
+    *
+    *@param interval_sec (in)  interval in sec
+    *
+    *@return none
+    */
+    inline void setOscillationInterval_sec(uint32_t interval_sec) {mMuxConfig.setOscillationInterval_sec(interval_sec);};
+
+    /**
     *@method setLinkProberStatUpdateIntervalCount
     *
     *@brief setter for link prober stats posting interval

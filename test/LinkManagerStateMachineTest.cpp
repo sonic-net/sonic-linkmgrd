@@ -21,8 +21,12 @@
  *      Author: Tamer Ahmed
  */
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
+
 #include "LinkManagerStateMachineTest.h"
 #include "link_prober/LinkProberStateMachineBase.h"
+#include "common/MuxLogger.h"
 
 #define VALIDATE_STATE(p, m, l) \
     do { \
@@ -49,7 +53,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
-    mMuxConfig.setOscillationInterval_sec(1,true);
+    mMuxConfig.setOscillationInterval_sec(2, true);
 }
 
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
@@ -67,6 +71,21 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
         }
         mIoService.run_one();
     }
+}
+
+void LinkManagerStateMachineTest::runIoServiceThreaded(uint32_t count)
+{
+    mWork = std::make_unique<boost::asio::io_service::work>(mIoService);
+    for (uint8_t i = 0; i < count; i++) {
+        mThreadGroup.create_thread(boost::bind(&boost::asio::io_service::run, &mIoService));
+    }
+}
+
+void LinkManagerStateMachineTest::stopIoServiceThreaded()
+{
+    mWork.reset();
+    mIoService.stop();
+    mThreadGroup.join_all();
 }
 
 void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count, uint32_t detect_multiplier)
@@ -1452,7 +1471,7 @@ TEST_F(LinkManagerStateMachineTest, TimedOscillation)
     handleMuxState("active", 3);
     VALIDATE_STATE(Wait, Active, Up);
 
-    runIoService(2);
+    runIoService(1);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("active", 3);
@@ -1461,6 +1480,38 @@ TEST_F(LinkManagerStateMachineTest, TimedOscillation)
     runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::TimedOscillation);
+
+    mMuxConfig.setTimeoutIpv4_msec(10);
+}
+
+TEST_F(LinkManagerStateMachineTest, TimedOscillationMuxProbeStandbyCancel)
+{
+    setMuxStandby();
+
+    // set icmp timeout to be 500ms otherwise it will probe mux state endlessly and get no chance to do timed oscillation
+    mMuxConfig.setTimeoutIpv4_msec(500);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    runIoService(1);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+
+    boost::this_thread::sleep(boost::posix_time::seconds(2));
+
+    // 3 mux probe active notifiations + 1 oscillation timeout + 1 mux probe timeout
+    handleProbeMuxState("active", 5);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause, link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
 
     mMuxConfig.setTimeoutIpv4_msec(10);
 }
@@ -1527,6 +1578,33 @@ TEST_F(LinkManagerStateMachineTest, ProbeLinkInSuspendTimeout)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+}
+
+TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
+{
+    mFakeMuxPort.activateStateMachine();
+    runIoServiceThreaded(3);
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    for (uint i = 0; i < 10000; ++i)
+    {
+        MUXLOGDEBUG(boost::format("Iteration %d") % i);
+        mFakeMuxPort.handleDefaultRouteState("na");
+        mFakeMuxPort.handleDefaultRouteState("ok");
+
+        int check = 0;
+        while (((mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount < i + 1) ||
+                (mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount < i + 1)) && (check < 4000))
+        {
+            usleep(2000);
+            ++check;
+        }
+
+        EXPECT_EQ(mFakeMuxPort.getDefaultRouteState(), link_manager::LinkManagerStateMachineBase::DefaultRoute::OK);
+        EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, i + 1);
+        EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, i + 1);
+    }
+    stopIoServiceThreaded();
 }
 
 } /* namespace test */

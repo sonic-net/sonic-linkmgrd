@@ -56,9 +56,11 @@ public:
     uint32_t getTimeoutIpv4_msec(std::string port);
     uint32_t getTimeoutIpv6_msec(std::string port);
     uint32_t getLinkWaitTimeout_msec(std::string port);
+    uint32_t getOscillationInterval_sec(std::string port);
     bool getIfUseWellKnownMac(std::string port);
     bool setUseWellKnownMacActiveActive(bool use);
     bool getIfUseToRMac(std::string port);
+    bool getOscillationEnabled(std::string port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getLastUpdatedMacAddress(std::string port);
@@ -120,6 +122,11 @@ class GetMuxStateTest: public MuxManagerTest,
 
 class MuxConfigUpdateTest: public MuxManagerTest,
                            public testing::WithParamInterface<std::tuple<std::string, common::MuxPortConfig::Mode, common::MuxPortConfig::PortCableType>>
+{
+};
+
+class OscillationIntervalTest: public MuxManagerTest,
+                               public testing::WithParamInterface<std::tuple<std::string, uint32_t>>
 {
 };
 
