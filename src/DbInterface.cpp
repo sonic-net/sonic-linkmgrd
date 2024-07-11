@@ -1064,7 +1064,7 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                     }
                 }
 
-                MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
+                MUXLOGWARNING(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
                     key %
                     operation %
                     f %
