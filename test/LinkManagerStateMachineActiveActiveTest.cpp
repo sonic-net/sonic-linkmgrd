@@ -193,10 +193,8 @@ void LinkManagerStateMachineActiveActiveTest::handleMuxState(std::string state, 
 
 void LinkManagerStateMachineActiveActiveTest::handlePeerMuxState(std::string state, uint32_t count)
 {
-    for (uint8_t i = 0; i < mPositiveUpdateCount; i++) {
-        mFakeMuxPort.handlePeerMuxState(state);
-        runIoService(count);
-    }
+    mFakeMuxPort.handlePeerMuxState(state);
+    runIoService(count);
 }
 
 void LinkManagerStateMachineActiveActiveTest::handleProbeMuxState(std::string state, uint32_t count)
@@ -405,6 +403,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     VALIDATE_PEER_STATE(PeerWait, Wait);
 
     postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive, 1);
+    runIoService(1);
     handlePeerMuxState("active", 1);
     VALIDATE_PEER_STATE(PeerActive, Active);
 
@@ -413,7 +412,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
 
-    handlePeerMuxState("standby", 1);
+    handlePeerMuxState("standby", 2);
     VALIDATE_PEER_STATE(PeerUnknown, Standby);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 1);
 }

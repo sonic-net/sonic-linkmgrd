@@ -32,8 +32,9 @@
 #include "MuxPort.h"
 #include "FakeDbInterface.h"
 #include "FakeLinkProber.h"
+#include "FakeLinkManagerStateMachine.h"
 
-namespace test 
+namespace test
 {
 
 class FakeMuxPort : public ::mux::MuxPort {
@@ -44,7 +45,8 @@ public:
         std::string& portName,
         uint16_t serverId,
         boost::asio::io_service& ioService,
-        common::MuxPortConfig::PortCableType portCableType = common::MuxPortConfig::PortCableType::ActiveStandby);
+        common::MuxPortConfig::PortCableType portCableType = common::MuxPortConfig::PortCableType::ActiveStandby,
+        bool useFakeLinkManagerStateMachine = false);
     virtual ~FakeMuxPort() = default;
 
     void activateStateMachine();
@@ -59,6 +61,7 @@ public:
 
     std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }
+    std::shared_ptr<FakeLinkManagerStateMachine> getFakeLinkManagerStateMachinePtr() { return mFakeLinkManagerStateMachinePtr; };
     const link_manager::LinkManagerStateMachineBase::CompositeState& getCompositeState() { return getLinkManagerStateMachinePtr()->getCompositeState(); };
     link_prober::LinkProberStateMachineBase* getLinkProberStateMachinePtr() { return getLinkManagerStateMachinePtr()->getLinkProberStateMachinePtr().get(); };
     mux_state::MuxStateMachine& getMuxStateMachine() { return getLinkManagerStateMachinePtr()->getMuxStateMachine(); };
@@ -76,6 +79,7 @@ public:
 
     std::shared_ptr<link_manager::ActiveActiveStateMachine> mActiveActiveStateMachinePtr;
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> mActiveStandbyStateMachinePtr;
+    std::shared_ptr<FakeLinkManagerStateMachine> mFakeLinkManagerStateMachinePtr = nullptr;
     std::shared_ptr<FakeLinkProber> mFakeLinkProber;
 };
 
