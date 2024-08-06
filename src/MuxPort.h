@@ -440,6 +440,15 @@ protected:
     */
     void setComponentInitState(uint8_t component) {mLinkManagerStateMachinePtr->setComponentInitState(component);};
 
+    /**
+    *@method resetLinkManagerStateMachinePtr
+    *
+    *@brief reset the LinkManagerStateMachinePtr (used during unit test)
+    *
+    *@return none
+    */
+    void resetLinkManagerStateMachinePtr(link_manager::LinkManagerStateMachineBase *stateMachinePtr) { mLinkManagerStateMachinePtr.reset(stateMachinePtr); };
+
 private:
     std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
