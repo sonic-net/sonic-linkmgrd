@@ -337,4 +337,11 @@ TEST_F(LinkProberTest, InitializeException)
     EXPECT_THROW(initialize(), common::SocketErrorException);
 }
 
+TEST_F(LinkProberTest, sendHeartbeatFails)
+{
+    mLinkProber.mSocket = -1;
+    initialize();
+
+    handleSendHeartbeat();
+}
 } /* namespace test */
