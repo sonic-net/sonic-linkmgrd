@@ -333,7 +333,7 @@ void LinkProber::sendHeartbeat(bool forceSend)
         mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
 
         if (errorCode) {
-            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to send heartbeat!");
+            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to send heartbeat! Error code: " + errorCode.message());
         } else {
             MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Done sending data");
         }
