@@ -623,6 +623,8 @@ private:
     std::shared_ptr<SockFilter> mSockFilterPtr;
     SockFilterProg mSockFilterProg;
 
+    int mSocket = 0;
+
     std::size_t mTxPacketSize;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
@@ -633,9 +635,6 @@ private:
 
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;
-
-public:
-    int mSocket = 0;
 };
 
 } /* namespace link_prober */

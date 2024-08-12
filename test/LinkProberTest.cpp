@@ -337,11 +337,15 @@ TEST_F(LinkProberTest, InitializeException)
     EXPECT_THROW(initialize(), common::SocketErrorException);
 }
 
-TEST_F(LinkProberTest, sendHeartbeatFails)
+TEST_F(LinkProberTest, LogErrorCodeMessage)
 {
-    mLinkProber.mSocket = -1;
-    initialize();
+    EXPECT_THROW(simulateBadFileDescriptor(), boost::system::system_error);
 
-    handleSendHeartbeat();
+    try {
+        simulateBadFileDescriptor();
+    } catch (const boost::system::system_error& e) {
+        EXPECT_EQ(e.code().value(), boost::system::errc::bad_file_descriptor);
+        EXPECT_EQ(e.code().message(), "Bad file descriptor");
+    }
 }
 } /* namespace test */

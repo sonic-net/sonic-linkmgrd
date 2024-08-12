@@ -458,6 +458,7 @@ void LinkProber::handleRecv(
             }
         } else {
             // Unknown ICMP packet, ignore.
+            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to receive heartbeat! Error code: " + errorCode.message());
         }
         // start another receive to consume as much as possible of backlog packets if any
         startRecv();
