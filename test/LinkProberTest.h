@@ -61,6 +61,10 @@ public:
     void initTxBufferTlvSendProbe() {mLinkProber.initTxBufferTlvSendProbe();}
     void initTxBufferSentinel() {mLinkProber.initTxBufferTlvSentinel();}
 
+    void simulateBadFileDescriptor() {
+        throw boost::system::system_error(make_error_code(boost::system::errc::bad_file_descriptor));
+    }
+
     boost::asio::io_service mIoService;
     common::MuxConfig mMuxConfig;
     std::shared_ptr<FakeDbInterface> mDbInterfacePtr;
