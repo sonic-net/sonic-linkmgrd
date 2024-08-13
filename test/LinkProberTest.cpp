@@ -337,4 +337,15 @@ TEST_F(LinkProberTest, InitializeException)
     EXPECT_THROW(initialize(), common::SocketErrorException);
 }
 
+TEST_F(LinkProberTest, LogErrorCodeMessage)
+{
+    EXPECT_THROW(simulateBadFileDescriptor(), boost::system::system_error);
+
+    try {
+        simulateBadFileDescriptor();
+    } catch (const boost::system::system_error& e) {
+        EXPECT_EQ(e.code().value(), boost::system::errc::bad_file_descriptor);
+        EXPECT_EQ(e.code().message(), "Bad file descriptor");
+    }
+}
 } /* namespace test */
