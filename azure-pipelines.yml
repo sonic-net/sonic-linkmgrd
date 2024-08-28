@@ -99,6 +99,7 @@ jobs:
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common'
+      allowPartiallySucceededBuilds: true
     displayName: "Download sonic swss common deb packages"
   - script: |
       sudo dpkg -i sonic-swss-common/libswsscommon_1.0.0_amd64.deb
