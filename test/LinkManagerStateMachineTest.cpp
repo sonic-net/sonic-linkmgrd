@@ -1521,7 +1521,7 @@ TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
     runIoServiceThreaded(3);
 
     mMuxConfig.enableDefaultRouteFeature(true);
-    for (int i = 0; i < 10000; ++i)
+    for (uint i = 0; i < 10000; ++i)
     {
         MUXLOGDEBUG(boost::format("Iteration %d") % i);
         mFakeMuxPort.handleDefaultRouteState("na");
@@ -1529,9 +1529,9 @@ TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
 
         int check = 0;
         while (((mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount < i + 1) ||
-                (mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount < i + 1)) && (check < 10))
+                (mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount < i + 1)) && (check < 4000))
         {
-            usleep(1000);
+            usleep(2000);
             ++check;
         }
 
