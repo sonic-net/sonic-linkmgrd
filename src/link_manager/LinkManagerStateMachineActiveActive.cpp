@@ -780,7 +780,7 @@ void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunctio
             // last siwtch mux state to standby failed, try again
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         }
-    } else {
+    } else if (mDefaultRouteState != DefaultRoute::NA) {
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
     }
 }

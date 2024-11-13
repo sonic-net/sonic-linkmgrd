@@ -500,6 +500,35 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteState)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteStateNALMuxProbeActiveAfterToggle)
+{
+    setMuxActive();
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    postDefaultRouteEvent("na", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Up);
+
+    // misleading mux state active from periodically probe
+    handleProbeMuxState("active", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Active, Up);
+
+    handleMuxState("standby", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Unknown, Standby, Up);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteStateMuxConfigActive)
 {
     setMuxActive();
