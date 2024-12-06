@@ -406,7 +406,6 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, ConfigStandbySocAgentRestart)
     VALIDATE_STATE(Active, Active, Up);
 }
 
-
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerActive)
 {
     setMuxActive();
