@@ -419,6 +419,15 @@ public:
      */
     void handleTsaEnable(bool enable);
 
+    /**
+     *@method handleResetSuspendTimer
+     *
+     *@brief handle reset suspend timer request
+     *
+     * @return none
+     */
+    void handleResetSuspendTimer();
+
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;

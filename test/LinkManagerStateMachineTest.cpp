@@ -211,6 +211,12 @@ void LinkManagerStateMachineTest::handleMuxConfig(std::string config, uint32_t c
     runIoService(count);
 }
 
+void LinkManagerStateMachineTest::handleResetSuspendTimer(uint32_t count)
+{
+    mFakeMuxPort.handleResetSuspendTimer();
+    runIoService(count);
+}
+
 void LinkManagerStateMachineTest::activateStateMachine()
 {
     mFakeMuxPort.activateStateMachine();
@@ -1605,6 +1611,45 @@ TEST_F(LinkManagerStateMachineTest, DefaultRouteStateRaceCondition)
         EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, i + 1);
     }
     stopIoServiceThreaded();
+}
+
+TEST_F(LinkManagerStateMachineTest, ResetSuspendTimer)
+{
+    setMuxActive();
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Up);
+
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+
+    handleResetSuspendTimer();
+
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.getActiveStandbyStateMachineSuspendBackoffFactor(), 2);
+
+    handleResetSuspendTimer();
+
+    // once suspend timer is reset, the tx probe is resumed
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
+    // the backoff factor is restored to 1
+    EXPECT_EQ(mFakeMuxPort.getActiveStandbyStateMachineSuspendBackoffFactor(), 1);
+
+    postSuspendTimerExpiredEvent(2);
+    VALIDATE_STATE(Unknown, Wait, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mDetectLinkCallCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 }
 
 } /* namespace test */

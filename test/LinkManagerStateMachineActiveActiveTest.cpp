@@ -223,6 +223,12 @@ void LinkManagerStateMachineActiveActiveTest::handleMuxConfig(std::string config
     }
 }
 
+void LinkManagerStateMachineActiveActiveTest::handleResetSuspendTimer(uint32_t count)
+{
+    mFakeMuxPort.handleResetSuspendTimer();
+    runIoService(count);
+}
+
 void LinkManagerStateMachineActiveActiveTest::activateStateMachine(bool enable_feature_default_route)
 {
     mMuxConfig.enableDefaultRouteFeature(enable_feature_default_route);
@@ -1208,6 +1214,19 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineInitEventWithMultipl
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     VALIDATE_STATE(Active, Standby, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, ResetSuspendTimer)
+{
+    setMuxActive();
+
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
+    // reset suspend timer is NOOP for active-active composite state machine
+    handleResetSuspendTimer();
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 0);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mResumeTxProbeCallCount, 2);
 }
 
 } /* namespace test */

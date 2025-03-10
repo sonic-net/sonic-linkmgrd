@@ -401,6 +401,15 @@ public:
     */
     void handleResetLinkProberPckLossCount();
 
+    /**
+     * @method handleResetSuspendTimer
+     *
+     * @brief reset the heartbeat suspend timer
+     *
+     * @return none
+     */
+    void handleResetSuspendTimer();
+
 private:
     /**
     *@method updateMuxLinkmgrState

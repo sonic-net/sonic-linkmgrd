@@ -437,4 +437,19 @@ void MuxPort::handleTsaEnable(bool enable)
     ));
 }
 
+//
+// ---> handleResetSuspendTimer();
+//
+// handle suspend timer reset
+//
+void MuxPort::handleResetSuspendTimer()
+{
+    MUXLOGWARNING(boost::format("%s: reset heartbeat suspend timer") % mMuxPortConfig.getPortName());
+
+    boost::asio::post(mStrand, boost::bind(
+        &link_manager::LinkManagerStateMachineBase::handleResetSuspendTimer,
+        mLinkManagerStateMachinePtr.get()
+    ));
+}
+
 } /* namespace mux */

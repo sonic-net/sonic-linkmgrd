@@ -73,6 +73,7 @@ public:
 
     link_prober::LinkProberState::Label getPeerLinkProberState() { return getActiveActiveStateMachinePtr()->mPeerLinkProberState; };
     mux_state::MuxState::Label getPeerMuxState() { return getActiveActiveStateMachinePtr()->mPeerMuxState; };
+    uint32_t getActiveStandbyStateMachineSuspendBackoffFactor() { return getActiveStandbyStateMachinePtr()->mUnknownActiveUpBackoffFactor; }
 
     inline void initLinkProberActiveActive();
     inline void initLinkProberActiveStandby();

@@ -336,6 +336,15 @@ void LinkManagerStateMachineBase::handleResetLinkProberPckLossCount()
     MUXLOGINFO(mMuxPortConfig.getPortName());
 }
 
+// ---> handleResetSuspendTimer();
+//
+// reset the heartbeat suspend timer
+//
+void LinkManagerStateMachineBase::handleResetSuspendTimer()
+{
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+}
+
 //
 // ---> postMuxStateEvent(mux_state::MuxState::Label label)
 //

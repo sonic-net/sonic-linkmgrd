@@ -495,6 +495,17 @@ public:
      */
     void handleTsaEnableNotification(bool enable);
 
+    /**
+    *@method processResetSuspendTimer
+    *
+    *@brief process suspend timer reset requests
+    *
+    *@param portNames (in)  mux ports to reset the suspend timer
+    *
+    *@return none
+    */
+    void processResetSuspendTimer(const std::vector<std::string> &portNames);
+
 private:
     /**
     *@method getMuxPortCableType
