@@ -903,9 +903,11 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"interval_v4", "abc"}}},
         {"LINK_PROBER", "SET", {{"src_mac", "ToRMac"}}},
         {"LINK_PROBER", "SET", {{"interval_pck_loss_count_update", "900"}}},
+        {"LINK_PROBER", "SET", {{"reset_suspend_timer", "Ethernet0"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
     processMuxLinkmgrConfigNotifiction(entries);
+    runIoService(2);
 
     EXPECT_TRUE(getTimeoutIpv4_msec(port) == v4PorbeInterval);
     EXPECT_TRUE(getTimeoutIpv6_msec(port) == v6ProveInterval);

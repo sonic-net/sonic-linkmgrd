@@ -188,8 +188,9 @@ void LinkProber::startProbing()
 //
 void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
-    MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing") % mMuxPortConfig.getPortName());
+    MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing %dms") % mMuxPortConfig.getPortName() % suspendTime_msec);
 
+    // NOTE: the timer reset also cancels any pending async ops with ec as boost::asio::error::operation_aborted
     mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
     mSuspendTimer.async_wait(mStrand.wrap(boost::bind(
         &LinkProber::handleSuspendTimeout,
@@ -198,6 +199,7 @@ void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
     )));
 
     mSuspendTx = true;
+    mCancelSuspend = false;
 }
 
 //
@@ -210,6 +212,7 @@ void LinkProber::resumeTxProbes()
     MUXLOGWARNING(boost::format("%s: resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mSuspendTimer.cancel();
+    mCancelSuspend = true;
 }
 
 //
@@ -538,8 +541,8 @@ void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 
     mSuspendTx = false;
 
-    if (errorCode == boost::system::errc::success) {
-        // inform the composite state machine about Suspend timer expiry
+    if (errorCode == boost::system::errc::success || mCancelSuspend) {
+        // inform the composite state machine about Suspend timer expiry or cancel
         boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
         boost::asio::io_service &ioService = strand.context();
         ioService.post(strand.wrap(boost::bind(
@@ -549,6 +552,8 @@ void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
             LinkProberStateMachineBase::getSuspendTimerExpiredEvent()
         )));
     }
+
+    mCancelSuspend = false;
 }
 
 //

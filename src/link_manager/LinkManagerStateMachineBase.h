@@ -505,6 +505,15 @@ public:
      */
     virtual void handleResetLinkProberPckLossCount();
 
+    /**
+     * @method handleResetSuspendTimer
+     *
+     * @brief reset the heartbeat suspend timer
+     *
+     * @return none
+     */
+    virtual void handleResetSuspendTimer();
+
 public:
     /**
     *@method getLinkProberStateMachinePtr

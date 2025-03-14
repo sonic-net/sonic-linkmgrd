@@ -598,4 +598,21 @@ void MuxManager::handleTsaEnableNotification(bool enable)
     }
 }
 
+//
+// ---> processResetSuspendTimer
+//
+// process suspend timer reset requests
+//
+void MuxManager::processResetSuspendTimer(const std::vector<std::string> &portNames)
+{
+    for (const std::string &portName : portNames)
+    {
+        MUXLOGINFO(boost::format("%s: reset heartbeat suspend timer") % portName);
+        PortMapIterator portMapIterator = mPortMap.find(portName);
+        if (portMapIterator != mPortMap.end()) {
+            portMapIterator->second->handleResetSuspendTimer();
+        }
+    }
+}
+
 } /* namespace mux */

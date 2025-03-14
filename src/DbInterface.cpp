@@ -28,6 +28,7 @@
 #include <boost/bind/bind.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "swss/netdispatcher.h"
 #include "swss/netlink.h"
@@ -1050,6 +1051,10 @@ void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpField
                         mMuxManagerPtr->processSrcMac(v == "ToRMac");
                     } else if (f == "interval_pck_loss_count_update") {
                         mMuxManagerPtr->setLinkProberStatUpdateIntervalCount(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "reset_suspend_timer") {
+                        boost::tokenizer<> tok(v);
+                        std::vector<std::string> ports(tok.begin(), tok.end());
+                        mMuxManagerPtr->processResetSuspendTimer(ports);
                     }
 
                     MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %

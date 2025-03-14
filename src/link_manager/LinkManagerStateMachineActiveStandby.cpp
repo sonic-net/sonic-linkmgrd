@@ -958,6 +958,22 @@ void ActiveStandbyStateMachine::handleResetLinkProberPckLossCount()
     mResetIcmpPacketCountsFnPtr();
 }
 
+// ---> handleResetSuspendTimer();
+//
+// reset the heartbeat suspend timer
+//
+void ActiveStandbyStateMachine::handleResetSuspendTimer()
+{
+    MUXLOGDEBUG(boost::format("%s: reset heartbeat suspend timer") % mMuxPortConfig.getPortName());
+
+    if (ps(mCompositeState) == link_prober::LinkProberState::Label::Unknown &&
+        ms(mCompositeState) == mux_state::MuxState::Label::Active &&
+        ls(mCompositeState) == link_state::LinkState::Label::Up) {
+        mUnknownActiveUpBackoffFactor = 1;
+        mResumeTxFnPtr();
+    }
+}
+
 //
 // ---> updateMuxLinkmgrState();
 //

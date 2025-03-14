@@ -629,6 +629,7 @@ private:
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
 
+    bool mCancelSuspend = false;
     bool mSuspendTx = false;
     bool mShutdownTx = false;
     bool mDecreaseProbingInterval = false;

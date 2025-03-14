@@ -43,6 +43,7 @@ public:
     void handleProbeMuxState(std::string, uint32_t count = 0);
     void handleLinkState(std::string linkState, uint32_t count = 0);
     void handleMuxConfig(std::string config, uint32_t count = 0, bool poll = false);
+    void handleResetSuspendTimer(uint32_t count = 0);
     void activateStateMachine(bool enable_feature_default_route=false);
     void setMuxActive();
     void setMuxStandby();
