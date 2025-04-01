@@ -15,7 +15,7 @@
  */
 
 /*
- * LinkProber.cpp
+ * LinkProberSw.cpp
  *
  *  Created on: Oct 4, 2020
  *      Author: tamer
@@ -29,33 +29,17 @@
 #include <boost/bind/bind.hpp>
 
 #include "common/MuxLogger.h"
-#include "LinkProber.h"
+#include "LinkProberSw.h"
 #include "common/MuxException.h"
+#include "LinkProberStateMachineActiveActive.h"
+#include "LinkProberStateMachineActiveStandby.h"
 
 namespace link_prober
 {
 
-//
-// Berkeley Packet Filter program that captures incoming ICMP traffic
-//
-SockFilter LinkProber::mIcmpFilter[] = {
-    [0]  = {.code = 0x28, .jt = 0, .jf = 0,  .k = 0x0000000c},
-    [1]  = {.code = 0x15, .jt = 0, .jf = 10, .k = 0x00000800},
-    [2]  = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x0000001a},
-    [3]  = {.code = 0x15, .jt = 0, .jf = 8,  .k = 0x00000000},
-    [4]  = {.code = 0x30, .jt = 0, .jf = 0,  .k = 0x00000017},
-    [5]  = {.code = 0x15, .jt = 0, .jf = 6,  .k = 0x00000001},
-    [6]  = {.code = 0x28, .jt = 0, .jf = 0,  .k = 0x00000014},
-    [7]  = {.code = 0x45, .jt = 4, .jf = 0,  .k = 0x00001fff},
-    [8]  = {.code = 0xb1, .jt = 0, .jf = 0,  .k = 0x0000000e},
-    [9]  = {.code = 0x50, .jt = 0, .jf = 0,  .k = 0x0000000e},
-    [10] = {.code = 0x15, .jt = 0, .jf = 1,  .k = 0x00000000},
-    [11] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00040000},
-    [12] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000},
-};
 
 //
-// ---> LinkProber(
+// ---> LinkProberSw(
 //          common::MuxPortConfig &muxPortConfig,
 //          boost::asio::io_service &ioService,
 //          LinkProberStateMachineBase &linkProberStateMachine
@@ -63,59 +47,37 @@ SockFilter LinkProber::mIcmpFilter[] = {
 //
 // class constructor
 //
-LinkProber::LinkProber(
+LinkProberSw::LinkProberSw(
     common::MuxPortConfig &muxPortConfig,
     boost::asio::io_service &ioService,
     LinkProberStateMachineBase *linkProberStateMachinePtr
 ) :
-    mMuxPortConfig(muxPortConfig),
-    mIoService(ioService),
-    mLinkProberStateMachinePtr(linkProberStateMachinePtr),
-    mStrand(mIoService),
-    mDeadlineTimer(mIoService),
-    mSuspendTimer(mIoService),
-    mSwitchoverTimer(mIoService),
-    mStream(mIoService)
+    LinkProberBase(muxPortConfig, ioService, linkProberStateMachinePtr)
 {
-    try {
-        mSockFilterPtr = std::shared_ptr<SockFilter> (
-            new SockFilter[sizeof(mIcmpFilter) / sizeof(*mIcmpFilter)],
-            std::default_delete<SockFilter[]>()
-        );
-        memcpy(mSockFilterPtr.get(), mIcmpFilter, sizeof(mIcmpFilter));
-
-        mSockFilterProg.len = sizeof(mIcmpFilter) / sizeof(*mIcmpFilter);
-        mSockFilterProg.filter = mSockFilterPtr.get();
-    }
-    catch (const std::bad_alloc& ex) {
-        std::ostringstream errMsg;
-        errMsg << "Failed allocate memory. Exception details: " << ex.what();
-
-        throw MUX_ERROR(BadAlloc, errMsg.str());
-    }
-
     switch (mMuxPortConfig.getPortCableType()) {
         case common::MuxPortConfig::PortCableType::ActiveActive: {
             mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyReceivedActiveActive,
+                &LinkProberSw::reportHeartbeatReplyReceivedActiveActive,
                 this,
                 boost::placeholders::_1
             );
-            mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyNotReceivedActiveActive,
-                this
+            mReportHeartbeatReplyNotReceivedFuncPtr = boost::bind(
+                &LinkProberSw::reportHeartbeatReplyNotReceivedActiveActive,
+                this,
+                boost::placeholders::_1
             );
             break;
         }
         case common::MuxPortConfig::PortCableType::ActiveStandby: {
             mReportHeartbeatReplyReceivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyReceivedActiveStandby,
+                &LinkProberSw::reportHeartbeatReplyReceivedActiveStandby,
                 this,
                 boost::placeholders::_1
             );
-            mReportHeartbeatReplyNotRecivedFuncPtr = boost::bind(
-                &LinkProber::reportHeartbeatReplyNotReceivedActiveStandby,
-                this
+            mReportHeartbeatReplyNotReceivedFuncPtr = boost::bind(
+                &LinkProberSw::reportHeartbeatReplyNotReceivedActiveStandby,
+                this,
+                boost::placeholders::_1
             );
             break;
         }
@@ -130,7 +92,7 @@ LinkProber::LinkProber(
 //
 // initialize link prober sockets and builds ICMP packet
 //
-void LinkProber::initialize()
+void LinkProberSw::initialize()
 {
     SockAddrLinkLayer addr = {0};
     addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
@@ -167,520 +129,11 @@ void LinkProber::initialize()
 }
 
 //
-// ---> startProbing();
-//
-// start sending ICMP ECHOREQUEST packets
-//
-void LinkProber::startProbing()
-{
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
-    mStream.cancel();
-    sendHeartbeat();
-    startRecv();
-    startTimer();
-}
-
-//
-// ---> suspendTxProbes(uint32_t suspendTime_msec);
-//
-// suspend sending ICMP ECHOREQUEST packets
-//
-void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
-{
-    MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing %dms") % mMuxPortConfig.getPortName() % suspendTime_msec);
-
-    // NOTE: the timer reset also cancels any pending async ops with ec as boost::asio::error::operation_aborted
-    mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
-    mSuspendTimer.async_wait(mStrand.wrap(boost::bind(
-        &LinkProber::handleSuspendTimeout,
-        this,
-        boost::asio::placeholders::error
-    )));
-
-    mSuspendTx = true;
-    mCancelSuspend = false;
-}
-
-//
-// ---> resumeTxProbes();
-//
-// resume sending ICMP ECHOREQUEST packets
-//
-void LinkProber::resumeTxProbes()
-{
-    MUXLOGWARNING(boost::format("%s: resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
-
-    mSuspendTimer.cancel();
-    mCancelSuspend = true;
-}
-
-//
-// ---> updateEthernetFrame();
-//
-// update Ethernet frame of Tx Buffer
-//
-void LinkProber::updateEthernetFrame()
-{
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(&LinkProber::handleUpdateEthernetFrame, this)));
-}
-
-//
-// ---> probePeerTor();
-//
-// send an early HB to peer ToR
-//
-void LinkProber::probePeerTor()
-{
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, false)));
-}
-
-//
-// ---> detectLink();
-//
-// send HBs to detect the link status
-//
-void LinkProber::detectLink()
-{
-    boost::asio::io_service &ioService = mStrand.context();
-    for (uint32_t i = 0; i < mMuxPortConfig.getPositiveStateChangeRetryCount(); ++i)
-    {
-        ioService.post(mStrand.wrap(boost::bind(&LinkProber::sendHeartbeat, this, true)));
-    }
-}
-
-//
-// ---> sendPeerSwitchCommand();
-//
-// send send peer switch command
-//
-void LinkProber::sendPeerSwitchCommand()
-{
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(&LinkProber::handleSendSwitchCommand, this)));
-}
-
-//
-// ---> sendPeerProbeCommand();
-//
-// send peer probe command
-//
-void LinkProber::sendPeerProbeCommand()
-{
-    boost::asio::post(mStrand, boost::bind(&LinkProber::handleSendProbeCommand, this));
-}
-
-//
-// ---> handleUpdateEthernetFrame();
-//
-// update Ethernet frame of Tx Buffer
-//
-void LinkProber::handleUpdateEthernetFrame()
-{
-    initializeSendBuffer();
-}
-
-//
-// ---> handleSendSwitchCommand();
-//
-// send switch command to peer ToR
-//
-void LinkProber::handleSendSwitchCommand()
-{
-    initTxBufferTlvSendSwitch();
-
-    sendHeartbeat();
-
-    initTxBufferTlvSentinel();
-
-    // inform the composite state machine about command send completion
-    boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-    boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveCommandCompleteEvent&)>
-            (&LinkProberStateMachineBase::processEvent),
-        mLinkProberStateMachinePtr,
-        LinkProberStateMachineBase::getSwitchActiveCommandCompleteEvent()
-    )));
-}
-
-//
-// ---> handleSendProbeCommand();
-//
-// send probe command to peer ToR
-//
-void LinkProber::handleSendProbeCommand()
-{
-    initTxBufferTlvSendProbe();
-
-    sendHeartbeat();
-
-    initTxBufferTlvSentinel();
-}
-
-//
-// ---> sendHeartbeat(bool forceSend)
-//
-// send ICMP ECHOREQUEST packet
-//
-void LinkProber::sendHeartbeat(bool forceSend)
-{
-    MUXLOGTRACE(mMuxPortConfig.getPortName());
-
-    updateIcmpSequenceNo();
-    // check if suspend timer is running
-    if (forceSend || ((!mSuspendTx) && (!mShutdownTx))) {
-        boost::system::error_code errorCode;
-        mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
-
-        if (errorCode) {
-            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to send heartbeat! Error code: " + errorCode.message());
-        } else {
-            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Done sending data");
-        }
-    }
-}
-
-//
-// ---> handleTlvCommandRecv(Tlv *tlvPtr,, bool isPeer);
-//
-// handle packet reception
-//
-void LinkProber::handleTlvCommandRecv(
-    Tlv *tlvPtr,
-    bool isPeer
-)
-{
-    if (isPeer) {
-        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-
-        switch (static_cast<Command>(tlvPtr->command)) {
-            case Command::COMMAND_SWITCH_ACTIVE: {
-                boost::asio::post(mStrand, boost::bind(
-                    static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
-                    mLinkProberStateMachinePtr,
-                    LinkProberStateMachineBase::getSwitchActiveRequestEvent()
-                ));
-                break;
-            }
-            case Command::COMMAND_MUX_PROBE: {
-                boost::asio::post(mStrand, boost::bind(
-                    static_cast<void (LinkProberStateMachineBase::*) (MuxProbeRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
-                    mLinkProberStateMachinePtr,
-                    LinkProberStateMachineBase::getMuxProbeRequestEvent()
-                ));
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-}
-
-//
-// ---> handleRecv(const boost::system::error_code& errorCode, size_t bytesTransferred);
-//
-// handle packet reception
-//
-void LinkProber::handleRecv(
-    const boost::system::error_code& errorCode,
-    size_t bytesTransferred
-)
-{
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
-    if (!errorCode) {
-        iphdr *ipHeader = reinterpret_cast<iphdr *> (mRxBuffer.data() + sizeof(ether_header));
-        icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (
-            mRxBuffer.data() + sizeof(ether_header) + sizeof(iphdr)
-        );
-
-        MUXLOGTRACE(boost::format("%s: Got data from: %s, size: %d") %
-            mMuxPortConfig.getPortName() %
-            boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string() %
-            (bytesTransferred - sizeof(iphdr) - sizeof(ether_header))
-        );
-
-        IcmpPayload *icmpPayload = reinterpret_cast<IcmpPayload *> (
-            mRxBuffer.data() + mPacketHeaderSize
-        );
-
-        if (ntohl(icmpPayload->cookie) == IcmpPayload::getCookie() &&
-            ntohl(icmpPayload->version) <= IcmpPayload::getVersion() &&
-            ntohs(icmpHeader->un.echo.id) == mMuxPortConfig.getServerId()) {
-            MUXLOGTRACE(boost::format("%s: Valid ICMP Packet from %s") %
-                mMuxPortConfig.getPortName() %
-                mMuxPortConfig.getBladeIpv4Address().to_string()
-            );
-            bool isMatch = (memcmp(icmpPayload->uuid, IcmpPayload::getGuidData(), sizeof(icmpPayload->uuid)) == 0);
-            HeartbeatType heartbeatType;
-            if (isMatch) {
-                MUXLOGTRACE(boost::format("%s: Matching Guid") % mMuxPortConfig.getPortName());
-                // echo reply for an echo request generated by this/active ToR
-                mRxSelfSeqNo = mTxSeqNo;
-                heartbeatType = HeartbeatType::HEARTBEAT_SELF;
-            } else {
-                mRxPeerSeqNo = mTxSeqNo;
-                heartbeatType = HeartbeatType::HEARTBEAT_PEER;
-            }
-            mReportHeartbeatReplyReceivedFuncPtr(heartbeatType);
-
-            size_t nextTlvOffset = mTlvStartOffset;
-            size_t nextTlvSize = 0;
-            bool stopProcessTlv = false;
-            while ((nextTlvSize = findNextTlv(nextTlvOffset, bytesTransferred)) > 0 && !stopProcessTlv) {
-                Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + nextTlvOffset);
-                switch (nextTlvPtr->tlvhead.type) {
-                    case TlvType::TLV_COMMAND: {
-                        handleTlvCommandRecv(nextTlvPtr, !isMatch);
-                        break;
-                    }
-                    case TlvType::TLV_SENTINEL: {
-                        // sentinel TLV, stop processing
-                        stopProcessTlv = true;
-                        break;
-                    }
-                    default: {
-                        // try to skip unknown TLV with valid length(>0)
-                        stopProcessTlv = (nextTlvSize == sizeof(Tlv));
-                        break;
-                    }
-                }
-                nextTlvOffset += nextTlvSize;
-            }
-
-            if (nextTlvOffset < bytesTransferred) {
-                size_t BytesNotProcessed = bytesTransferred - nextTlvOffset;
-                MUXLOGTRACE(boost::format("%s: %d bytes in RxBuffer not processed") %
-                    mMuxPortConfig.getPortName() %
-                    BytesNotProcessed
-                );
-            }
-        } else {
-            // Unknown ICMP packet, ignore.
-            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to receive heartbeat! Error code: " + errorCode.message());
-        }
-        // start another receive to consume as much as possible of backlog packets if any
-        startRecv();
-    }
-}
-
-//
-// ---> handleInitRecv(const boost::system::error_code& errorCode, size_t bytesTransferred);
-//
-// handle packet reception
-//
-void LinkProber::handleInitRecv(
-    const boost::system::error_code& errorCode,
-    size_t bytesTransferred
-)
-{
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
-    if (errorCode != boost::asio::error::operation_aborted) {
-        ether_header *ethHeader = reinterpret_cast<ether_header *> (mRxBuffer.data());
-        std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
-
-        memcpy(macAddress.data(), ethHeader->ether_shost, macAddress.size());
-
-        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-        boost::asio::io_service &ioService = strand.context();
-        ioService.post(strand.wrap(boost::bind(
-            &LinkProberStateMachineBase::handleMackAddressUpdate,
-            mLinkProberStateMachinePtr,
-            macAddress
-        )));
-    }
-}
-
-//
-// ---> handleTimeout(boost::system::error_code ec);
-//
-// handle ICMP packet reception timeout
-//
-void LinkProber::handleTimeout(boost::system::error_code errorCode)
-{
-    MUXLOGTRACE(boost::format("%s: server: %d, mRxSelfSeqNo: %d, mRxPeerSeqNo: %d, mTxSeqNo: %d") %
-        mMuxPortConfig.getPortName() %
-        mMuxPortConfig.getServerId() %
-        mRxSelfSeqNo %
-        mRxPeerSeqNo %
-        mTxSeqNo
-    );
-
-    mStream.cancel();
-    mReportHeartbeatReplyNotRecivedFuncPtr();
-
-    mIcmpPacketCount++;
-    if (mIcmpPacketCount % mMuxPortConfig.getLinkProberStatUpdateIntervalCount() == 0) {
-        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-        boost::asio::io_service &ioService = strand.context();
-        ioService.post(strand.wrap(boost::bind(
-            &LinkProberStateMachineBase::handlePckLossRatioUpdate,
-            mLinkProberStateMachinePtr,
-            mIcmpUnknownEventCount,
-            mIcmpPacketCount
-        )));
-    }
-
-    // start another cycle of send/recv
-    startProbing();
-}
-
-//
-// ---> handleSuspendTimeout(boost::system::error_code errorCode);
-//
-// handle suspend timer timeout
-//
-void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
-{
-    MUXLOGWARNING(boost::format("%s: suspend timeout, resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
-
-    mSuspendTx = false;
-
-    if (errorCode == boost::system::errc::success || mCancelSuspend) {
-        // inform the composite state machine about Suspend timer expiry or cancel
-        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-        boost::asio::io_service &ioService = strand.context();
-        ioService.post(strand.wrap(boost::bind(
-            static_cast<void (LinkProberStateMachineBase::*) (SuspendTimerExpiredEvent&)>
-                (&LinkProberStateMachineBase::processEvent),
-            mLinkProberStateMachinePtr,
-            LinkProberStateMachineBase::getSuspendTimerExpiredEvent()
-        )));
-    }
-
-    mCancelSuspend = false;
-}
-
-//
-// ---> startRecv();
-//
-// start ICMP ECHOREPLY reception
-//
-void LinkProber::startRecv()
-{
-    MUXLOGTRACE(mMuxPortConfig.getPortName());
-
-
-    mStream.async_read_some(
-        boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
-        mStrand.wrap(boost::bind(
-            &LinkProber::handleRecv,
-            this,
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred
-        ))
-    );
-}
-
-//
-// ---> startInitRecv();
-//
-// start ICMP ECHOREPLY reception
-//
-void LinkProber::startInitRecv()
-{
-    MUXLOGTRACE(mMuxPortConfig.getPortName());
-
-    mStream.async_read_some(
-        boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
-        mStrand.wrap(boost::bind(
-            &LinkProber::handleInitRecv,
-            this,
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred
-        ))
-    );
-}
-
-//
-// ---> startTimer();
-//
-// start ICMP ECHOREPLY timeout timer
-//
-void LinkProber::startTimer()
-{
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    // time out these heartbeats
-    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
-    mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
-        &LinkProber::handleTimeout,
-        this,
-        boost::asio::placeholders::error
-    )));
-}
-
-//
-// ---> calculateChecksum(uint16_t *data, size_t size);
-//
-// calculate ICMP payload checksum
-//
-uint32_t LinkProber::calculateChecksum(uint16_t *data, size_t size)
-{
-    uint32_t sum = 0;
-
-    while (size > 1) {
-        sum += ntohs(*data++);
-        size -= sizeof(uint16_t);
-    }
-
-    if (size) {
-        sum += ntohs(static_cast<uint16_t> ((*reinterpret_cast<uint8_t *> (data))));
-    }
-
-    return sum;
-}
-
-//
-// ---> addChecksumCarryover(uint16_t *checksum, uint32_t sum);
-//
-// add checksum carryover
-//
-void LinkProber::addChecksumCarryover(uint16_t *checksum, uint32_t sum)
-{
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-    *checksum = htons(~sum);
-}
-
-//
-// ---> computeChecksum(icmphdr *icmpHeader, size_t size);
-//
-// compute ICMP checksum
-//
-void LinkProber::computeChecksum(icmphdr *icmpHeader, size_t size)
-{
-    icmpHeader->checksum = 0;
-    mIcmpChecksum = calculateChecksum(
-        reinterpret_cast<uint16_t *> (icmpHeader), size
-    );
-    addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
-}
-
-//
-// ---> computeChecksum(iphdr *ipHeader, size_t size);
-//
-// compute IPv4 checksum
-//
-void LinkProber::computeChecksum(iphdr *ipHeader, size_t size)
-{
-    ipHeader->check = 0;
-    mIpChecksum = calculateChecksum(
-        reinterpret_cast<uint16_t *> (ipHeader), size
-    );
-    addChecksumCarryover(&ipHeader->check, mIpChecksum);
-}
-
-//
 // ---> initializeSendBuffer();
 //
 // initialize ICMP packet once
 //
-void LinkProber::initializeSendBuffer()
+void LinkProberSw::initializeSendBuffer()
 {
     ether_header *ethHeader = reinterpret_cast<ether_header *> (mTxBuffer.data());
     memcpy(ethHeader->ether_dhost, mMuxPortConfig.getBladeMacAddress().data(), sizeof(ethHeader->ether_dhost));
@@ -694,7 +147,8 @@ void LinkProber::initializeSendBuffer()
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
 
-    new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
+    IcmpPayload *payloadPtr  = new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
+    memcpy(payloadPtr->uuid, mSelfUUID.data, sizeof(payloadPtr->uuid));
     resetTxBufferTlv();
     appendTlvSentinel();
     size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
@@ -721,11 +175,328 @@ void LinkProber::initializeSendBuffer()
 }
 
 //
+// ---> appendTlvSentinel
+//
+// Append TlvSentinel to the end of txBuffer
+//
+size_t LinkProberSw::appendTlvSentinel()
+{
+    size_t tlvSize = sizeof(TlvHead);
+    assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
+    Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
+    tlvPtr->tlvhead.type = TlvType::TLV_SENTINEL;
+    tlvPtr->tlvhead.length = 0;
+    mTxPacketSize += tlvSize;
+    return tlvSize;
+}
+
+
+//
+// ---> startProbing();
+//
+// start sending ICMP ECHOREQUEST packets
+//
+void LinkProberSw::startProbing()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    mStream.cancel();
+    sendHeartbeat();
+    startRecv();
+    startTimer();
+}
+
+//
+// ---> suspendTxProbes(uint32_t suspendTime_msec);
+//
+// suspend sending ICMP ECHOREQUEST packets
+//
+void LinkProberSw::suspendTxProbes(uint32_t suspendTime_msec)
+{
+    MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing %dms") % mMuxPortConfig.getPortName() % suspendTime_msec);
+
+    // NOTE: the timer reset also cancels any pending async ops with ec as boost::asio::error::operation_aborted
+    mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
+    mSuspendTimer.async_wait(mStrand.wrap(boost::bind(
+        &LinkProberSw::handleSuspendTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
+
+    mSuspendTx = true;
+    mCancelSuspend = false;
+}
+
+//
+// ---> resumeTxProbes();
+//
+// resume sending ICMP ECHOREQUEST packets
+//
+void LinkProberSw::resumeTxProbes()
+{
+    MUXLOGWARNING(boost::format("%s: resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
+
+    mSuspendTimer.cancel();
+    mCancelSuspend = true;
+}
+
+//
+// ---> updateEthernetFrame();
+//
+// update Ethernet frame of Tx Buffer
+//
+void LinkProberSw::updateEthernetFrame()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(&LinkProberSw::handleUpdateEthernetFrame, this)));
+}
+
+//
+// ---> probePeerTor();
+//
+// send an early HB to peer ToR
+//
+void LinkProberSw::probePeerTor()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(&LinkProberSw::sendHeartbeat, this, false)));
+}
+
+//
+// ---> detectLink();
+//
+// send HBs to detect the link status
+//
+void LinkProberSw::detectLink()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    for (uint32_t i = 0; i < mMuxPortConfig.getPositiveStateChangeRetryCount(); ++i)
+    {
+        ioService.post(mStrand.wrap(boost::bind(&LinkProberSw::sendHeartbeat, this, true)));
+    }
+}
+
+//
+// ---> sendPeerSwitchCommand();
+//
+// send send peer switch command
+//
+void LinkProberSw::sendPeerSwitchCommand()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(&LinkProberSw::handleSendSwitchCommand, this)));
+}
+
+//
+// ---> sendPeerProbeCommand();
+//
+// send peer probe command
+//
+void LinkProberSw::sendPeerProbeCommand()
+{
+    boost::asio::post(mStrand, boost::bind(&LinkProberSw::handleSendProbeCommand, this));
+}
+
+//
+// ---> handleUpdateEthernetFrame();
+//
+// update Ethernet frame of Tx Buffer
+//
+void LinkProberSw::handleUpdateEthernetFrame()
+{
+    initializeSendBuffer();
+}
+
+//
+// ---> handleSendSwitchCommand();
+//
+// send switch command to peer ToR
+//
+void LinkProberSw::handleSendSwitchCommand()
+{
+    initTxBufferTlvSendSwitch();
+
+    sendHeartbeat();
+
+    initTxBufferTlvSentinel();
+
+    // inform the composite state machine about command send completion
+    boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveCommandCompleteEvent&)>
+            (&LinkProberStateMachineBase::processEvent),
+        mLinkProberStateMachinePtr,
+        LinkProberStateMachineBase::getSwitchActiveCommandCompleteEvent()
+    )));
+}
+
+//
+// ---> handleSendProbeCommand();
+//
+// send probe command to peer ToR
+//
+void LinkProberSw::handleSendProbeCommand()
+{
+    initTxBufferTlvSendProbe();
+
+    sendHeartbeat();
+
+    initTxBufferTlvSentinel();
+}
+
+//
+// ---> sendHeartbeat(bool forceSend)
+//
+// send ICMP ECHOREQUEST packet
+//
+void LinkProberSw::sendHeartbeat(bool forceSend)
+{
+    MUXLOGTRACE(mMuxPortConfig.getPortName());
+
+    updateIcmpSequenceNo();
+    // check if suspend timer is running
+    if (forceSend || ((!mSuspendTx) && (!mShutdownTx))) {
+        boost::system::error_code errorCode;
+        mStream.write_some(boost::asio::buffer(mTxBuffer.data(), mTxPacketSize), errorCode);
+
+        if (errorCode) {
+            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Failed to send heartbeat! Error code: " + errorCode.message());
+        } else {
+            MUXLOGTRACE(mMuxPortConfig.getPortName() + ": Done sending data");
+        }
+    }
+}
+
+//
+// ---> handleTimeout(boost::system::error_code ec);
+//
+// handle ICMP packet reception timeout
+//
+void LinkProberSw::handleTimeout(boost::system::error_code errorCode)
+{
+    MUXLOGTRACE(boost::format("%s: server: %d, mRxSelfSeqNo: %d, mRxPeerSeqNo: %d, mTxSeqNo: %d") %
+        mMuxPortConfig.getPortName() %
+        mMuxPortConfig.getServerId() %
+        mRxSelfSeqNo %
+        mRxPeerSeqNo %
+        mTxSeqNo
+    );
+
+    mStream.cancel();
+    mReportHeartbeatReplyNotReceivedFuncPtr(HeartbeatType::HEARTBEAT_SELF);
+
+    mIcmpPacketCount++;
+    if (mIcmpPacketCount % mMuxPortConfig.getLinkProberStatUpdateIntervalCount() == 0) {
+        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+        boost::asio::io_service &ioService = strand.context();
+        ioService.post(strand.wrap(boost::bind(
+            &LinkProberStateMachineBase::handlePckLossRatioUpdate,
+            mLinkProberStateMachinePtr,
+            mIcmpUnknownEventCount,
+            mIcmpPacketCount
+        )));
+    }
+
+    // start another cycle of send/recv
+    startProbing();
+}
+
+//
+// ---> handleSuspendTimeout(boost::system::error_code errorCode);
+//
+// handle suspend timer timeout
+//
+void LinkProberSw::handleSuspendTimeout(boost::system::error_code errorCode)
+{
+    MUXLOGWARNING(boost::format("%s: suspend timeout, resume ICMP heartbeat probing") % mMuxPortConfig.getPortName());
+
+    mSuspendTx = false;
+
+    if (errorCode == boost::system::errc::success || mCancelSuspend) {
+        // inform the composite state machine about Suspend timer expiry or cancel
+        boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+        boost::asio::io_service &ioService = strand.context();
+        ioService.post(strand.wrap(boost::bind(
+            static_cast<void (LinkProberStateMachineBase::*) (SuspendTimerExpiredEvent&)>
+                (&LinkProberStateMachineBase::processEvent),
+            mLinkProberStateMachinePtr,
+            LinkProberStateMachineBase::getSuspendTimerExpiredEvent()
+        )));
+    }
+    mCancelSuspend = false;
+}
+
+
+//
+// ---> calculateChecksum(uint16_t *data, size_t size);
+//
+// calculate ICMP payload checksum
+//
+uint32_t LinkProberSw::calculateChecksum(uint16_t *data, size_t size)
+{
+    uint32_t sum = 0;
+
+    while (size > 1) {
+        sum += ntohs(*data++);
+        size -= sizeof(uint16_t);
+    }
+
+    if (size) {
+        sum += ntohs(static_cast<uint16_t> ((*reinterpret_cast<uint8_t *> (data))));
+    }
+
+    return sum;
+}
+
+//
+// ---> addChecksumCarryover(uint16_t *checksum, uint32_t sum);
+//
+// add checksum carryover
+//
+void LinkProberSw::addChecksumCarryover(uint16_t *checksum, uint32_t sum)
+{
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
+    *checksum = htons(~sum);
+}
+
+//
+// ---> computeChecksum(icmphdr *icmpHeader, size_t size);
+//
+// compute ICMP checksum
+//
+void LinkProberSw::computeChecksum(icmphdr *icmpHeader, size_t size)
+{
+    icmpHeader->checksum = 0;
+    mIcmpChecksum = calculateChecksum(
+        reinterpret_cast<uint16_t *> (icmpHeader), size
+    );
+    addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
+}
+
+//
+// ---> computeChecksum(iphdr *ipHeader, size_t size);
+//
+// compute IPv4 checksum
+//
+void LinkProberSw::computeChecksum(iphdr *ipHeader, size_t size)
+{
+    ipHeader->check = 0;
+    mIpChecksum = calculateChecksum(
+        reinterpret_cast<uint16_t *> (ipHeader), size
+    );
+    addChecksumCarryover(&ipHeader->check, mIpChecksum);
+}
+
+
+
+//
 // ---> updateIcmpSequenceNo();
 //
 // update ICMP packet checksum, used before sending new heartbeat
 //
-void LinkProber::updateIcmpSequenceNo()
+void LinkProberSw::updateIcmpSequenceNo()
 {
     // update received sequence to avoid reporting invalid ICMP event when sequence number rolls over
     mRxPeerSeqNo = mTxSeqNo;
@@ -738,29 +509,11 @@ void LinkProber::updateIcmpSequenceNo()
 }
 
 //
-// ---> findNextTlv
-//
-// Find next TLV to process in rxBuffer
-//
-size_t LinkProber::findNextTlv(size_t readOffset, size_t bytesTransferred)
-{
-    size_t tlvSize = 0;
-    if (readOffset + sizeof(TlvHead) <= bytesTransferred) {
-        Tlv *tlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + readOffset);
-        tlvSize = (sizeof(TlvHead) + ntohs(tlvPtr->tlvhead.length));
-        if (readOffset + tlvSize > bytesTransferred) {
-            tlvSize = 0;
-        }
-    }
-    return tlvSize;
-}
-
-//
 // ---> appendTlvCommand
 //
 // Append TlvCommand to the end of txBuffer
 //
-size_t LinkProber::appendTlvCommand(Command commandType)
+size_t LinkProberSw::appendTlvCommand(Command commandType)
 {
     size_t tlvSize = sizeof(TlvHead) + sizeof(Command);
     assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
@@ -772,28 +525,14 @@ size_t LinkProber::appendTlvCommand(Command commandType)
     return tlvSize;
 }
 
-//
-// ---> appendTlvSentinel
-//
-// Append TlvSentinel to the end of txBuffer
-//
-size_t LinkProber::appendTlvSentinel()
-{
-    size_t tlvSize = sizeof(TlvHead);
-    assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
-    Tlv *tlvPtr = reinterpret_cast<Tlv *> (mTxBuffer.data() + mTxPacketSize);
-    tlvPtr->tlvhead.type = TlvType::TLV_SENTINEL;
-    tlvPtr->tlvhead.length = 0;
-    mTxPacketSize += tlvSize;
-    return tlvSize;
-}
+
 
 //
 // ---> appendTlvDummy
 //
 // Append a dummy TLV, test purpose only
 //
-size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
+size_t LinkProberSw::appendTlvDummy(size_t paddingSize, int seqNo)
 {
     size_t tlvSize = sizeof(TlvHead) + paddingSize + sizeof(uint32_t);
     assert(mTxPacketSize + tlvSize <= MUX_MAX_ICMP_BUFFER_SIZE);
@@ -811,7 +550,7 @@ size_t LinkProber::appendTlvDummy(size_t paddingSize, int seqNo)
 //
 // Initialize TX buffer TLVs to send switch command to peer
 //
-void LinkProber::initTxBufferTlvSendSwitch()
+void LinkProberSw::initTxBufferTlvSendSwitch()
 {
     resetTxBufferTlv();
     appendTlvCommand(Command::COMMAND_SWITCH_ACTIVE);
@@ -825,7 +564,7 @@ void LinkProber::initTxBufferTlvSendSwitch()
 //
 // Initialize TX buffer TLVs to send probe command to peer
 //
-void LinkProber::initTxBufferTlvSendProbe()
+void LinkProberSw::initTxBufferTlvSendProbe()
 {
     resetTxBufferTlv();
     appendTlvCommand(Command::COMMAND_MUX_PROBE);
@@ -839,7 +578,7 @@ void LinkProber::initTxBufferTlvSendProbe()
 //
 // Initialize TX buffer to have only TLV sentinel
 //
-void LinkProber::initTxBufferTlvSentinel()
+void LinkProberSw::initTxBufferTlvSentinel()
 {
     resetTxBufferTlv();
     appendTlvSentinel();
@@ -852,7 +591,7 @@ void LinkProber::initTxBufferTlvSentinel()
 //
 // Calculate TX packet checksums in both IP header and ICMP header
 //
-void LinkProber::calculateTxPacketChecksum()
+void LinkProberSw::calculateTxPacketChecksum()
 {
     size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
@@ -867,7 +606,7 @@ void LinkProber::calculateTxPacketChecksum()
 //
 // reset Icmp packet counts, post a pck loss ratio update immediately 
 //
-void LinkProber::resetIcmpPacketCounts()
+void LinkProberSw::resetIcmpPacketCounts()
 {
     mIcmpUnknownEventCount = 0;
     mIcmpPacketCount = 0;
@@ -882,14 +621,24 @@ void LinkProber::resetIcmpPacketCounts()
     )));
 }
 
-void LinkProber::shutdownTxProbes()
+// 
+// ---> shutdownTxProbes();
+//
+// stop sending ICMP ECHOREQUEST packets
+//
+void LinkProberSw::shutdownTxProbes()
 {
     MUXLOGWARNING(boost::format("%s: shutdown ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
     mShutdownTx = true;
 }
 
-void LinkProber::restartTxProbes()
+// 
+// ---> restartTxProbes();
+//
+// first stop sending and then again resume sending ICMP ECHOREQUEST packets
+//
+void LinkProberSw::restartTxProbes()
 {
     MUXLOGWARNING(boost::format("%s: restart ICMP heartbeat probing") % mMuxPortConfig.getPortName());
 
@@ -901,13 +650,13 @@ void LinkProber::restartTxProbes()
 //
 //  adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
 //
-void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
+void LinkProberSw::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     mSwitchoverTimer.expires_from_now(boost::posix_time::milliseconds(switchTime_msec));
     mSwitchoverTimer.async_wait(mStrand.wrap(boost::bind(
-        &LinkProber::handleSwitchoverTimeout,
+        &LinkProberSw::handleSwitchoverTimeout,
         this,
         boost::asio::placeholders::error
     )));
@@ -919,7 +668,7 @@ void LinkProber::decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)
 //
 // revert probe interval change after switchover is completed
 // 
-void LinkProber::revertProbeIntervalAfterSwitchComplete()
+void LinkProberSw::revertProbeIntervalAfterSwitchComplete()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
@@ -932,7 +681,7 @@ void LinkProber::revertProbeIntervalAfterSwitchComplete()
 //
 // handle switchover time out 
 // 
-void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
+void LinkProberSw::handleSwitchoverTimeout(boost::system::error_code errorCode)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
@@ -943,22 +692,11 @@ void LinkProber::handleSwitchoverTimeout(boost::system::error_code errorCode)
 }
 
 //
-// ---> getProbingInterval
-// 
-// get link prober interval
-//
-inline uint32_t LinkProber::getProbingInterval()
-{
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
-}
-
-//
 // ---> reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType)
 //
 // report heartbeat reply received to active-standby mode link prober state machine
 //
-void LinkProber::reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType)
+void LinkProberSw::reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType)
 {
     if (mTxSeqNo == mRxSelfSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpSelfEvent());
@@ -972,7 +710,7 @@ void LinkProber::reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbe
 //
 // report heartbeat reply received to active-active mode link prober state machine
 //
-void LinkProber::reportHeartbeatReplyNotReceivedActiveStandby()
+void LinkProberSw::reportHeartbeatReplyNotReceivedActiveStandby(HeartbeatType heartbeatType)
 {
     if (mTxSeqNo != mRxSelfSeqNo && mTxSeqNo != mRxPeerSeqNo) {
         // post unknown event
@@ -986,7 +724,7 @@ void LinkProber::reportHeartbeatReplyNotReceivedActiveStandby()
 //
 // report heartbeat reply not received to active-standby mode link prober state machine
 //
-void LinkProber::reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType)
+void LinkProberSw::reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType)
 {
     if (heartbeatType == HeartbeatType::HEARTBEAT_SELF && mTxSeqNo == mRxSelfSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpSelfEvent());
@@ -1001,7 +739,7 @@ void LinkProber::reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbea
 //
 // report heartbeat reply not received to active-active mode link prober state machine
 //
-void LinkProber::reportHeartbeatReplyNotReceivedActiveActive()
+void LinkProberSw::reportHeartbeatReplyNotReceivedActiveActive(HeartbeatType heartbeatType)
 {
     if (mTxSeqNo != mRxSelfSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpUnknownEvent());
@@ -1010,6 +748,23 @@ void LinkProber::reportHeartbeatReplyNotReceivedActiveActive()
     if (mTxSeqNo != mRxPeerSeqNo) {
         mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
     }
+}
+
+//
+// ---> startTimer();
+//
+// start ICMP ECHOREPLY timeout timer
+//
+void LinkProberSw::startTimer()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    // time out these heartbeats
+    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
+    mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
+        &LinkProberSw::handleTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
 }
 
 } /* namespace link_prober */

@@ -43,9 +43,9 @@ MuxManager::MuxManager() :
     mMuxConfig(),
     mWork(mIoService),
     mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),
-    mDbInterfacePtr(std::make_shared<mux::DbInterface> (this, &mIoService)),
     mStrand(mIoService),
-    mReconciliationTimer(mIoService)
+    mReconciliationTimer(mIoService),
+    mDbInterfacePtr(std::make_shared<mux::DbInterface> (this, &mIoService))
 {
     mSignalSet.add(SIGUSR1);
     mSignalSet.add(SIGUSR2);
@@ -237,11 +237,45 @@ void MuxManager::updatePortCableType(const std::string &portName, const std::str
     mPortCableTypeMap.insert(PortCableTypeMap::value_type(portName, portCableType));
 }
 
-// 
+//
+// ---> updateLinkFailureDetectionState(const std::string &portName, const std::string &linkFailureDetectionState, const std::string &session_type);
+//
+// updates the link state change in state_db for a ICMP_ECHO_SESSION
+//
+void MuxManager::updateLinkFailureDetectionState(const std::string &portName, const std::string &linkFailureDetectionState, const std::string &session_type)
+{
+    MUXLOGWARNING(boost::format("%s: link failure detection state for %s : %s") % portName % session_type %linkFailureDetectionState );
+    std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
+
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+            // notify link failure detection type for ports in active-active cable type
+            muxPortPtr->updateLinkFailureDetectionState(linkFailureDetectionState, session_type);
+    }
+}
+
+//
+// ---> updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType);
+//
+// Updates the link_failure_detection_type for link_prober
+//
+void MuxManager::updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType)
+{
+    MUXLOGWARNING(boost::format("%s: link failure detection type for : %s") % portName % linkFailureDetectionType );
+    std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
+    common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
+
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+            // notify link failure detection type for ports in active-active cable type
+            muxPortPtr->updateLinkFailureDetectionType(linkFailureDetectionType);
+    }
+}
+
+//
 // ---> resetPckLossCount(const std::string &portName);
 //
-// reset ICMP packet loss count 
-// 
+// reset ICMP packet loss count
+//
 void MuxManager::resetPckLossCount(const std::string &portName)
 {
     MUXLOGWARNING(boost::format("%s: reset ICMP packet loss count ") % portName);

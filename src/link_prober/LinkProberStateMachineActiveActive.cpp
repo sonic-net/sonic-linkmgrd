@@ -28,6 +28,7 @@ namespace link_prober
 //          link_manager::LinkManagerStateMachineBase &linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
+//          bool proberTypeHardware,
 //          LinkProberState::Label label
 //      );
 //
@@ -187,7 +188,7 @@ void LinkProberStateMachineActiveActive::processEvent(SuspendTimerExpiredEvent &
 void LinkProberStateMachineActiveActive::processEvent(MuxProbeRequestEvent &muxProbeRequestEvent)
 {
     boost::asio::io_service::strand &strand = mLinkManagerStateMachinePtr->getStrand();
-    boost::asio::post(mStrand, boost::bind(
+    boost::asio::post(strand, boost::bind(
         &link_manager::LinkManagerStateMachineBase::handleMuxProbeRequestEvent,
         mLinkManagerStateMachinePtr
     ));

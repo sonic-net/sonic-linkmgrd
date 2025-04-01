@@ -69,6 +69,30 @@ public:
 };
 
 /**
+ *@class IcmpWaitEvent
+ *
+ *@brief signals a IcmpWaitEvent event to LinkProber state machine
+ */
+class IcmpWaitEvent
+{
+public:
+    IcmpWaitEvent() = default;
+    ~IcmpWaitEvent() = default;
+};
+
+/**
+ *@class IcmpPeerWaitEvent
+ *
+ *@brief signals a IcmpPeerWaitEvent event to LinkProber state machine
+ */
+class IcmpPeerWaitEvent
+{
+public:
+    IcmpPeerWaitEvent() = default;
+    ~IcmpPeerWaitEvent() = default;
+};
+
+/**
  *@class IcmpPeerActiveEvent
  *
  *@brief signals a IcmpPeerActiveEvent event to LinkProber state machine
@@ -489,6 +513,25 @@ public:
      */
     static IcmpPeerUnknownEvent &getIcmpPeerUnknownEvent() { return mIcmpPeerUnknownEvent; }
 
+     /**
+     *@method getIcmpWaitEvent
+     *
+     *@brief getter for IcmpPeerWaitEvent object
+     *
+     *@return pointer to IcmpPeerWaitEvent object
+     */
+    static IcmpPeerWaitEvent &getIcmpPeerWaitEvent() { return mIcmpPeerWaitEvent; }
+
+     /**
+     *@method getIcmpWaitEvent
+     *
+     *@brief getter for IcmpWaitEvent object
+     *
+     *@return pointer to IcmpWaitEvent object
+     */
+    static IcmpWaitEvent &getIcmpWaitEvent() { return mIcmpWaitEvent; }
+
+
 private:
     /**
      *@method postLinkManagerEvent
@@ -511,6 +554,8 @@ private:
     static MuxProbeRequestEvent mMuxProbeRequestEvent;
     static IcmpPeerActiveEvent mIcmpPeerActiveEvent;
     static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
+    static IcmpWaitEvent mIcmpWaitEvent;
+    static IcmpPeerWaitEvent mIcmpPeerWaitEvent;
 
 private:
     friend class LinkProberStateMachineActiveStandby;
