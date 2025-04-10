@@ -25,7 +25,12 @@
 #include <tuple>
 #include <vector>
 
-#include "link_prober/LinkProber.h"
+#include "link_prober/LinkProberBase.h"
+#include "link_prober/LinkProberSw.h"
+#include "link_prober/LinkProberHw.h"
+#include "link_prober/LinkProberStateMachineBase.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
+#include "link_prober/LinkProberStateMachineActiveActive.h"
 #include "link_prober/LinkProberState.h"
 #include "link_state/LinkState.h"
 #include "link_state/LinkStateMachine.h"
@@ -514,6 +519,17 @@ public:
      */
     virtual void handleResetSuspendTimer();
 
+    /**
+     * @method updateLinkFailureDetectionState
+     *
+     * @brief pdates link state to link prober
+     *
+     * @return none
+     */
+    virtual void updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, 
+        const std::string session_type) {
+    }
+
 public:
     /**
     *@method getLinkProberStateMachinePtr
@@ -550,6 +566,9 @@ public:
     *@return value of current default route state
     */
     DefaultRoute getDefaultRouteState() {return mDefaultRouteState;};
+
+protected:
+    mux::MuxPort *mMuxPortPtr;
 
 private:
     /**
@@ -642,9 +661,8 @@ private:
                                               [link_state::LinkState::Label::Count];
     LinkManagerStateMachineBase::CompositeState mCompositeState;
 
-    mux::MuxPort *mMuxPortPtr;
     std::shared_ptr<link_prober::LinkProberStateMachineBase> mLinkProberStateMachinePtr;
-    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
+    std::shared_ptr<link_prober::LinkProberBase> mLinkProberPtr = nullptr;
     mux_state::MuxStateMachine mMuxStateMachine;
     link_state::LinkStateMachine mLinkStateMachine;
 

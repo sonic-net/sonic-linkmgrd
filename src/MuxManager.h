@@ -506,6 +506,25 @@ public:
     */
     void processResetSuspendTimer(const std::vector<std::string> &portNames);
 
+   /**
+    * @method updateLinkFailureDetectionState
+    *
+    * @brief update state of ICMP_ECHO_SESSION
+    *
+    * @return none
+    */
+   void updateLinkFailureDetectionState(const std::string &portName, const std::string &linkFailureDetectionState,
+           const std::string &session_type);
+
+   /**
+    * @method updateLinkFailureDetectionType
+    *
+    * @brief updates link_failure_detection type for link_prober
+    *
+    * @return none
+    */
+   void updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType);
+
 private:
     /**
     *@method getMuxPortCableType
