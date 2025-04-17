@@ -21,7 +21,7 @@
 
 namespace link_manager
 {
-class LinkManagerStateMachineBase;
+    class LinkManagerStateMachineBase;
 }
 
 namespace link_prober
@@ -58,6 +58,7 @@ public:
      *@param linkManagerStateMachinePtr (in) pointer to LinkManagerStateMachineBase
      *@param strand (in)                     reference to boost serialization object
      *@param muxPortConfig (in)              reference to MuxPortConfig object
+     *@param proberTypeHardware (in)         if Link prober is running in hardware mode
      *@param label (in)                      state machine initial state
      */
     LinkProberStateMachineActiveActive(

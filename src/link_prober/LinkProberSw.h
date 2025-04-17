@@ -15,28 +15,16 @@
  */
 
 /*
- * LinkProber.h
+ * LinkProberSw.h
  *
  *  Created on: Oct 4, 2020
  *      Author: tamer
  */
 
-#ifndef LINKPROBER_H_
-#define LINKPROBER_H_
+#ifndef LINK_PROBER_LINKPROBERSW_H_
+#define LINK_PROBER_LINKPROBERSW_H_
 
-#include <memory>
-#include <stdint.h>
-#include <vector>
-#include <linux/filter.h>
-
-#include <common/BoostAsioBehavior.h>
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
-
-#include "IcmpPayload.h"
-#include "LinkProberStateMachineActiveActive.h"
-#include "LinkProberStateMachineActiveStandby.h"
-#include "common/MuxPortConfig.h"
+#include "LinkProberBase.h"
 
 namespace test {
 class LinkProberTest;
@@ -45,24 +33,8 @@ class LinkProberMockTest;
 
 namespace link_prober
 {
-using SockFilter = struct sock_filter;
-using SockFilterProg = struct sock_fprog;
-using SockAddrLinkLayer = struct sockaddr_ll;
-
 /**
- *@enum HeartbeatType
- *
- *@brief Received heartbeat type
- */
-enum class HeartbeatType: uint8_t {
-    HEARTBEAT_SELF,
-    HEARTBEAT_PEER,
-
-    Count
-};
-
-/**
- *@class LinkProber
+ *@class LinkProberSw
  *
  *@brief probes the server sing ICMP ECHPREQUEST packet. The packet payload
  *       holds GUID that identifies this ToR. Reception of this ToR's GUID
@@ -70,27 +42,27 @@ enum class HeartbeatType: uint8_t {
  *       GUID will indicate standby state. Lack of ICMP packets will signal
  *       that the link state is unknown.
  */
-class LinkProber
+class LinkProberSw : public LinkProberBase
 {
-public:
+public:    
     /**
-    *@method LinkProber
+    *@method LinkProberSw
     *
     *@brief class default constructor
     */
-    LinkProber() = delete;
+    LinkProberSw() = delete;
 
     /**
-    *@method LinkProber
+    *@method LinkProberSw
     *
     *@brief class copy constructor
     *
-    *@param LinkProber (in)  reference to LinkProber object to be copied
+    *@param LinkProberSw (in)  reference to LinkProberSw object to be copied
     */
-    LinkProber(const LinkProber &) = delete;
+    LinkProberSw(const LinkProberSw &) = delete;
 
     /**
-    *@method LinkProber
+    *@method LinkProberSw
     *
     *@brief class constructor
     *
@@ -98,149 +70,19 @@ public:
     *@param ioService (in)              reference to boost io_service object
     *@param linkProberStateMachinePtr (in) reference to LinkProberStateMachineBase object
     */
-    LinkProber(
+    LinkProberSw(
         common::MuxPortConfig &muxPortConfig,
         boost::asio::io_service &ioService,
         LinkProberStateMachineBase *linkProberStateMachinePtr
     );
 
     /**
-    *@method ~LinkProber
+    *@method ~LinkProberSw
     *
     *@brief class destructor
     */
-    virtual ~LinkProber() = default;
+    virtual ~LinkProberSw() = default;
 
-    /**
-    *@method initialize
-    *
-    *@brief initialize link prober sockets and builds ICMP packet
-    *
-    *@return none
-    */
-    void initialize();
-
-    /**
-    *@method startProbing
-    *
-    *@brief start probing server/blade using ICMP ECHOREQUEST
-    *
-    *@return none
-    */
-    void startProbing();
-
-    /**
-    *@method suspendTxProbes
-    *
-    *@brief suspend sending ICMP ECHOREQUEST packets
-    *
-    *@param suspendTime_msec suspension time in msec
-    *
-    *@return none
-    */
-    void suspendTxProbes(uint32_t suspendTime_msec);
-
-    /**
-    *@method resumeTxProbes
-    *
-    *@brief resume sending ICMP ECHOREQUEST packets
-    *
-    *@return none
-    */
-    void resumeTxProbes();
-
-    /**
-    *@method updateEthernetFrame
-    *
-    *@brief update Ethernet frame of Tx Buffer
-    *
-    *@return none
-    */
-    void updateEthernetFrame();
-
-    /**
-    *@method probePeerTor
-    *
-    *@brief send an early HB to peer ToR
-    *
-    *@return none
-    */
-    void probePeerTor();
-
-    /**
-    *@method detectLink
-    *
-    *@brief detect link status
-    *
-    *@return none
-    */
-    void detectLink();
-
-    /**
-    *@method sendPeerSwitchCommand
-    *
-    *@brief send switch command to peer ToR
-    *
-    *@return none
-    */
-    void sendPeerSwitchCommand();
-
-    /**
-    *@method sendPeerProbeCommand
-    *
-    *@brief send probe command to peer ToR
-    *
-    *@return none
-    */
-    void sendPeerProbeCommand();
-
-    /**
-     * @method resetIcmpPacketCounts()
-     * 
-     * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
-     * 
-     * @return none
-    */
-    void resetIcmpPacketCounts();
-
-    /**
-     * @method shutdownTxProbes
-     * 
-     * @brief stop sending ICMP ECHOREQUEST packets indefinitely.
-     * 
-     * @return none
-     */
-    void shutdownTxProbes();
-
-    /**
-     * @method restartTxProbes
-     * 
-     * @brief restart sending ICMP ECHOREQUEST packets
-     * 
-     * @return none
-     */
-    void restartTxProbes();
-
-    /**
-     * @method decreaseProbeIntervalAfterSwitch
-     *  
-     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
-     * 
-     * @param switchTime_msec (in) switchover is expected to complete  within this time window
-     * @param expectingLinkProberEvent (in) depends on which state LinkManager is switching to, link prober expects self or peer events
-     * 
-     * @return none
-     */
-    void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec);
-
-    /**
-     * @method revertProbeIntervalAfterSwitchComplete 
-     * 
-     * @brief revert probe interval change after switchover is completed
-     * 
-     * @return none
-     */
-    void revertProbeIntervalAfterSwitchComplete();
 
 private:
     /**
@@ -347,24 +189,6 @@ private:
     *@return none
     */
     void handleSuspendTimeout(boost::system::error_code errorCode);
-
-    /**
-    *@method startRecv
-    *
-    *@brief start ICMP ECHOREPLY reception
-    *
-    *@return none
-    */
-    void startRecv();
-
-    /**
-    *@method startInitRecv
-    *
-    *@brief start ICMP ECHOREPLY reception
-    *
-    *@return none
-    */
-    void startInitRecv();
 
     /**
     *@method startTimer
@@ -530,15 +354,6 @@ private:
     inline void calculateTxPacketChecksum();
 
     /**
-     * @method getProbingInterval
-     * 
-     * @brief get link prober interval
-     * 
-     * @return link prober interval
-     */
-    inline uint32_t getProbingInterval(); 
-
-    /**
      * @method handleSwitchoverTimeout
      * 
      * @brief handle switchover time out 
@@ -552,10 +367,139 @@ private:
     friend class test::LinkProberTest;
     friend class test::LinkProberMockTest;
 
-private:
-    static SockFilter mIcmpFilter[];
+public:
 
-private:
+    /**
+    *@method startProbing
+    *
+    *@brief start probing server/blade using ICMP ECHOREQUEST
+    *
+    *@return none
+    */
+    virtual void startProbing() override;
+
+    /**
+    *@method initialize
+    *
+    *@brief initialize link prober sockets and builds ICMP packet
+    *
+    *@return none
+    */
+    virtual void initialize() override;
+
+    /**
+    *@method suspendTxProbes
+    *
+    *@brief suspend sending ICMP ECHOREQUEST packets
+    *
+    *@param suspendTime_msec suspension time in msec
+    *
+    *@return none
+    */
+    virtual void suspendTxProbes(uint32_t suspendTime_msec) override;
+
+    /**
+    *@method resumeTxProbes
+    *
+    *@brief resume sending ICMP ECHOREQUEST packets
+    *
+    *@return none
+    */
+    virtual void resumeTxProbes() override;
+
+    /**
+    *@method probePeerTor
+    *
+    *@brief send an early HB to peer ToR
+    *
+    *@return none
+    */
+    virtual void probePeerTor() override;
+
+    /**
+    *@method updateEthernetFrame
+    *
+    *@brief update Ethernet frame of Tx Buffer
+    *
+    *@return none
+    */
+    virtual void updateEthernetFrame() override;
+
+    /**
+    *@method detectLink
+    *
+    *@brief detect link status
+    *
+    *@return none
+    */
+    virtual void detectLink() override;
+
+    /**
+    *@method sendPeerSwitchCommand
+    *
+    *@brief send switch command to peer ToR
+    *
+    *@return none
+    */
+    virtual void sendPeerSwitchCommand() override;
+
+    /**
+    *@method sendPeerProbeCommand
+    *
+    *@brief send probe command to peer ToR
+    *
+    *@return none
+    */
+    virtual void sendPeerProbeCommand() override;
+
+    /**
+     * @method resetIcmpPacketCounts()
+     * 
+     * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
+     * 
+     * @return none
+    */
+    virtual void resetIcmpPacketCounts() override;
+
+    /**
+    *@method shutdownTxProbes
+    *
+    *@brief stop sending ICMP ECHOREQUEST packets
+    *
+    *@return none
+    */
+    virtual void shutdownTxProbes() override;
+
+    /**
+    * @method restartTxProbes
+    * 
+    * @brief restart sending ICMP ECHOREQUEST packets
+    * 
+    * @return none
+    */
+    virtual void restartTxProbes() override;
+
+    /**
+     * @method decreaseProbeIntervalAfterSwitch
+     *  
+     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+     * 
+     * @param switchTime_msec (in) switchover is expected to complete  within this time window
+     * @param expectingLinkProberEvent (in) depends on which state LinkManager is switching to, link prober expects self or peer events
+     * 
+     * @return none
+     */
+    virtual void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)override;
+
+    /**
+     * @method revertProbeIntervalAfterSwitchComplete 
+     * 
+     * @brief revert probe interval change after switchover is completed
+     * 
+     * @return none
+     */
+    virtual void revertProbeIntervalAfterSwitchComplete() override;
+
     /**
      * @method reportHeartbeatReplyReceivedActiveStandby
      * 
@@ -563,18 +507,7 @@ private:
      * 
      * @return none
      */
-    void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType);
-
-    /**
-     * @method reportHeartbeatReplyReceivedActiveActive
-     * 
-     * @brief report heartbeat reply received to active-active mode link prober state machine
-     * 
-     * @param heartbeatType (in) received heartbeat type
-     *
-     * @return none
-     */
-    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
+    virtual void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType) ;
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveStandby
@@ -585,7 +518,18 @@ private:
      *
      * @return none
      */
-    void reportHeartbeatReplyNotReceivedActiveStandby();
+    virtual void reportHeartbeatReplyNotReceivedActiveStandby(HeartbeatType heartbeatType);
+
+    /**
+     * @method reportHeartbeatReplyReceivedActiveActive
+     * 
+     * @brief report heartbeat reply received to active-active mode link prober state machine
+     * 
+     * @param heartbeatType (in) received heartbeat type
+     *
+     * @return none
+     */
+    virtual void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType) ;
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveActive
@@ -594,48 +538,9 @@ private:
      * 
      * @return none
      */
-    void reportHeartbeatReplyNotReceivedActiveActive();
+    virtual void reportHeartbeatReplyNotReceivedActiveActive(HeartbeatType heartbeatType);
 
 private:
-    common::MuxPortConfig &mMuxPortConfig;
-    boost::asio::io_service &mIoService;
-    LinkProberStateMachineBase *mLinkProberStateMachinePtr;
-
-    boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
-    boost::function<void ()> mReportHeartbeatReplyNotRecivedFuncPtr;
-
-    uint16_t mTxSeqNo = 0xffff;
-    uint16_t mRxSelfSeqNo = 0;
-    uint16_t mRxPeerSeqNo = 0;
-
-    uint32_t mIcmpChecksum = 0;
-    uint32_t mIpChecksum = 0;
-
-    static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
-    static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
-
-    boost::asio::io_service::strand mStrand;
-    boost::asio::deadline_timer mDeadlineTimer;
-    boost::asio::deadline_timer mSuspendTimer;
-    boost::asio::deadline_timer mSwitchoverTimer;
-    boost::asio::posix::stream_descriptor mStream;
-
-    std::shared_ptr<SockFilter> mSockFilterPtr;
-    SockFilterProg mSockFilterProg;
-
-    int mSocket = 0;
-
-    std::size_t mTxPacketSize;
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
-
-    bool mCancelSuspend = false;
-    bool mSuspendTx = false;
-    bool mShutdownTx = false;
-    bool mDecreaseProbingInterval = false;
-
-    uint64_t mIcmpUnknownEventCount = 0;
-    uint64_t mIcmpPacketCount = 0;
 };
 
 } /* namespace link_prober */
