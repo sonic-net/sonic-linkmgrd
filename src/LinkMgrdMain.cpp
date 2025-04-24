@@ -35,7 +35,7 @@
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
 #include "link_prober/LinkProberStateMachineActiveActive.h"
 #include "link_prober/LinkProberStateMachineActiveStandby.h"
-#include "link_prober/LinkProberBase.h"
+#include "link_prober/LinkProber.h"
 #include "link_prober/IcmpPayload.h"
 
 // Private namespace for this module
@@ -127,6 +127,9 @@ int main(int argc, const char* argv[])
         std::stringstream ss;
         ss << "level: " << level;
         MUXLOGINFO(ss.str());
+
+        // initialize static data
+        link_prober::IcmpPayload::generateGuid();
 
         // warm restart static
         swss::WarmStart::initialize("linkmgrd", "mux");

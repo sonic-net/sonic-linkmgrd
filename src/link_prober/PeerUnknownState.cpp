@@ -77,23 +77,6 @@ LinkProberState* PeerUnknownState::handleEvent(IcmpPeerUnknownEvent &event)
 }
 
 //
-// ---> handleEvent(IcmpPeerWaitEvent &event);
-//
-// handle IcmpPeerWaitEvent from LinkProber
-//
-LinkProberState* PeerUnknownState::handleEvent(IcmpPeerWaitEvent &event)
-{
-    MUXLOGDEBUG(getMuxPortConfig().getPortName());
-
-    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
-    LinkProberState *nextState;
-
-    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerWaitState());
-    return nextState;
-
-}
-
-//
 // ---> resetState();
 //
 // reset current state attributes

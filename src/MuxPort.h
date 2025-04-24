@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 
+#include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachineBase.h"
 #include "link_manager/LinkManagerStateMachineActiveActive.h"
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
@@ -78,7 +79,7 @@ public:
     *@param ioService (in)      reference to Boost IO Service object
     */
     MuxPort(
-        std::shared_ptr<DbInterface> dbInterfacePtr,
+        std::shared_ptr<mux::DbInterface> dbInterfacePtr,
         common::MuxConfig &muxConfig,
         const std::string &portName,
         uint16_t serverId,
@@ -427,47 +428,6 @@ public:
      */
     void handleResetSuspendTimer();
 
-    /**
-     * @method updateLinkFailureDetectionState
-     *
-     * @brief handles link failure detection state update for port in active-active cable type
-     *
-     * @return none
-     */
-    void updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type);
-
-    /**
-     * @method updateLinkFailureDetectionType
-     *
-     * @brief link failure detection type update for port in active-active cable type
-     *
-     * @return none
-     */
-    void updateLinkFailureDetectionType(const std::string &linkFailureDetectionType);
-
-    /**
-     * @method createIcmpEchoSession
-     *
-     * @brief calls DbInterface API to create ICMO_ECHO_SESSION
-     *
-     * @return none
-     */
-    inline void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
-        mDbInterfacePtr->createIcmpEchoSession(key, std::move(entries));
-    }
-
-    /**
-     * @method deleteIcmpEchoSession
-     *
-     * @brief calls DbInterface API to delete ICMO_ECHO_SESSION
-     *
-     * @return none
-     */
-    inline void deleteIcmpEchoSession(std::string key) {
-        mDbInterfacePtr->deleteIcmpEchoSession(key);
-    }
-
-
 protected:
     friend class test::MuxManagerTest;
     friend class test::FakeMuxPort;
@@ -499,7 +459,7 @@ protected:
     void resetLinkManagerStateMachinePtr(link_manager::LinkManagerStateMachineBase *stateMachinePtr) { mLinkManagerStateMachinePtr.reset(stateMachinePtr); };
 
 private:
-    std::shared_ptr<DbInterface> mDbInterfacePtr = nullptr;
+    std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 

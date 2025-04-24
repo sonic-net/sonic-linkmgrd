@@ -39,8 +39,6 @@
 #include "MuxPort.h"
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
-#include "link_prober/LinkProberStateMachineActiveActive.h"
-#include "link_prober/LinkProberStateMachineActiveStandby.h"
 
 namespace mux
 {
@@ -119,36 +117,6 @@ void MuxPort::handleSoCIpv4AddressUpdate(boost::asio::ip::address address)
         mLinkManagerStateMachinePtr.get(),
         address
     ));
-}
-
-// ---> updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type);
-//
-// handles link failure detection state update for port in active-active cable type
-//
-void MuxPort::updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type)
-{
-    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
-
-    boost::asio::post(mStrand, boost::bind(
-        &link_manager::LinkManagerStateMachineBase::updateLinkFailureDetectionState,
-        mLinkManagerStateMachinePtr.get(),
-        linkFailureDetectionState,
-        session_type
-    ));
-}
-
-// ---> updateLinkFailureDetectionType(const std::string &linkFailureDetectionState);
-//
-// handles link failure detection type update for port in active-active cable type
-//
-void MuxPort::updateLinkFailureDetectionType(const std::string &linkFailureDetectionType)
-{
-    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
-    if(linkFailureDetectionType == "hardware"){
-        mMuxPortConfig.setLinkFailureDetectionTypeHw(true);
-    } else {
-        mMuxPortConfig.setLinkFailureDetectionTypeHw(false);
-    }
 }
 
 //

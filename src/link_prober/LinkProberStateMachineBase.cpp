@@ -36,9 +36,6 @@ SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
 MuxProbeRequestEvent LinkProberStateMachineBase::mMuxProbeRequestEvent;
 IcmpPeerActiveEvent LinkProberStateMachineBase::mIcmpPeerActiveEvent;
 IcmpPeerUnknownEvent LinkProberStateMachineBase::mIcmpPeerUnknownEvent;
-IcmpWaitEvent LinkProberStateMachineBase::mIcmpWaitEvent;
-IcmpPeerWaitEvent LinkProberStateMachineBase::mIcmpPeerWaitEvent;
-
 
 LinkProberStateMachineBase::LinkProberStateMachineBase(
     link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
@@ -126,23 +123,6 @@ template
 void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerUnknownEvent>(IcmpPeerUnknownEvent &event);
 
 //
-// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpWaitEvent &e);
-//
-// post LinkProberState IcmpWaitEvent to the state machine
-//
-template
-void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpWaitEvent>(IcmpWaitEvent &event);
-
-//
-// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpPeerWaitEvent &e);
-//
-// post LinkProberState IcmpPeerWaitEvent to the state machine
-//
-template
-void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerWaitEvent>(IcmpPeerWaitEvent &event);
-
-
-//
 // ---> LinkProberStateMachineBase::processEvent(T &t);
 //
 // process LinkProberState event
@@ -191,12 +171,6 @@ void LinkProberStateMachineBase::processEvent<IcmpPeerEvent&>(IcmpPeerEvent &eve
 //
 template
 void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &event);
-
-template
-void LinkProberStateMachineBase::processEvent<IcmpWaitEvent&>(IcmpWaitEvent &event);
-
-template
-void LinkProberStateMachineBase::processEvent<IcmpPeerWaitEvent&>(IcmpPeerWaitEvent &event);
 
 //
 // ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);

@@ -110,17 +110,6 @@ public:
     virtual LinkProberState* handleEvent(IcmpUnknownEvent &event) override;
 
     /**
-    *@method handleEvent
-    *
-    *@brief handle IcmpWaitEvent from LinkProber
-    *
-    *@param event (in)  reference to IcmpWaitEvent
-    *
-    *@return pointer to next LinkProberState
-    */
-    virtual LinkProberState* handleEvent(IcmpWaitEvent &event) override;
-
-    /**
     *@method resetState
     *
     *@brief reset current state attributes

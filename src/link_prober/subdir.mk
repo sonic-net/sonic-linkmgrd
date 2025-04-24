@@ -5,9 +5,7 @@ CPP_SRCS += \
     ./src/link_prober/PeerUnknownState.cpp \
     ./src/link_prober/PeerWaitState.cpp \
     ./src/link_prober/IcmpPayload.cpp \
-    ./src/link_prober/LinkProberBase.cpp \
-    ./src/link_prober/LinkProberHw.cpp \
-    ./src/link_prober/LinkProberSw.cpp \
+    ./src/link_prober/LinkProber.cpp \
     ./src/link_prober/LinkProberState.cpp \
     ./src/link_prober/LinkProberStateMachineBase.cpp \
     ./src/link_prober/LinkProberStateMachineActiveStandby.cpp \
@@ -22,9 +20,7 @@ OBJS += \
     ./src/link_prober/PeerUnknownState.o \
     ./src/link_prober/PeerWaitState.o \
     ./src/link_prober/IcmpPayload.o \
-    ./src/link_prober/LinkProberBase.o \
-    ./src/link_prober/LinkProberHw.o \
-    ./src/link_prober/LinkProberSw.o \
+    ./src/link_prober/LinkProber.o \
     ./src/link_prober/LinkProberState.o \
     ./src/link_prober/LinkProberStateMachineBase.o \
     ./src/link_prober/LinkProberStateMachineActiveStandby.o \

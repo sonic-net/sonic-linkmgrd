@@ -310,27 +310,6 @@ public:
     inline PortCableType getPortCableType() const {return mPortCableType;};
 
     /**
-    *@method getLinkFailureDetectionTypeHw
-    *
-    *@brief getter for LinkFailureDetectionTypeHw
-    *
-    *@return Link Failure Detection Type HW
-    */
-    inline bool getLinkFailureDetectionTypeHw() const {return mLinkFailureDetectionTypeHw;};
-
-    /**
-     * @method setLinkFailureDetectionTypeHw
-     *
-     * @brief Set the Link Failure Detection Type Hw
-     *
-     * @param linkFailureDetectionTypeHw   link failure detection type hardware
-     *
-     * @return none
-     */
-    inline void setLinkFailureDetectionTypeHw(bool linkFailureDetectionTypeHw) { mLinkFailureDetectionTypeHw = linkFailureDetectionTypeHw; };
-
-
-    /**
     *@method getDecreasedTimeoutIpv4_msec
     *
     *@brief getter for decreased IPv4 LinkProber timeout in msec
@@ -445,7 +424,6 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
-    bool mLinkFailureDetectionTypeHw;
     uint32_t mAdminForwardingStateSyncUpInterval_msec = 10000;
 
 };

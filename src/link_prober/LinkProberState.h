@@ -31,12 +31,10 @@ namespace link_prober
 class LinkProberStateMachineBase;
 class IcmpPeerEvent;
 class IcmpSelfEvent;
-class IcmpWaitEvent;
 class IcmpUnknownEvent;
 class SuspendTimerExpiredEvent;
 class IcmpPeerActiveEvent;
 class IcmpPeerUnknownEvent;
-class IcmpPeerWaitEvent;
 
 /**
  *@class LinkProberState
@@ -121,17 +119,6 @@ public:
     */
     virtual LinkProberState* handleEvent(IcmpSelfEvent &event);
 
-     /**
-    *@method handleEvent
-    *
-    *@brief handle IcmpWaitEvent from LinkProber
-    *
-    *@param event (in)  reference to IcmpWaitEvent
-    *
-    *@return pointer to next LinkProberState
-    */
-   virtual LinkProberState* handleEvent(IcmpWaitEvent &event);
-
     /**
     *@method handleEvent
     *
@@ -164,17 +151,6 @@ public:
     *@return pointer to next LinkProberState
     */
     virtual LinkProberState* handleEvent(IcmpPeerUnknownEvent &event);
-
-    /**
-    *@method handleEvent
-    *
-    *@brief handle IcmpPeerWaitEvent from LinkProber
-    *
-    *@param event (in)  reference to IcmpPeerWaitEvent
-    *
-    *@return pointer to next LinkProberState
-    */
-   virtual LinkProberState* handleEvent(IcmpPeerWaitEvent &event);
 
     /**
     *@method getStateLabel

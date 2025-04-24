@@ -86,17 +86,6 @@ public:
     */
     inline void setTimeoutIpv4_msec(uint32_t timeout_msec) {mTimeoutIpv4_msec = timeout_msec;};
 
-     /**
-    *@method setRxTimeoutIpv4_msec
-    *
-    *@brief setter for IPv4 LinkProber Rx timeout in msec
-    *
-    *@param timeout_msec (in)  timeout in msec
-    *
-    *@return none
-    */
-   inline void setRxTimeoutIpv4_msec(uint32_t timeout_msec) {mRxTimeoutIpv4_msec = timeout_msec;};
-
     /**
     *@method setTimeoutIpv6_msec
     *
@@ -466,7 +455,6 @@ private:
     uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
-    uint32_t mRxTimeoutIpv4_msec = 300;
     uint32_t mPositiveStateChangeRetryCount = 1;
     uint32_t mNegativeStateChangeRetryCount = 3;
     uint32_t mLinkProberStatUpdateIntervalCount = 300; 

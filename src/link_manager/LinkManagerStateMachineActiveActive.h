@@ -26,6 +26,7 @@
 
 #include "common/AsyncEvent.h"
 #include "link_manager/LinkManagerStateMachineBase.h"
+#include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberState.h"
 #include "link_state/LinkState.h"
 #include "link_state/LinkStateMachine.h"
@@ -208,15 +209,6 @@ public: // db event handlers
      * @return none
     */
     void handleResetLinkProberPckLossCount() override;
-
-    /**
-     * @method updateLinkFailureDetectionState
-     *
-     * @brief updates link state to link prober
-     *
-     * @return none
-    */
-    void updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string session_type) override;
 
 public: // link prober event handlers
     /**
@@ -734,8 +726,6 @@ private:
     boost::function<void()> mRestartTxFnPtr;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
     boost::function<void ()> mSendPeerProbeCommandFnPtr;
-    boost::function<void (const std::string& linkFailureDetectionState,
-            const std::string session_type)> mHandleStateDbUpdateFnPtr;
 
     bool mContinuousLinkProberUnknownEvent = false;
 };

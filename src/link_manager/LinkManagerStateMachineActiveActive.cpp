@@ -118,57 +118,40 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
         mMuxPortConfig.setBladeIpv4Address(address);
 
         try {
-            if(mMuxPortConfig.getLinkFailureDetectionTypeHw())
-            {
-                mLinkProberPtr = std::make_shared<link_prober::LinkProberHw>(
-                mMuxPortConfig,
-                getStrand().context(),
-                mLinkProberStateMachinePtr.get(),
-                mMuxPortPtr
-                );
-            } else {
-                mLinkProberPtr = std::make_shared<link_prober::LinkProberSw>(
+            mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
                 mMuxPortConfig,
                 getStrand().context(),
                 mLinkProberStateMachinePtr.get()
-                );
-            }
-
+            );
             mInitializeProberFnPtr = boost::bind(
-                &link_prober::LinkProberBase::initialize, mLinkProberPtr.get()
+                &link_prober::LinkProber::initialize, mLinkProberPtr.get()
             );
             mStartProbingFnPtr = boost::bind(
-                &link_prober::LinkProberBase::startProbing, mLinkProberPtr.get()
+                &link_prober::LinkProber::startProbing, mLinkProberPtr.get()
             );
             mUpdateEthernetFrameFnPtr = boost::bind(
-                &link_prober::LinkProberBase::updateEthernetFrame, mLinkProberPtr.get()
+                &link_prober::LinkProber::updateEthernetFrame, mLinkProberPtr.get()
             );
             mProbePeerTorFnPtr = boost::bind(
-                &link_prober::LinkProberBase::probePeerTor, mLinkProberPtr.get()
+                &link_prober::LinkProber::probePeerTor, mLinkProberPtr.get()
             );
             mSuspendTxFnPtr = boost::bind(
-                &link_prober::LinkProberBase::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
+                &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
             );
             mResumeTxFnPtr = boost::bind(
-                &link_prober::LinkProberBase::resumeTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProber::resumeTxProbes, mLinkProberPtr.get()
             );
             mShutdownTxFnPtr = boost::bind(
-                &link_prober::LinkProberBase::shutdownTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProber::shutdownTxProbes, mLinkProberPtr.get()
             );
             mRestartTxFnPtr = boost::bind(
-                &link_prober::LinkProberBase::restartTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProber::restartTxProbes, mLinkProberPtr.get()
             );
             mResetIcmpPacketCountsFnPtr = boost::bind(
-                &link_prober::LinkProberBase::resetIcmpPacketCounts, mLinkProberPtr.get()
+                &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
             mSendPeerProbeCommandFnPtr = boost::bind(
-                &link_prober::LinkProberBase::sendPeerProbeCommand, mLinkProberPtr.get()
-            );
-
-            mHandleStateDbUpdateFnPtr = boost::bind(
-                &link_prober::LinkProberBase::handleStateDbStateUpdate, mLinkProberPtr.get(),
-                boost::placeholders::_1,
-                boost::placeholders::_2
+                &link_prober::LinkProber::sendPeerProbeCommand, mLinkProberPtr.get()
             );
 
             setComponentInitState(LinkProberComponent);
@@ -1071,17 +1054,6 @@ void ActiveActiveStateMachine::switchMuxState(
     } else {
         probeMuxState();
     }
-}
-
-//
-// ---> updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string session_type));
-//
-// updates link state to link prober
-//
-void ActiveActiveStateMachine::updateLinkFailureDetectionState(const std::string &linkFailureDetectionState,
-        const std::string session_type)
-{
-    mHandleStateDbUpdateFnPtr(linkFailureDetectionState, session_type);
 }
 
 //

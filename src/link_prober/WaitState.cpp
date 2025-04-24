@@ -80,11 +80,6 @@ LinkProberState* WaitState::handleEvent(IcmpSelfEvent &event)
     LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState;
 
-    if(getMuxPortConfig().getLinkFailureDetectionTypeHw()){
-        nextState = dynamic_cast<LinkProberState *> (stateMachine->getActiveState());
-        return nextState;
-    }
-
     mPeerEventCount = 0;
     mUnknownEventCount = 0;
     if (++mSelfEventCount >= getMuxPortConfig().getPositiveStateChangeRetryCount()) {
@@ -112,10 +107,6 @@ LinkProberState* WaitState::handleEvent(IcmpUnknownEvent &event)
 
     switch (portCableType) {
         case common::MuxPortConfig::PortCableType::ActiveActive:
-            if(getMuxPortConfig().getLinkFailureDetectionTypeHw()){
-                nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
-                return nextState;
-            }
             if (++mUnknownEventCount >= getMuxPortConfig().getNegativeStateChangeRetryCount()) {
                 nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
             }
