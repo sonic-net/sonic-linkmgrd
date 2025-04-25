@@ -269,7 +269,7 @@ void MuxManager::updatePortCableType(const std::string &portName, const std::str
 //
 void MuxManager::updateLinkFailureDetectionState(const std::string &portName, const std::string &linkFailureDetectionState, const std::string &session_type)
 {
-    MUXLOGWARNING(boost::format("%s: link failure detection state for %s : %s") % portName % session_type %linkFailureDetectionState );
+    MUXLOGDEBUG(boost::format("%s: link failure detection state for %s : %s") % portName % session_type %linkFailureDetectionState );
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
@@ -286,7 +286,7 @@ void MuxManager::updateLinkFailureDetectionState(const std::string &portName, co
 //
 void MuxManager::updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType)
 {
-    MUXLOGWARNING(boost::format("%s: link failure detection type for : %s") % portName % linkFailureDetectionType );
+    MUXLOGDEBUG(boost::format("%s: link failure detection type for : %s") % portName % linkFailureDetectionType );
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 

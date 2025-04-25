@@ -835,8 +835,6 @@ void DbInterface::processLinkFailureDetectionType(std::vector<swss::KeyOpFieldsV
             [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
         );
         std::string linkFailureDetectionType = (cit != fieldValues.cend() ? cit->second : "software");
-        MUXLOGWARNING(boost::format("Link Prober Detection type detected = {%s}") % linkFailureDetectionType);
-
         MUXLOGDEBUG(boost::format("port: %s, %s = %s") % portName % field % linkFailureDetectionType);
 
         mMuxManagerPtr->updateLinkFailureDetectionType(portName, linkFailureDetectionType);
@@ -851,7 +849,6 @@ void DbInterface::processLinkFailureDetectionType(std::vector<swss::KeyOpFieldsV
 void DbInterface::getLinkFailureDetectionType(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
     MUXLOGINFO("Reading link_prober_mode");
-    MUXLOGWARNING(boost::format("Link Prober Detection type triggered"));
     swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
     std::vector<swss::KeyOpFieldsValuesTuple> entries;
 
@@ -1582,8 +1579,7 @@ void DbInterface::processTsaEnableNotification(std::deque<swss::KeyOpFieldsValue
 //
 void DbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries)
 {
-    MUXLOGWARNING(key);
-    MUXLOGWARNING(boost::format(" ICMP session Being created "));
+    MUXLOGDEBUG(boost::format(" %s : ICMP session Being created " % key));
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleIcmpEchoSession,
         this,
@@ -1616,8 +1612,7 @@ void DbInterface::handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *e
 
 void DbInterface::updateTxIntervalv4(std::string key, uint32_t tx_interval)
 {
-    MUXLOGWARNING(key);
-    MUXLOGWARNING(boost::format(" Updating Tx Interval v4 "));
+    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v4 " %key));
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateTxIntervalv4,
         this,
@@ -1628,8 +1623,7 @@ void DbInterface::updateTxIntervalv4(std::string key, uint32_t tx_interval)
 
 void DbInterface::updateTxIntervalv6(std::string key, uint32_t tx_interval)
 {
-    MUXLOGWARNING(key);
-    MUXLOGWARNING(boost::format(" Updating Tx Interval v6"));
+    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v6 " %key));
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateTxIntervalv6,
         this,
@@ -1659,8 +1653,7 @@ void DbInterface::handleUpdateTxIntervalv6(std::string key, uint32_t tx_interval
 //
 void DbInterface::deleteIcmpEchoSession(std::string key)
 {
-    MUXLOGWARNING(key);
-    MUXLOGWARNING(boost::format(" ICMP session Being deleted "));
+    MUXLOGDEBUG(boost::format(" %s : ICMP session Being deleted" % key));
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleDeleteIcmpEchoSession,
         this,
@@ -1720,7 +1713,7 @@ void DbInterface::processIcmpEchoSessionStateNotification(std::deque<swss::KeyOp
             const std::string field = cit->first;
             const std::string value = cit->second;
 
-            MUXLOGWARNING(boost::format("port: %s, f: %s, v: %s") %
+            MUXLOGINFO(boost::format("port: %s, f: %s, v: %s") %
                 port %
                 field %
                 value

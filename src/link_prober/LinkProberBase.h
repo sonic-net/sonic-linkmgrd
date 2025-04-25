@@ -25,16 +25,6 @@
 #include "common/MuxPortConfig.h"
 #include "common/MuxLogger.h"
 
-namespace std {
-    template <>
-    struct hash<boost::uuids::uuid> {
-        std::size_t operator()(const boost::uuids::uuid& uuid) const {
-            // Use boost's built-in hash function for UUIDs
-            return boost::uuids::hash_value(uuid);
-        }
-    };
-}
-
 namespace test {
 class LinkProberTest;
 class LinkProberMockTest;
@@ -619,49 +609,49 @@ protected:
     void calculateTxPacketChecksum();
  
  
-     static SockFilter mIcmpFilter[];    
+    static SockFilter mIcmpFilter[];    
  
-     common::MuxPortConfig &mMuxPortConfig;
-     boost::asio::io_service &mIoService;
-     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
+    common::MuxPortConfig &mMuxPortConfig;
+    boost::asio::io_service &mIoService;
+    LinkProberStateMachineBase *mLinkProberStateMachinePtr;
  
-     uint16_t mTxSeqNo = 0xffff;
-     uint16_t mRxSelfSeqNo = 0;
-     uint16_t mRxPeerSeqNo = 0;
+    uint16_t mTxSeqNo = 0xffff;
+    uint16_t mRxSelfSeqNo = 0;
+    uint16_t mRxPeerSeqNo = 0;
  
-     uint32_t mIcmpChecksum = 0;
-     uint32_t mIpChecksum = 0;
+    uint32_t mIcmpChecksum = 0;
+    uint32_t mIpChecksum = 0;
  
-     static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
-     static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
+    static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
+    static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
  
-     boost::asio::io_service::strand mStrand;
-     boost::asio::posix::stream_descriptor mStream;
-     boost::asio::deadline_timer mDeadlineTimer;
-     boost::asio::deadline_timer mSuspendTimer;
-     boost::asio::deadline_timer mSwitchoverTimer;
-     std::shared_ptr<SockFilter> mSockFilterPtr;
-     SockFilterProg mSockFilterProg;
+    boost::asio::io_service::strand mStrand;
+    boost::asio::posix::stream_descriptor mStream;
+    boost::asio::deadline_timer mDeadlineTimer;
+    boost::asio::deadline_timer mSuspendTimer;
+    boost::asio::deadline_timer mSwitchoverTimer;
+    std::shared_ptr<SockFilter> mSockFilterPtr;
+    SockFilterProg mSockFilterProg;
  
-     std::string mSelfGuid;
-     std::string mPeerGuid;
-     boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
-     boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyNotReceivedFuncPtr;
+    std::string mSelfGuid;
+    std::string mPeerGuid;
+    boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
+    boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyNotReceivedFuncPtr;
  
  
-     int mSocket = 0;
+    int mSocket = 0;
  
-     std::size_t mTxPacketSize;
-     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
-     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
+    std::size_t mTxPacketSize;
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
  
-     bool mCancelSuspend = false;
-     bool mSuspendTx = false;
-     bool mShutdownTx = false;
-     bool mDecreaseProbingInterval = false;
+    bool mCancelSuspend = false;
+    bool mSuspendTx = false;
+    bool mShutdownTx = false;
+    bool mDecreaseProbingInterval = false;
  
-     uint64_t mIcmpUnknownEventCount = 0;
-     uint64_t mIcmpPacketCount = 0;
+    uint64_t mIcmpUnknownEventCount = 0;
+    uint64_t mIcmpPacketCount = 0;
 };
 
 } /* namespace link_prober */

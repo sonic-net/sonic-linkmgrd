@@ -980,7 +980,7 @@ void ActiveActiveStateMachine::enterLinkProberState(
     link_prober::LinkProberState::Label label
 )
 {
-     MUXLOGDEBUG(
+     MUXLOGWARNING(
         boost::format("%s: Entering MUX state to '%s'") %
         mMuxPortConfig.getPortName() %
         label
