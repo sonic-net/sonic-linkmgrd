@@ -496,7 +496,7 @@ protected:
     *
     *@return tx buffer
     */
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mTxBuffer;};
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getTxBuffer() {return mTxBuffer;};
 
     /**
     *@method findNextTlv

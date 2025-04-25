@@ -1579,7 +1579,7 @@ void DbInterface::processTsaEnableNotification(std::deque<swss::KeyOpFieldsValue
 //
 void DbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries)
 {
-    MUXLOGDEBUG(boost::format(" %s : ICMP session Being created " % key));
+    MUXLOGDEBUG(boost::format(" %s : ICMP session Being created ") % key);
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleIcmpEchoSession,
         this,
@@ -1612,7 +1612,7 @@ void DbInterface::handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *e
 
 void DbInterface::updateTxIntervalv4(std::string key, uint32_t tx_interval)
 {
-    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v4 " %key));
+    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v4 ") %key);
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateTxIntervalv4,
         this,
@@ -1623,7 +1623,7 @@ void DbInterface::updateTxIntervalv4(std::string key, uint32_t tx_interval)
 
 void DbInterface::updateTxIntervalv6(std::string key, uint32_t tx_interval)
 {
-    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v6 " %key));
+    MUXLOGDEBUG(boost::format(" %s : Updating Tx Interval v6 ") %key);
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateTxIntervalv6,
         this,
@@ -1653,7 +1653,7 @@ void DbInterface::handleUpdateTxIntervalv6(std::string key, uint32_t tx_interval
 //
 void DbInterface::deleteIcmpEchoSession(std::string key)
 {
-    MUXLOGDEBUG(boost::format(" %s : ICMP session Being deleted" % key));
+    MUXLOGDEBUG(boost::format(" %s : ICMP session Being deleted") % key);
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleDeleteIcmpEchoSession,
         this,

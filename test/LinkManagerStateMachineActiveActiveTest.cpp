@@ -903,7 +903,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyRecvMuxProbeTlv)
 
     VALIDATE_STATE(Unknown, Standby, Up);
 }
-/*
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberUnknownRecvMuxProbeTlv)
 {
     setMuxActive();
@@ -924,7 +924,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberUnknownRecvMu
     handleMuxState("standby", 3);
     VALIDATE_STATE(Unknown, Standby, Up);
 }
-*/
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeriodicalCheckStandby)
 {
     setMuxActive();

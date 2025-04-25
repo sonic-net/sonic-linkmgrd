@@ -105,32 +105,32 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
 
     EXPECT_TRUE(icmpPayload->cookie == htonl(link_prober::IcmpPayload::getSoftwareCookie()));
     EXPECT_TRUE(icmpPayload->version == htonl(link_prober::IcmpPayload::getVersion()));
-    /*EXPECT_TRUE(memcmp(
+    EXPECT_TRUE(memcmp(
         icmpPayload->uuid,
-        link_prober::IcmpPayload::getGuidData(),
+        (mLinkProber.mSelfUUID.data+8),
         sizeof(icmpPayload->uuid)
-    ) == 0);*/
+    ) == 0);
 
     EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_SENTINEL);
     EXPECT_TRUE(tlvPtr->tlvhead.length == 0);
 }
-/*
+
 TEST_F(LinkProberTest, CalculateChecksum)
 {
     link_prober::IcmpPayload *icmpPayload = new (
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
-    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-44f4-9d86c312414b");
-    memcpy(mLinkProber.mSelfUUID.data, guid.data, sizeof(mLinkProber.mSelfUUID.data));
-    memcpy(icmpPayload->uuid, (mLinkProber.mSelfUUID.data+8), sizeof(icmpPayload->uuid));
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy((mLinkProber.mSelfUUID.data + 8) , guid.data, (sizeof(mLinkProber.mSelfUUID.data)-8));
     initializeSendBuffer();
-
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 }
 
 TEST_F(LinkProberTest, handleSendSwitchCommand)
 {
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy((mLinkProber.mSelfUUID.data + 8) , guid.data, (sizeof(mLinkProber.mSelfUUID.data)-8));
     initializeSendBuffer();
 
     iphdr *ipHeader = reinterpret_cast<iphdr *>(getTxBufferData() + sizeof(ether_header));
@@ -138,19 +138,21 @@ TEST_F(LinkProberTest, handleSendSwitchCommand)
     ipHeader->id = static_cast<uint16_t> (17767);
     initTxBufferSentinel();
     EXPECT_TRUE(ipHeader->check == 62919);
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 
     initTxBufferTlvSendSwitch();
     EXPECT_TRUE(ipHeader->check == 61895);
-    EXPECT_TRUE(icmpHeader->checksum == 11838);
+    EXPECT_EQ(icmpHeader->checksum, 21847);
 
     initTxBufferSentinel();
     EXPECT_TRUE(ipHeader->check == 62919);
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 }
 
 TEST_F(LinkProberTest, handleSendProbeCommand)
 {
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy((mLinkProber.mSelfUUID.data + 8) , guid.data, (sizeof(mLinkProber.mSelfUUID.data)-8));
     initializeSendBuffer();
 
     iphdr *ipHeader = reinterpret_cast<iphdr *>(getTxBufferData() + sizeof(ether_header));
@@ -158,15 +160,15 @@ TEST_F(LinkProberTest, handleSendProbeCommand)
     ipHeader->id = static_cast<uint16_t> (17767);
     initTxBufferSentinel();
     EXPECT_TRUE(ipHeader->check == 62919);
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 
     initTxBufferTlvSendProbe();
     EXPECT_TRUE(ipHeader->check == 61895);
-    EXPECT_TRUE(icmpHeader->checksum == 11582);
+    EXPECT_EQ(icmpHeader->checksum, 21591);
 
     initTxBufferSentinel();
     EXPECT_TRUE(ipHeader->check == 62919);
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
@@ -175,11 +177,11 @@ TEST_F(LinkProberTest, UpdateEthernetFrame)
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
-    memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
+    memcpy((mLinkProber.mSelfUUID.data + 8) , guid.data, (sizeof(mLinkProber.mSelfUUID.data)-8));
     handleUpdateEthernetFrame();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 12100);
+    EXPECT_EQ(icmpHeader->checksum, 22109);
 }
 
 TEST_F(LinkProberTest, UpdateSequenceNo)
@@ -188,7 +190,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
         getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
-    memcpy(icmpPayload->uuid, guid.data, sizeof(icmpPayload->uuid));
+    memcpy((mLinkProber.mSelfUUID.data + 8) , guid.data, (sizeof(mLinkProber.mSelfUUID.data)-8));
 
     handleUpdateEthernetFrame();
 
@@ -197,7 +199,7 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 11844);
+    EXPECT_EQ(icmpHeader->checksum, 21853);
 
     EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
     EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
@@ -216,7 +218,6 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
 
 TEST_F(LinkProberTest, GenerateGuid)
 {
-    //link_prober::IcmpPayload::generateGuid();
     initializeSendBuffer();
 
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
@@ -225,15 +226,13 @@ TEST_F(LinkProberTest, GenerateGuid)
     ) link_prober::IcmpPayload();
     EXPECT_TRUE(memcmp(
         icmpPayload->uuid,
-        link_prober::IcmpPayload::getGuidData(),
+        (mLinkProber.mSelfUUID.data+8),
         sizeof(icmpPayload->uuid)
     ) == 0);
 }
-*/
+
 TEST_F(LinkProberTest, UpdateToRMac)
 {
-    //link_prober::IcmpPayload::generateGuid();
-
     std::array<uint8_t, ETHER_ADDR_LEN> torMac = {0, 'b', 2, 'd', 4, 'f'};
     mMuxConfig.setTorMacAddress(torMac);
 
