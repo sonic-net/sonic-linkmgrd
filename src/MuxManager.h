@@ -110,7 +110,7 @@ public:
     *
     *@return none
     */
-    inline void setTimeoutIpv4_msec(uint32_t timeout_msec) {mMuxConfig.setTimeoutIpv4_msec(timeout_msec);};
+    void setTimeoutIpv4_msec(uint32_t timeout_msec);
 
     /**
     *@method setTimeoutIpv6_msec
@@ -121,7 +121,7 @@ public:
     *
     *@return none
     */
-    inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mMuxConfig.setTimeoutIpv6_msec(timeout_msec);};
+    void setTimeoutIpv6_msec(uint32_t timeout_msec);
 
     /**
     *@method setOscillationEnabled
@@ -505,6 +505,25 @@ public:
     *@return none
     */
     void processResetSuspendTimer(const std::vector<std::string> &portNames);
+
+    /**
+    * @method updateLinkFailureDetectionState
+    *
+    * @brief update state of ICMP_ECHO_SESSION
+    *
+    * @return none
+    */
+    void updateLinkFailureDetectionState(const std::string &portName, const std::string &linkFailureDetectionState,
+           const std::string &session_type);
+
+    /**
+    * @method updateLinkFailureDetectionType
+    *
+    * @brief updates link_failure_detection type for link_prober
+    *
+    * @return none
+    */
+    void updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType);
 
 private:
     /**

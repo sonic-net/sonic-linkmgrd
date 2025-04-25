@@ -118,40 +118,60 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
         mMuxPortConfig.setBladeIpv4Address(address);
 
         try {
-            mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
+            MUXLOGINFO( boost::format(" For Port %s detected Prober type Hw is %b ") % mMuxPortConfig.getPortName() %
+            mMuxPortConfig.getLinkFailureDetectionTypeHw());
+
+            if(mMuxPortConfig.getLinkFailureDetectionTypeHw())
+            {
+                mLinkProberPtr = std::make_shared<link_prober::LinkProberHw>(
+                mMuxPortConfig,
+                getStrand().context(),
+                mLinkProberStateMachinePtr.get(),
+                mMuxPortPtr
+                );
+            } else {
+                mLinkProberPtr = std::make_shared<link_prober::LinkProberSw>(
                 mMuxPortConfig,
                 getStrand().context(),
                 mLinkProberStateMachinePtr.get()
-            );
+                );
+            }
+
             mInitializeProberFnPtr = boost::bind(
-                &link_prober::LinkProber::initialize, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::initialize, mLinkProberPtr.get()
             );
             mStartProbingFnPtr = boost::bind(
-                &link_prober::LinkProber::startProbing, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::startProbing, mLinkProberPtr.get()
             );
             mUpdateEthernetFrameFnPtr = boost::bind(
-                &link_prober::LinkProber::updateEthernetFrame, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::updateEthernetFrame, mLinkProberPtr.get()
             );
             mProbePeerTorFnPtr = boost::bind(
-                &link_prober::LinkProber::probePeerTor, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::probePeerTor, mLinkProberPtr.get()
             );
             mSuspendTxFnPtr = boost::bind(
-                &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
+                &link_prober::LinkProberBase::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
             );
             mResumeTxFnPtr = boost::bind(
-                &link_prober::LinkProber::resumeTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::resumeTxProbes, mLinkProberPtr.get()
             );
             mShutdownTxFnPtr = boost::bind(
-                &link_prober::LinkProber::shutdownTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::shutdownTxProbes, mLinkProberPtr.get()
             );
             mRestartTxFnPtr = boost::bind(
-                &link_prober::LinkProber::restartTxProbes, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::restartTxProbes, mLinkProberPtr.get()
             );
             mResetIcmpPacketCountsFnPtr = boost::bind(
-                &link_prober::LinkProber::resetIcmpPacketCounts, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
             mSendPeerProbeCommandFnPtr = boost::bind(
-                &link_prober::LinkProber::sendPeerProbeCommand, mLinkProberPtr.get()
+                &link_prober::LinkProberBase::sendPeerProbeCommand, mLinkProberPtr.get()
+            );
+
+            mHandleStateDbUpdateFnPtr = boost::bind(
+                &link_prober::LinkProberBase::handleStateDbStateUpdate, mLinkProberPtr.get(),
+                boost::placeholders::_1,
+                boost::placeholders::_2
             );
 
             setComponentInitState(LinkProberComponent);
@@ -219,7 +239,7 @@ void ActiveActiveStateMachine::handleMuxStateNotification(mux_state::MuxState::L
 //
 void ActiveActiveStateMachine::handleSwssLinkStateNotification(const link_state::LinkState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: state db link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
+    MUXLOGWARNING(boost::format("%s: state db link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
 
     if (mComponentInitState.all()) {
         if (label == link_state::LinkState::Label::Up) {
@@ -324,7 +344,7 @@ void ActiveActiveStateMachine::handleProbeMuxFailure()
     auto expiryTime = mWaitTimer.expires_at();
     auto now = boost::posix_time::microsec_clock::universal_time();
 
-    MUXLOGINFO(boost::format("%s: lost gRPC connection, expiry time: %s, now: %s") 
+    MUXLOGWARNING(boost::format("%s: lost gRPC connection, expiry time: %s, now: %s") 
         % mMuxPortConfig.getPortName() 
         % boost::posix_time::to_simple_string(expiryTime) 
         % boost::posix_time::to_simple_string(now)
@@ -471,7 +491,6 @@ void ActiveActiveStateMachine::handleSuspendTimerExpiry()
 void ActiveActiveStateMachine::handleMuxProbeRequestEvent()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
     // if there is no interaction with mux, probe mux
     if (!mWaitMux) {
         probeMuxState();
@@ -961,6 +980,12 @@ void ActiveActiveStateMachine::enterLinkProberState(
     link_prober::LinkProberState::Label label
 )
 {
+     MUXLOGDEBUG(
+        boost::format("%s: Entering MUX state to '%s'") %
+        mMuxPortConfig.getPortName() %
+        label
+    );
+
     mLinkProberStateMachinePtr->enterState(label);
     ps(nextState) = label;
 }
@@ -1057,6 +1082,17 @@ void ActiveActiveStateMachine::switchMuxState(
 }
 
 //
+// ---> updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string session_type));
+//
+// updates link state to link prober
+//
+void ActiveActiveStateMachine::updateLinkFailureDetectionState(const std::string &linkFailureDetectionState,
+        const std::string session_type)
+{
+    mHandleStateDbUpdateFnPtr(linkFailureDetectionState, session_type);
+}
+
+//
 // ---> switchPeerMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch);
 //
 // switch peer MUX to the target state
@@ -1083,6 +1119,7 @@ void ActiveActiveStateMachine::switchPeerMuxState(mux_state::MuxState::Label lab
 //
 void ActiveActiveStateMachine::probeMuxState()
 {
+    MUXLOGDEBUG(boost::format("%s: probing mux state and start timer ") % mMuxPortConfig.getPortName());
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
     mMuxPortPtr->probeMuxState();
     startMuxWaitTimer();
@@ -1103,6 +1140,7 @@ void ActiveActiveStateMachine::updateMuxLinkmgrState()
          (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
           mLastMuxProbeNotification == mux_state::MuxState::Label::Unknown)) &&
         (mMuxPortConfig.ifEnableDefaultRouteFeature() == false || mDefaultRouteState == DefaultRoute::OK)) {
+        MUXLOGDEBUG(boost::format("%s: setting Link Manager state Healthy") % mMuxPortConfig.getPortName());
         label = Label::Healthy;
     }
     setLabel(label);
@@ -1171,6 +1209,7 @@ void ActiveActiveStateMachine::initPeerLinkProberState()
 //
 void ActiveActiveStateMachine::startMuxProbeTimer()
 {
+    MUXLOGDEBUG(boost::format("%s: Start Mux Probe Timer") % mMuxPortConfig.getPortName());
     probeMuxState();
     mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(
         mMuxProbeBackoffFactor * mMuxPortConfig.getNegativeStateChangeRetryCount() * mMuxPortConfig.getTimeoutIpv4_msec()
@@ -1191,7 +1230,6 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
 void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
     stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||
@@ -1213,6 +1251,7 @@ void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code e
 //
 void ActiveActiveStateMachine::startMuxWaitTimer(uint32_t factor)
 {
+    MUXLOGDEBUG(boost::format("%s: Mux Wait Timer Started") % mMuxPortConfig.getPortName());
     mWaitTimer.expires_from_now(boost::posix_time::milliseconds(
         factor * mMuxPortConfig.getNegativeStateChangeRetryCount() * mMuxPortConfig.getTimeoutIpv4_msec()
     ));
@@ -1319,7 +1358,7 @@ void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const Default
 //
 void ActiveActiveStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGINFO(mMuxPortConfig.getPortName());
 
     if (mComponentInitState.all()) {
         if ((mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||

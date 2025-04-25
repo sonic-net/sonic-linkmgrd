@@ -41,7 +41,7 @@ MuxManagerTest::MuxManagerTest() :
 {
     mMuxManagerPtr->setDbInterfacePtr(mDbInterfacePtr);
 
-    link_prober::IcmpPayload::generateGuid();
+    //link_prober::IcmpPayload::generateGuid();
 }
 
 void MuxManagerTest::runIoService(uint32_t count)

@@ -27,7 +27,7 @@
 #include "gtest/gtest.h"
 
 #include "FakeMuxPort.h"
-#include "link_prober/LinkProber.h"
+#include "link_prober/LinkProberSw.h"
 
 namespace test
 {
@@ -73,7 +73,7 @@ public:
     uint16_t mServerId = 01;
 
     FakeMuxPort mFakeMuxPort;
-    link_prober::LinkProber mLinkProber;
+    link_prober::LinkProberSw mLinkProber;
 };
 
 } /* namespace test */

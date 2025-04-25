@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <tuple>
+#include <vector>
+#include <functional>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/bind/bind.hpp>
@@ -323,6 +325,9 @@ void DbInterface::initialize()
         mAppDbForwardingCommandTablePtr = std::make_shared<swss::Table> (
             mAppDbPtr.get(), APP_FORWARDING_STATE_COMMAND_TABLE_NAME
         );
+        mAppDbIcmpEchoSessionTablePtr = std::make_shared<swss::ProducerStateTable> (
+            mAppDbPtr.get(), APP_ICMP_ECHO_SESSION_TABLE_NAME
+        );
         mStateDbMuxLinkmgrTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_LINKMGR_TABLE_NAME
         );
@@ -334,6 +339,9 @@ void DbInterface::initialize()
         );
         mStateDbSwitchCauseTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(),  STATE_MUX_SWITCH_CAUSE_TABLE_NAME
+        );
+        mStateDbIcmpEchoSessionTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(),  STATE_ICMP_ECHO_SESSION_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
@@ -806,6 +814,49 @@ void DbInterface::getPortCableType(std::shared_ptr<swss::DBConnector> configDbCo
 
     configDbMuxCableTable.getContent(entries);
     processPortCableType(entries);
+}
+
+//
+// ---> processLinkFailureDetectionType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process Mux Cable Table enteries to get linkFailureDetectionType by defaut its software 
+//
+void DbInterface::processLinkFailureDetectionType(std::vector<swss::KeyOpFieldsValuesTuple> &entries)
+{
+    for (auto &entry: entries) {
+        std::string portName = kfvKey(entry);
+        std::string operation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::string field = "link_prober_mode";
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+        );
+        std::string linkFailureDetectionType = (cit != fieldValues.cend() ? cit->second : "software");
+        MUXLOGWARNING(boost::format("Link Prober Detection type detected = {%s}") % linkFailureDetectionType);
+
+        MUXLOGDEBUG(boost::format("port: %s, %s = %s") % portName % field % linkFailureDetectionType);
+
+        mMuxManagerPtr->updateLinkFailureDetectionType(portName, linkFailureDetectionType);
+    }
+}
+
+//
+// ---> getPortCableType(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve the Link Failure Detection Type (HW/SW) from config
+//
+void DbInterface::getLinkFailureDetectionType(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading link_prober_mode");
+    MUXLOGWARNING(boost::format("Link Prober Detection type triggered"));
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    std::vector<swss::KeyOpFieldsValuesTuple> entries;
+
+    configDbMuxCableTable.getContent(entries);
+    processLinkFailureDetectionType(entries);
 }
 
 //
@@ -1525,6 +1576,174 @@ void DbInterface::processTsaEnableNotification(std::deque<swss::KeyOpFieldsValue
 }
 
 //
+// ---> createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries);
+//
+// triggers creation of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
+void DbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries)
+{
+    MUXLOGWARNING(key);
+    MUXLOGWARNING(boost::format(" ICMP session Being created "));
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handleIcmpEchoSession,
+        this,
+        key,
+        entries.release()
+    ));
+}
+
+//
+// ---> handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *entries);
+//
+// handles creation of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
+void DbInterface::handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *entries)
+{
+    std::vector<swss::FieldValueTuple> fvs;
+    for(auto& entry : *entries) {
+        const std::string field = entry.first;
+        const std::string value = entry.second;
+        fvs.emplace_back(field, value);
+        MUXLOGDEBUG(boost::format("APP_ICMP_ECHO_SESSION_TABLE::key: %s, field: %s, value: %s") %
+                key %
+                field %
+                value
+            );
+    }
+    mAppDbIcmpEchoSessionTablePtr->set(key, fvs);
+    delete entries;
+}
+
+void DbInterface::updateTxIntervalv4(std::string key, uint32_t tx_interval)
+{
+    MUXLOGWARNING(key);
+    MUXLOGWARNING(boost::format(" Updating Tx Interval v4 "));
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handleUpdateTxIntervalv4,
+        this,
+        key,
+        tx_interval
+    ));
+}
+
+void DbInterface::updateTxIntervalv6(std::string key, uint32_t tx_interval)
+{
+    MUXLOGWARNING(key);
+    MUXLOGWARNING(boost::format(" Updating Tx Interval v6"));
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handleUpdateTxIntervalv6,
+        this,
+        key,
+        tx_interval
+    ));
+}
+
+void DbInterface::handleUpdateTxIntervalv4(std::string key, uint32_t tx_interval)
+{
+    std::vector<swss::FieldValueTuple> fvs;
+    fvs.emplace_back("interval_v4", std::to_string(tx_interval));
+    mAppDbIcmpEchoSessionTablePtr->set(key, fvs);
+}
+
+void DbInterface::handleUpdateTxIntervalv6(std::string key, uint32_t tx_interval)
+{
+    std::vector<swss::FieldValueTuple> fvs;
+    fvs.emplace_back("interval_v6", std::to_string(tx_interval));
+    mAppDbIcmpEchoSessionTablePtr->set(key, fvs);
+}
+
+//
+// ---> deleteIcmpEchoSession(std::string key);
+//
+// handles deletion of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
+void DbInterface::deleteIcmpEchoSession(std::string key)
+{
+    MUXLOGWARNING(key);
+    MUXLOGWARNING(boost::format(" ICMP session Being deleted "));
+    boost::asio::post(mStrand, boost::bind(
+        &DbInterface::handleDeleteIcmpEchoSession,
+        this,
+        key
+    ));
+}
+
+void DbInterface::handleDeleteIcmpEchoSession(std::string key) {
+     MUXLOGDEBUG(boost::format("APP_ICMP_ECHO_SESSION_TABLE::key: %s ") %
+            key
+        );
+    mAppDbIcmpEchoSessionTablePtr->del(key);
+}
+
+//
+// ---> extractIfnameAndSessionType(const std::string &key, std::string &ifname, std::string &sessionType);
+//
+// helper function to extract interface name and session_type from the key 
+//
+void DbInterface::extractIfnameAndSessionType(const std::string &key, std::string &ifname, std::string &sessionType)
+{
+    size_t firstSep = key.find('|');
+    size_t secondSep = key.find('|', firstSep + 1);
+    size_t thirdSep = key.find('|', secondSep + 1);
+
+    if (firstSep != std::string::npos &&
+        secondSep != std::string::npos &&
+        thirdSep != std::string::npos) {
+        ifname = key.substr(firstSep + 1, secondSep - firstSep - 1);
+        sessionType = key.substr(thirdSep + 1);
+    } else {
+        std::cerr << "Unexpected format: " << key << std::endl;
+    }
+}
+
+//
+// ---> processIcmpEchoSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process each entery of ICMP_ECHO_SESSION_TABLE extract Port, Session_Type(Normal/Rx) and state itself
+//
+void DbInterface::processIcmpEchoSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
+      for (auto &entry: entries) {
+        std::string key = kfvKey(entry);
+        std::string port;
+        std::string session_type;
+        extractIfnameAndSessionType(key, port, session_type);
+        std::string opertation = kfvOp(entry);
+        std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
+            fieldValues.cbegin(),
+            fieldValues.cend(),
+            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "state";}
+        );
+        if (cit != fieldValues.cend()) {
+            const std::string field = cit->first;
+            const std::string value = cit->second;
+
+            MUXLOGWARNING(boost::format("port: %s, f: %s, v: %s") %
+                port %
+                field %
+                value
+            );
+            mMuxManagerPtr->updateLinkFailureDetectionState(port, value, session_type);
+        }
+    }
+}
+
+//
+// ---> handleIcmpEchoSessionStateNotification(swss::SubscriberStateTable &stateDbIcmpEchoSessionTable);
+//
+// extract enteries from State_DB ICMP_ECHO_SESSION_TABLE and call processing function
+//
+void DbInterface::handleIcmpEchoSessionStateNotification(swss::SubscriberStateTable &stateDbIcmpEchoSessionTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    stateDbIcmpEchoSessionTable.pops(entries);
+    processIcmpEchoSessionStateNotification(entries);
+}
+
+//
 // ---> handleSwssNotification();
 //
 // main thread method for handling SWSS notification
@@ -1556,11 +1775,14 @@ void DbInterface::handleSwssNotification()
     swss::SubscriberStateTable stateDbMuxInfoTable(stateDbPtr.get(), MUX_CABLE_INFO_TABLE);
     // for getting peer's admin forwarding state
     swss::SubscriberStateTable stateDbPeerMuxTable(stateDbPtr.get(), STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME);
+    // for getting icmp echo session state
+    swss::SubscriberStateTable stateDbIcmpEchoSessionTable(stateDbPtr.get(), STATE_ICMP_ECHO_SESSION_TABLE_NAME);
 
     getTorMacAddress(configDbPtr);
     getVlanNames(configDbPtr);
     getLoopback2InterfaceInfo(configDbPtr);
     getPortCableType(configDbPtr);
+    getLinkFailureDetectionType(configDbPtr);
     getServerIpAddress(configDbPtr);
     getSoCIpAddress(configDbPtr);
 
@@ -1584,6 +1806,7 @@ void DbInterface::handleSwssNotification()
     swssSelect.addSelectable(&stateDbMuxInfoTable);
     swssSelect.addSelectable(&stateDbPeerMuxTable);
     swssSelect.addSelectable(&netlinkNeighbor);
+    swssSelect.addSelectable(&stateDbIcmpEchoSessionTable);
 
     while (mPollSwssNotifcation) {
         swss::Selectable *selectable;
@@ -1619,6 +1842,8 @@ void DbInterface::handleSwssNotification()
             handlePeerLinkStateNotification(stateDbMuxInfoTable);
         } else if (selectable == static_cast<swss::Selectable *> (&stateDbPeerMuxTable)) {
             handlePeerMuxStateNotification(stateDbPeerMuxTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbIcmpEchoSessionTable)) {
+            handleIcmpEchoSessionStateNotification(stateDbIcmpEchoSessionTable);
         } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
         } else {

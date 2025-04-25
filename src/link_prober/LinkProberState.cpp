@@ -63,6 +63,12 @@ LinkProberState* LinkProberState::handleEvent(IcmpUnknownEvent &event)
     return nullptr;
 }
 
+LinkProberState* LinkProberState::handleEvent(IcmpWaitEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
 LinkProberState* LinkProberState::handleEvent(IcmpPeerActiveEvent &event)
 {
     MUXLOGERROR(getMuxPortConfig().getPortName());
@@ -70,6 +76,12 @@ LinkProberState* LinkProberState::handleEvent(IcmpPeerActiveEvent &event)
 }
 
 LinkProberState* LinkProberState::handleEvent(IcmpPeerUnknownEvent &event)
+{
+    MUXLOGERROR(getMuxPortConfig().getPortName());
+    return nullptr;
+}
+
+LinkProberState* LinkProberState::handleEvent(IcmpPeerWaitEvent &event)
 {
     MUXLOGERROR(getMuxPortConfig().getPortName());
     return nullptr;

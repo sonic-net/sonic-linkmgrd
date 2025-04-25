@@ -27,6 +27,8 @@
 #include <string>
 #include <stdint.h>
 #include <net/ethernet.h>
+#include <unordered_set>
+
 
 #include "MuxConfig.h"
 
@@ -310,6 +312,27 @@ public:
     inline PortCableType getPortCableType() const {return mPortCableType;};
 
     /**
+    *@method getLinkFailureDetectionTypeHw
+    *
+    *@brief getter for LinkFailureDetectionTypeHw
+    *
+    *@return Link Failure Detection Type HW
+    */
+    inline bool getLinkFailureDetectionTypeHw() const {return mLinkFailureDetectionTypeHw;};
+
+    /**
+     * @method setLinkFailureDetectionTypeHw
+     * 
+     * @brief Set the Link Failure Detection Type Hw
+     * 
+     * @param linkFailureDetectionTypeHw   link failure detection type hardware
+     * 
+     * @return none
+     */
+    inline void setLinkFailureDetectionTypeHw(bool linkFailureDetectionTypeHw) { mLinkFailureDetectionTypeHw = linkFailureDetectionTypeHw; };
+
+
+    /**
     *@method getDecreasedTimeoutIpv4_msec
     *
     *@brief getter for decreased IPv4 LinkProber timeout in msec
@@ -414,9 +437,37 @@ public:
      */
     uint32_t getAdminForwardingStateSyncUpInterval() {return mAdminForwardingStateSyncUpInterval_msec;};
 
+    /**
+     * @method setHardwareSessionKey
+     * 
+     * @brief set ports session key in case of hardware prober
+     * 
+     * @return none
+     */
+    inline void setHardwareSessionKey(std::string key) { mHardwareSessionKeys.insert(key); };
+
+    /**
+     * @method getHardwareSessionKey
+     * 
+     * @brief get ports session key in case of hardware prober
+     * 
+     * @return hardware session key value
+     */
+    std::unordered_set<std::string> getHardwareSessionKeys() { return mHardwareSessionKeys; };
+
+    /**
+     * @method removeHardwareSessionKey
+     * 
+     * @brief removes ports session key in case of hardware prober
+     * 
+     * @return none
+     */
+    inline void removeHardwareSessionKey(std::string key) { mHardwareSessionKeys.erase(key); };
+
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
+    std::unordered_set<std::string> mHardwareSessionKeys;
     boost::asio::ip::address mBladeIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     std::array<uint8_t, ETHER_ADDR_LEN> mWellKnownMacAddress = {0, 0, 0, 0, 0, 0};
@@ -424,6 +475,7 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
+    bool mLinkFailureDetectionTypeHw;
     uint32_t mAdminForwardingStateSyncUpInterval_msec = 10000;
 
 };
