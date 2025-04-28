@@ -96,6 +96,11 @@ LinkProberState* ActiveState::handleEvent(IcmpUnknownEvent &event)
     LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState;
 
+    if(getMuxPortConfig().getLinkFailureDetectionTypeHw()){
+        nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
+        return nextState;
+    }
+
     mPeerEventCount = 0;
     if (++mUnknownEventCount >= getMuxPortConfig().getNegativeStateChangeRetryCount()) {
         nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
@@ -106,6 +111,19 @@ LinkProberState* ActiveState::handleEvent(IcmpUnknownEvent &event)
 
     return nextState;
 }
+
+LinkProberState* ActiveState::handleEvent(IcmpWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getWaitState());
+    return nextState;
+
+}
+
 
 //
 // ---> resetState();

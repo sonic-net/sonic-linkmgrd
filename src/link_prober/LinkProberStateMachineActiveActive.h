@@ -21,7 +21,7 @@
 
 namespace link_manager
 {
-class LinkManagerStateMachineBase;
+    class LinkManagerStateMachineBase;
 }
 
 namespace link_prober

@@ -34,8 +34,8 @@ namespace link_prober
 //
 // static members
 //
-boost::uuids::uuid IcmpPayload::mGuid;
-uint32_t IcmpPayload::mCookie = 0x47656d69;
+uint32_t IcmpPayload::mHardwareCookie = 0x58767e7a;
+uint32_t IcmpPayload::mSoftwareCookie = 0x47656d69;
 uint32_t IcmpPayload::mVersion = 0;
 
 //
@@ -44,24 +44,10 @@ uint32_t IcmpPayload::mVersion = 0;
 // class constructor
 //
 IcmpPayload::IcmpPayload() :
-    cookie(htonl(mCookie)),
+    cookie(htonl(mSoftwareCookie)),
     version(htonl(mVersion)),
     seq(0)
 {
-    memcpy(uuid, mGuid.data, sizeof(uuid));
+   
 }
-
-//
-// ---> generateGuid()
-//
-// generate GUID for the current instance of linkmgrd
-//
-void IcmpPayload::generateGuid()
-{
-    boost::uuids::random_generator gen;
-    mGuid = gen();
-
-    MUXLOGWARNING(boost::format("Link Prober generated GUID: {%s}") % boost::uuids::to_string(mGuid));
-}
-
 } /* namespace link_prober */
