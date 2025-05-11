@@ -67,6 +67,16 @@ void FakeDbInterface::handleProbeForwardingState(const std::string portName)
     mProbeForwardingStateInvokeCount++;
 }
 
+void FakeDbInterface::updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval)
+{
+    mUpdateIntervalV4Count++;
+}
+
+void FakeDbInterface::updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval)
+{
+    mUpdateIntervalV6Count++;
+}
+
 void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachineBase::Label label)
 {
     mLastSetMuxLinkmgrState = label;

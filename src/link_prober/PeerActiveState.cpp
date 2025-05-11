@@ -63,11 +63,6 @@ LinkProberState* PeerActiveState::handleEvent(IcmpPeerUnknownEvent &event)
     LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
     LinkProberState *nextState;
 
-    if(getMuxPortConfig().getLinkFailureDetectionTypeHw()){
-        nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerUnknownState());
-        return nextState;
-    }
-
     if (++mUnknownEventCount >= getMuxPortConfig().getNegativeStateChangeRetryCount()) {
         nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerUnknownState());
     }
@@ -84,6 +79,56 @@ LinkProberState* PeerActiveState::handleEvent(IcmpPeerUnknownEvent &event)
 // handle IcmpPeerWaitEvent from LinkProber
 //
 LinkProberState* PeerActiveState::handleEvent(IcmpPeerWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerWaitState());
+    return nextState;
+
+}
+
+//
+// ---> handleEvent(IcmpHwPeerActiveEvent &event);
+//
+// handle IcmpHwPeerActiveEvent from LinkProber
+//
+LinkProberState* PeerActiveState::handleEvent(IcmpHwPeerActiveEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerActiveState());
+
+    resetState();
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwPeerUnknownEvent &event);
+//
+// handle IcmpHwPeerUnknownEvent from LinkProber
+//
+LinkProberState* PeerActiveState::handleEvent(IcmpHwPeerUnknownEvent &event)
+{
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    // detection timer in hardware prober takes into account retry count
+    // and will move to Unknown state directly
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerUnknownState());
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwPeerWaitEvent &event);
+//
+// handle IcmpHwPeerWaitEvent from LinkProber
+//
+LinkProberState* PeerActiveState::handleEvent(IcmpHwPeerWaitEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 

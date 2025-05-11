@@ -226,7 +226,7 @@ public:
      * 
      * @return none
      */
-    virtual void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec)override;
+    virtual void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec) override;
 
     /**
      * @method revertProbeIntervalAfterSwitchComplete 
@@ -244,7 +244,7 @@ public:
      * 
      * @return none
      */
-    virtual void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType) ;
+    void reportHeartbeatReplyReceivedActiveStandby(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveStandby
@@ -255,7 +255,7 @@ public:
      *
      * @return none
      */
-    virtual void reportHeartbeatReplyNotReceivedActiveStandby(HeartbeatType heartbeatType);
+    void reportHeartbeatReplyNotReceivedActiveStandby(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyReceivedActiveActive
@@ -266,7 +266,7 @@ public:
      *
      * @return none
      */
-    virtual void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType) ;
+    void reportHeartbeatReplyReceivedActiveActive(HeartbeatType heartbeatType);
 
     /**
      * @method reportHeartbeatReplyNotReceivedActiveActive
@@ -275,7 +275,10 @@ public:
      * 
      * @return none
      */
-    virtual void reportHeartbeatReplyNotReceivedActiveActive(HeartbeatType heartbeatType);
+    void reportHeartbeatReplyNotReceivedActiveActive(HeartbeatType heartbeatType);
+
+
+    virtual void handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) override;
 
 private:
 };

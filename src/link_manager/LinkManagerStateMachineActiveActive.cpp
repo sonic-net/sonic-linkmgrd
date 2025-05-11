@@ -20,6 +20,10 @@
 #include "common/MuxLogger.h"
 #include "common/MuxException.h"
 #include "MuxPort.h"
+#include <chrono>
+
+std::chrono::time_point<std::chrono::high_resolution_clock> global_start;
+std::chrono::time_point<std::chrono::high_resolution_clock> global_end;
 
 namespace link_manager
 {
@@ -118,10 +122,11 @@ void ActiveActiveStateMachine::handleSwssSoCIpv4AddressUpdate(boost::asio::ip::a
         mMuxPortConfig.setBladeIpv4Address(address);
 
         try {
-            MUXLOGINFO( boost::format(" For Port %s detected Prober type Hw is %b ") % mMuxPortConfig.getPortName() %
-            mMuxPortConfig.getLinkFailureDetectionTypeHw());
+            bool isHwProber = mMuxPortConfig.getLinkProberType() == common::MuxPortConfig::LinkProberType::Hardware; 
+            MUXLOGINFO( boost::format("%s: detected Prober type HW(%b) ") % mMuxPortConfig.getPortName() %
+            isHwProber);
 
-            if(mMuxPortConfig.getLinkFailureDetectionTypeHw())
+            if (isHwProber)
             {
                 mLinkProberPtr = std::make_shared<link_prober::LinkProberHw>(
                 mMuxPortConfig,
@@ -1229,7 +1234,7 @@ void ActiveActiveStateMachine::startMuxProbeTimer()
 //
 void ActiveActiveStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(boost::format("%s: Mux Probe Timeout") % mMuxPortConfig.getPortName());
     stopWaitMux();
     if (errorCode == boost::system::errc::success) {
         if (ms(mCompositeState) == mux_state::MuxState::Label::Unknown ||

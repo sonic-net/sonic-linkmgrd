@@ -427,27 +427,27 @@ public:
 
     /**
     * @method updateLinkFailureDetectionState
-    *
+    * 
     * @brief handles link failure detection state update for port in active-active cable type
-    *
+    * 
     * @return none
     */
     void updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type);
 
     /**
-    * @method updateLinkFailureDetectionType
-    *
+    * @method updateProberType
+    * 
     * @brief link failure detection type update for port in active-active cable type
-    *
+    * 
     * @return none
     */
-    void updateLinkFailureDetectionType(const std::string &linkFailureDetectionType);
+    void updateProberType(const std::string &linkFailureDetectionType);
 
     /**
     * @method createIcmpEchoSession
-    *
+    * 
     * @brief calls DbInterface API to create ICMO_ECHO_SESSION
-    *
+    * 
     * @return none
     */
     inline void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
@@ -456,9 +456,9 @@ public:
 
     /**
     * @method deleteIcmpEchoSession
-    *
-    * @brief calls DbInterface API to delete ICMO_ECHO_SESSION
-    *
+    * 
+    * @brief calls DbInterface API to delete ICMO_ECHO_SESSION 
+    * 
     * @return none
     */
     inline void deleteIcmpEchoSession(std::string key) {
@@ -467,22 +467,21 @@ public:
 
     /**
     * @method setTimeoutIpv4_msec
-    *
+    * 
     * @brief calls DbInterface API to update Tx v4 Interval for ICMP_ECHO_SESSION
-    *
+    * 
     * @return none
     */
-    void setTimeoutIpv4_msec(uint32_t timeout_msec);
+     void setTimeoutIpv4_msec(uint32_t timeout_msec);
 
     /**
     * @method setTimeoutIpv6_msec
-    *
+    * 
     * @brief calls DbInterface API to update Tx v6 Interval for ICMP_ECHO_SESSION
-    *
+    * 
     * @return none
     */
-    void setTimeoutIpv6_msec(uint32_t timeout_msec);
-
+     void setTimeoutIpv6_msec(uint32_t timeout_msec);
 
 protected:
     friend class test::MuxManagerTest;

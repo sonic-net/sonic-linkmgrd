@@ -423,22 +423,22 @@ public:
     void deleteIcmpEchoSession(std::string key);
 
     /**
-    *@method updateTxIntervalv4
+    *@method updateIntervalv4
     *
-    *@brief update Tx v4 Interval
+    *@brief update v4 Interval
     *
     *@return handles update of interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
     */
-    void updateTxIntervalv4(std::string key, uint32_t tx_interval);
+    virtual void updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval);
 
     /**
-    *@method updateTxIntervalv4
+    *@method updateIntervalv6
     *
-    *@brief update Tx v6 Interval
+    *@brief update v6 Interval
     *
     *@return handles update of interval_v6 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
     */
-    void updateTxIntervalv6(std::string key, uint32_t Rx_interval);
+    virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval);
 
 private:
     friend class test::MuxManagerTest;
@@ -936,13 +936,13 @@ private:
     void handleDeleteIcmpEchoSession(std::string key);
 
     /**
-     * @method handleUpdateTxIntervalv4
+     * @method handleUpdateInterval
      * 
      * @brief handles update of interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
      * 
      * @return none
      */
-    void handleUpdateTxIntervalv4(std::string key, uint32_t tx_interval);
+    void handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval);
 
     /**
      * @method handleUpdateTxIntervalv6
@@ -963,22 +963,22 @@ private:
     void processIcmpEchoSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
-     * @method processLinkFailureDetectionType
+     * @method processProberType
      * 
      * @brief process Mux Cable Table enteries to get linkFailureDetectionType by defaut its software 
      * 
      * @return none
      */
-    void processLinkFailureDetectionType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+    void processProberType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
-     * @method getLinkFailureDetectionType
+     * @method getProberType
      * 
      * @brief retrieve the Link Failure Detection Type (HW/SW) from config
      * 
      * @return none
      */
-    void getLinkFailureDetectionType(std::shared_ptr<swss::DBConnector> configDbConnector);
+    void getProberType(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
      * @method extractIfnameAndSessionType
@@ -1003,6 +1003,7 @@ private:
     std::shared_ptr<swss::DBConnector> mAppDbPtr;
     std::shared_ptr<swss::DBConnector> mStateDbPtr;
     std::shared_ptr<swss::Table> mMuxStateTablePtr;
+    std::shared_ptr<swss::Table> mSwitchCapTablePtr;
 
     // for communicating with orchagent for mux stae
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;

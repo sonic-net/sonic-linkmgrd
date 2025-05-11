@@ -25,6 +25,16 @@
 #include "common/MuxPortConfig.h"
 #include "common/MuxLogger.h"
 
+namespace std {
+    template <>
+    struct hash<boost::uuids::uuid> {
+        std::size_t operator()(const boost::uuids::uuid& uuid) const {
+            // Use boost's built-in hash function for UUIDs
+            return boost::uuids::hash_value(uuid);
+        }
+    };
+}
+
 namespace test {
 class LinkProberTest;
 class LinkProberMockTest;
@@ -62,6 +72,12 @@ using SockAddrLinkLayer = struct sockaddr_ll;
 class LinkProberBase
 {
 public:
+    enum SessionType {
+        UNKNOWN,
+        SOFTWARE,
+        HARDWARE
+    };
+
     /**
     *@method LinkProberBase
     *
@@ -97,7 +113,7 @@ public:
     LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio::io_service &ioService,
             LinkProberStateMachineBase *linkProberStateMachinePtr);
 
-    
+
     /**
     *@method initialize
     *
@@ -157,9 +173,9 @@ public:
 
     /**
     * @method resetIcmpPacketCounts()
-    * 
+    *
     * @brief reset Icmp packet counts, post a pck loss ratio update immediately 
-    * 
+    *
     * @return none
     */
     virtual void resetIcmpPacketCounts() {
@@ -168,9 +184,9 @@ public:
 
     /**
     * @method handleStateDbStateUpdate
-    * 
+    *
     * @brief handle state change of ICMP_ECHO_SESSION_TABLE in STATE_DB
-    * 
+    *
     * @return none
     */
     virtual void handleStateDbStateUpdate(const std::string &linkFailureDetectionState, const std::string session_type) {
@@ -189,39 +205,43 @@ public:
     }
 
     /**
-     * @method restartTxProbes
-     * 
-     * @brief restart sending ICMP ECHOREQUEST packets
-     * 
-     * @return none
-     */
+    * @method restartTxProbes
+    *
+    * @brief restart sending ICMP ECHOREQUEST packets
+    *
+    * @return none
+    */
     virtual void restartTxProbes() {
         MUXLOGWARNING(boost::format("Link Prober restartTxProbes not implemented"));
     }
 
     /**
-     * @method decreaseProbeIntervalAfterSwitch
-     *  
-     * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
-     * 
-     * @param switchTime_msec (in) switchover is expected to complete  within this time window
-     * @param expectingLinkProberEvent (in) depends on which state LinkManager is switching to, link prober expects self or peer events
-     * 
-     * @return none
-     */
+    * @method decreaseProbeIntervalAfterSwitch
+    *
+    * @brief adjust link prober interval to 10 ms after switchover to better measure the switchover overhead.
+    *
+    * @param switchTime_msec (in) switchover is expected to complete  within this time window
+    * @param expectingLinkProberEvent (in) depends on which state LinkManager is switching to, link prober expects self or peer events
+    *
+    * @return none
+    */
     virtual void decreaseProbeIntervalAfterSwitch(uint32_t switchTime_msec) {
         MUXLOGWARNING(boost::format("Link Prober decreaseProbeIntervalAfterSwitch not implemented"));
     }
 
     /**
-     * @method revertProbeIntervalAfterSwitchComplete 
-     * 
-     * @brief revert probe interval change after switchover is completed
-     * 
-     * @return none
-     */
+    * @method revertProbeIntervalAfterSwitchComplete
+    *
+    * @brief revert probe interval change after switchover is completed
+    *
+    * @return none
+    */
     virtual void revertProbeIntervalAfterSwitchComplete(){
         MUXLOGWARNING(boost::format("Link Prober revertProbeIntervalAfterSwitchComplete not implemented"));
+    }
+
+    virtual void handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) {
+        MUXLOGWARNING(boost::format("Link Prober handleIcmpPayload not implemented"));
     }
 
     /**
@@ -269,10 +289,21 @@ public:
     }
 
     /**
+    * @method getPeerSessionType
+    *
+    * @brief get peer session type
+    *
+    * @return SessionType
+    */
+    inline SessionType getPeerSessionType () {
+        return mPeerType;
+    }
+
+    /**
     * @method getProbingInterval
-    * 
+    *
     * @brief get link prober interval
-    * 
+    *
     * @return link prober interval
     */
     inline uint32_t getProbingInterval() {
@@ -287,8 +318,8 @@ public:
     *
     *@return none
     */
-   virtual void updateEthernetFrame() {
-    MUXLOGWARNING(boost::format("Link Prober updateEthernetFrame not implemented"));
+    virtual void updateEthernetFrame() {
+        MUXLOGWARNING(boost::format("Link Prober updateEthernetFrame not implemented"));
     }
 
     /**
@@ -307,7 +338,7 @@ public:
     *
     *@return none
     */
-   virtual void sendPeerProbeCommand();
+    virtual void sendPeerProbeCommand();
 
     /**
     *@method sendPeerSwitchCommand
@@ -319,40 +350,38 @@ public:
     virtual void sendPeerSwitchCommand();
 
     /**
-     * @method initTxBufferTlvSendProbe
-     *
-     * @brief initialize TX buffer TLVs to send probe command to peer
-     *
-     * @return none
-     */
+    * @method initTxBufferTlvSendProbe
+    *
+    * @brief initialize TX buffer TLVs to send probe command to peer
+    *
+    * @return none
+    */
     void initTxBufferTlvSendProbe();
 
     /**
-      * @method initTxBufferTlvSentinel
-      * 
-      * @brief initialize TX buffer to have only TLV sentinel
-      * 
-      * @return none
-      */
+    * @method initTxBufferTlvSentinel
+    *
+    * @brief initialize TX buffer to have only TLV sentinel
+    *
+    * @return none
+    */
     void initTxBufferTlvSentinel();
 
     /**
-     * @method initTxBufferTlvSendSwitch
-     * 
-     * @brief initialize TX buffer TLVs to send switch command to peer
-     * 
-     * @return none
-     */
+    * @method initTxBufferTlvSendSwitch
+    *
+    * @brief initialize TX buffer TLVs to send switch command to peer
+    *
+    * @return none
+    */
     void initTxBufferTlvSendSwitch();
 
     void resetTxBufferTlv() {mTxPacketSize = mTlvStartOffset;};
 
     static std::unordered_set<std::string> mGuidSet;
     boost::uuids::uuid mSelfUUID;
-    
-protected:
 
-    
+protected:
 
     /**
     *@method addChecksumCarryover
@@ -368,27 +397,27 @@ protected:
 
     /**
     * @method startInitRecv
-    * 
+    *
     * @brief start ICMP ECHOREPLY reception
-    * 
+    *
     * @return none
     */
    void startInitRecv();
 
    /**
    * @method startRecv
-   * 
+   *
    * @brief start ICMP ECHOREPLY reception
-   * 
+   *
    * @return none
    */
    void startRecv();
 
    /**
    * @method setupSocket
-   * 
-   * @brief setup socket filter and 
-   * 
+   *
+   * @brief setup socket filter
+   *
    * @return none
    */
    void setupSocket();
@@ -408,6 +437,10 @@ protected:
        bool isPeer
    );
 
+   void handleTlvRecv(
+        size_t bytesTransferred,
+        bool isSelfGuid
+   );
        /**
    *@method handleRecv
    *
@@ -455,7 +488,7 @@ protected:
    *@return none
    */
    void handleSendSwitchCommand();
-    
+
     /**
     *@method computeChecksum
     *
@@ -494,7 +527,7 @@ protected:
     *
     *@brief getter for TxBuffer used for testing
     *
-    *@return tx buffer
+    *@return reference to tx buffer
     */
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getTxBuffer() {return mTxBuffer;};
 
@@ -570,8 +603,10 @@ protected:
      *
      *@return uuid's string repersentation in hex form
      */
-     std::string uuidToHexString(const boost::uuids::uuid& uuid);
- 
+    std::string uuidToHexString(const boost::uuids::uuid& uuid);
+
+    void getGuidStr(const IcmpPayload *icmpPayload, std::string& guidDataStr);
+
     /**
      *@method generateGuid
      *
@@ -579,7 +614,7 @@ protected:
      *
      *@return newly generated guid
      */
-     std::string generateGuid();
+    std::string generateGuid();
 
     /**
     *@method appendTlvSentinel
@@ -601,30 +636,30 @@ protected:
 
     /**
     * @method calculateTxPacketChecksum
-    * 
+    *
     * @brief calculate TX packet checksums in both IP header and ICMP header
-    * 
+    *
     * @return none
     */
     void calculateTxPacketChecksum();
- 
- 
-    static SockFilter mIcmpFilter[];    
- 
+
+
+    static SockFilter mIcmpFilter[];
+
     common::MuxPortConfig &mMuxPortConfig;
     boost::asio::io_service &mIoService;
     LinkProberStateMachineBase *mLinkProberStateMachinePtr;
- 
+
     uint16_t mTxSeqNo = 0xffff;
     uint16_t mRxSelfSeqNo = 0;
     uint16_t mRxPeerSeqNo = 0;
- 
+
     uint32_t mIcmpChecksum = 0;
     uint32_t mIpChecksum = 0;
- 
+
     static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
     static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
- 
+
     boost::asio::io_service::strand mStrand;
     boost::asio::posix::stream_descriptor mStream;
     boost::asio::deadline_timer mDeadlineTimer;
@@ -632,24 +667,24 @@ protected:
     boost::asio::deadline_timer mSwitchoverTimer;
     std::shared_ptr<SockFilter> mSockFilterPtr;
     SockFilterProg mSockFilterProg;
- 
+
     std::string mSelfGuid;
     std::string mPeerGuid;
+    SessionType mPeerType = SessionType::UNKNOWN;
     boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyReceivedFuncPtr;
     boost::function<void (HeartbeatType heartbeatType)> mReportHeartbeatReplyNotReceivedFuncPtr;
- 
- 
+
     int mSocket = 0;
- 
+
     std::size_t mTxPacketSize;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
- 
+
     bool mCancelSuspend = false;
     bool mSuspendTx = false;
     bool mShutdownTx = false;
     bool mDecreaseProbingInterval = false;
- 
+
     uint64_t mIcmpUnknownEventCount = 0;
     uint64_t mIcmpPacketCount = 0;
 };

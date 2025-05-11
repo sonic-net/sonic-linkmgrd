@@ -137,19 +137,19 @@ void MuxPort::updateLinkFailureDetectionState(const std::string &linkFailureDete
     ));
 }
 
-// ---> updateLinkFailureDetectionType(const std::string &linkFailureDetectionState);
+// ---> updateProberType(const std::string &linkFailureDetectionState);
 //
 // handles link failure detection type update for port in active-active cable type
 //
-void MuxPort::updateLinkFailureDetectionType(const std::string &linkFailureDetectionType)
+void MuxPort::updateProberType(const std::string &proberType)
 {
     MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
-    if(linkFailureDetectionType == "hardware"){
-        mMuxPortConfig.setLinkFailureDetectionTypeHw(true);
+    if(proberType == "hardware")
+    {
+        mMuxPortConfig.setLinkProberType(common::MuxPortConfig::LinkProberType::Hardware);
     } else {
-        mMuxPortConfig.setLinkFailureDetectionTypeHw(false);
+        mMuxPortConfig.setLinkProberType(common::MuxPortConfig::LinkProberType::Software);
     }
-    
 }
 
 //
@@ -210,24 +210,20 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
     ));
 }
 
-void MuxPort::setTimeoutIpv4_msec(uint32_t timeout_msec){
+void MuxPort::setTimeoutIpv4_msec (uint32_t timeout_msec)
+{
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    std::unordered_set<std::string> mHardwareSessionKeys = mMuxPortConfig.getHardwareSessionKeys();
+    uint32_t rx_interval = timeout_msec * mMuxPortConfig.getNegativeStateChangeRetryCount();
 
-    for(auto key:mHardwareSessionKeys){
-        mDbInterfacePtr->updateTxIntervalv4(key, timeout_msec); 
-    }
-    
+    mDbInterfacePtr->updateIntervalv4(timeout_msec, rx_interval); 
 }
 
-void MuxPort::setTimeoutIpv6_msec(uint32_t timeout_msec){
+void MuxPort::setTimeoutIpv6_msec (uint32_t timeout_msec)
+{
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    std::unordered_set<std::string> mHardwareSessionKeys = mMuxPortConfig.getHardwareSessionKeys();
+    uint32_t rx_interval = timeout_msec * mMuxPortConfig.getNegativeStateChangeRetryCount();
 
-    for(auto key:mHardwareSessionKeys){
-        mDbInterfacePtr->updateTxIntervalv6(key, timeout_msec); 
-    }
-    
+    mDbInterfacePtr->updateIntervalv6(timeout_msec, rx_interval);
 }
 
 //

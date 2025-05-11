@@ -906,9 +906,13 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"reset_suspend_timer", "Ethernet0"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV4Count, 0);
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV6Count, 0);
     processMuxLinkmgrConfigNotifiction(entries);
     runIoService(2);
 
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV4Count, 1);
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV6Count, 1);
     EXPECT_TRUE(getTimeoutIpv4_msec(port) == v4PorbeInterval);
     EXPECT_TRUE(getTimeoutIpv6_msec(port) == v6ProveInterval);
     EXPECT_TRUE(getPositiveStateChangeRetryCount(port) == positiveSignalCount);

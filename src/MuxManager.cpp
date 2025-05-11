@@ -280,19 +280,21 @@ void MuxManager::updateLinkFailureDetectionState(const std::string &portName, co
 }
 
 //
-// ---> updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType);
+// ---> updateProberType(const std::string &portName, const std::string &proberType);
 //
 // Updates the link_failure_detection_type for link_prober
 //
-void MuxManager::updateLinkFailureDetectionType(const std::string &portName, const std::string &linkFailureDetectionType)
+void MuxManager::updateProberType(const std::string &portName, const std::string &proberType)
 {
-    MUXLOGDEBUG(boost::format("%s: link failure detection type for : %s") % portName % linkFailureDetectionType );
+    MUXLOGDEBUG(boost::format("%s: link failure detection type for : %s") % portName % proberType );
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
     if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
-            // notify link failure detection type for ports in active-active cable type
-            muxPortPtr->updateLinkFailureDetectionType(linkFailureDetectionType);
+        // notify prober type for ports in active-active cable type
+        muxPortPtr->updateProberType(proberType);
+    } else {
+        MUXLOGERROR(boost::format("%s: Unsupported link failure detection type for : %s") % portName % proberType );
     }
 }
 

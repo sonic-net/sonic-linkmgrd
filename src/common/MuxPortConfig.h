@@ -53,7 +53,7 @@ public:
         Manual,
         Active,
         Standby,
-        Detached      // mux mode for active-active cable type only 
+        Detached      // mux mode for active-active cable type only
     };
 
     /**
@@ -65,6 +65,18 @@ public:
         ActiveStandby,
         ActiveActive,
         DefaultType = ActiveStandby
+    };
+
+
+    /**
+     * @enum LinkProberType
+     *
+     * @brief Link Prober Type
+     */
+    enum LinkProberType {
+        Software,
+        Hardware,
+        Default=Software
     };
 
 public:
@@ -312,25 +324,24 @@ public:
     inline PortCableType getPortCableType() const {return mPortCableType;};
 
     /**
-    *@method getLinkFailureDetectionTypeHw
+    *@method getLinkProberType
     *
-    *@brief getter for LinkFailureDetectionTypeHw
+    *@brief getter for LinkProberType
     *
-    *@return Link Failure Detection Type HW
+    *@return LinkProberType 
     */
-    inline bool getLinkFailureDetectionTypeHw() const {return mLinkFailureDetectionTypeHw;};
+    inline LinkProberType getLinkProberType() const {return mLinkProberType;};
 
     /**
-     * @method setLinkFailureDetectionTypeHw
+     * @method setLinkProberType
      * 
-     * @brief Set the Link Failure Detection Type Hw
+     * @brief Set the Link Prober Type 
      * 
-     * @param linkFailureDetectionTypeHw   link failure detection type hardware
+     * @param LinkProberType link prober hardware
      * 
      * @return none
      */
-    inline void setLinkFailureDetectionTypeHw(bool linkFailureDetectionTypeHw) { mLinkFailureDetectionTypeHw = linkFailureDetectionTypeHw; };
-
+    inline void setLinkProberType(LinkProberType linkProberType) { mLinkProberType = linkProberType; };
 
     /**
     *@method getDecreasedTimeoutIpv4_msec
@@ -437,37 +448,9 @@ public:
      */
     uint32_t getAdminForwardingStateSyncUpInterval() {return mAdminForwardingStateSyncUpInterval_msec;};
 
-    /**
-     * @method setHardwareSessionKey
-     * 
-     * @brief set ports session key in case of hardware prober
-     * 
-     * @return none
-     */
-    inline void setHardwareSessionKey(std::string key) { mHardwareSessionKeys.insert(key); };
-
-    /**
-     * @method getHardwareSessionKey
-     * 
-     * @brief get ports session key in case of hardware prober
-     * 
-     * @return hardware session key value
-     */
-    std::unordered_set<std::string> getHardwareSessionKeys() { return mHardwareSessionKeys; };
-
-    /**
-     * @method removeHardwareSessionKey
-     * 
-     * @brief removes ports session key in case of hardware prober
-     * 
-     * @return none
-     */
-    inline void removeHardwareSessionKey(std::string key) { mHardwareSessionKeys.erase(key); };
-
 private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
-    std::unordered_set<std::string> mHardwareSessionKeys;
     boost::asio::ip::address mBladeIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     std::array<uint8_t, ETHER_ADDR_LEN> mWellKnownMacAddress = {0, 0, 0, 0, 0, 0};
@@ -475,7 +458,7 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
-    bool mLinkFailureDetectionTypeHw;
+    LinkProberType mLinkProberType;
     uint32_t mAdminForwardingStateSyncUpInterval_msec = 10000;
 
 };
