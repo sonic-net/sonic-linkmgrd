@@ -109,6 +109,86 @@ LinkProberState* UnknownState::handleEvent(IcmpUnknownEvent &event)
     return nextState;
 }
 
+LinkProberState* UnknownState::handleEvent(IcmpWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getWaitState());
+    return nextState;
+
+}
+
+//
+// ---> handleEvent(IcmpHwPeerEvent &event);
+//
+// handle IcmpHwPeerEvent from LinkProber
+//
+LinkProberState* UnknownState::handleEvent(IcmpHwPeerEvent &event)
+{
+    // used for active-standby state machine
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine =
+        dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    mSelfEventCount = 0;
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getStandbyState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwSelfEvent &event);
+//
+// handle IcmpSelfEvent from LinkProber
+//
+LinkProberState* UnknownState::handleEvent(IcmpHwSelfEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine =
+        dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    mPeerEventCount = 0;
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getActiveState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwUnknownEvent &event);
+//
+// handle IcmpHwUnknownEvent from LinkProber
+//
+LinkProberState* UnknownState::handleEvent(IcmpHwUnknownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
+
+    resetState();
+
+    return nextState;
+}
+
+LinkProberState* UnknownState::handleEvent(IcmpHwWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getWaitState());
+    return nextState;
+
+}
+
 //
 // ---> resetState();
 //

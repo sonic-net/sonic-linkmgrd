@@ -42,6 +42,8 @@ public:
     virtual std::map<std::string, std::string> getMuxModeConfig() override;
     virtual void probeMuxState(const std::string &portName) override;
     virtual void handleProbeForwardingState(const std::string portName) override;
+    virtual void updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval) override;
+    virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval) override;
     virtual void setMuxLinkmgrState(
         const std::string &portName,
         link_manager::LinkManagerStateMachineBase::Label label
@@ -88,6 +90,8 @@ public:
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
     uint32_t mProbeForwardingStateInvokeCount = 0;
+    uint32_t mUpdateIntervalV4Count = 0;
+    uint32_t mUpdateIntervalV6Count = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
     uint32_t mPostMetricsInvokeCount = 0;
     uint32_t mPostLinkProberMetricsInvokeCount = 0;

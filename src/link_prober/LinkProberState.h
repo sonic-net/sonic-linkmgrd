@@ -31,10 +31,20 @@ namespace link_prober
 class LinkProberStateMachineBase;
 class IcmpPeerEvent;
 class IcmpSelfEvent;
+class IcmpWaitEvent;
 class IcmpUnknownEvent;
 class SuspendTimerExpiredEvent;
 class IcmpPeerActiveEvent;
 class IcmpPeerUnknownEvent;
+class IcmpPeerWaitEvent;
+
+class IcmpHwPeerEvent;
+class IcmpHwSelfEvent;
+class IcmpHwWaitEvent;
+class IcmpHwUnknownEvent;
+class IcmpHwPeerActiveEvent;
+class IcmpHwPeerUnknownEvent;
+class IcmpHwPeerWaitEvent;
 
 /**
  *@class LinkProberState
@@ -119,6 +129,17 @@ public:
     */
     virtual LinkProberState* handleEvent(IcmpSelfEvent &event);
 
+     /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpWaitEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpWaitEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+   virtual LinkProberState* handleEvent(IcmpWaitEvent &event);
+
     /**
     *@method handleEvent
     *
@@ -151,6 +172,95 @@ public:
     *@return pointer to next LinkProberState
     */
     virtual LinkProberState* handleEvent(IcmpPeerUnknownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpPeerWaitEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpPeerWaitEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+   virtual LinkProberState* handleEvent(IcmpPeerWaitEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwPeerEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwPeerEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpHwPeerEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwSelfEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwSelfEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpHwSelfEvent &event);
+
+     /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwWaitEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwWaitEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+   virtual LinkProberState* handleEvent(IcmpHwWaitEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwUnknownEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwUnknownEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpHwUnknownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwPeerActiveEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwPeerActiveEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpHwPeerActiveEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwPeerUnknownEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwPeerUnknownEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+    virtual LinkProberState* handleEvent(IcmpHwPeerUnknownEvent &event);
+
+    /**
+    *@method handleEvent
+    *
+    *@brief handle IcmpHwPeerWaitEvent from LinkProber
+    *
+    *@param event (in)  reference to IcmpHwPeerWaitEvent
+    *
+    *@return pointer to next LinkProberState
+    */
+   virtual LinkProberState* handleEvent(IcmpHwPeerWaitEvent &event);
+
 
     /**
     *@method getStateLabel
