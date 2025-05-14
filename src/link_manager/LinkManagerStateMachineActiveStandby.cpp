@@ -437,6 +437,10 @@ void ActiveStandbyStateMachine::activateStateMachine()
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
 
+        if (mMuxPortConfig.ifEnableDefaultRouteFeature() == true)  {
+            shutdownOrRestartLinkProberOnDefaultRoute();
+        }
+
         mInitializeProberFnPtr();
         mStartProbingFnPtr();
 
@@ -922,10 +926,12 @@ void ActiveStandbyStateMachine::shutdownOrRestartLinkProberOnDefaultRoute()
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (mComponentInitState.all()) {
-        if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto && mDefaultRouteState == DefaultRoute::NA) {
+        if ((mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto ||
+             mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) && 
+             mDefaultRouteState == DefaultRoute::NA) {
             mShutdownTxFnPtr();
         } else {
-            // If mux mode is in manual/standby/active mode, we should restart link prober. 
+            // If mux mode is in manual/active mode, we should restart link prober. 
             // If default route state is "ok", we should retart link prober.
             mRestartTxFnPtr();
         }
