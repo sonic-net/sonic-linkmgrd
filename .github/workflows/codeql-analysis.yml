@@ -53,15 +53,11 @@ jobs:
             libzmq3-dev \
             libzmq5 \
             swig3.0 \
-            libpython2.7-dev \
+            libpython3-dev \
             libgtest-dev \
             libgmock-dev \
-            libboost1.71-dev \
-            libboost-serialization1.71-dev \
-            libboost-date-time1.71-dev \
-            libboost-thread1.71-dev \
-            libboost-log1.71-dev \
-            libboost-program-options1.71-dev \
+            libboost-dev \
+            libboost-serialization-dev \
             dh-exec \
             doxygen \
             cdbs \
@@ -71,7 +67,6 @@ jobs:
             autoconf-archive \
             uuid-dev \
             libjansson-dev \
-            python \
             nlohmann-json3-dev
 
     - name: build-swss-common
@@ -80,13 +75,15 @@ jobs:
         cd ..
         git clone https://github.com/sonic-net/sonic-swss-common
         pushd sonic-swss-common
+        ./autogen.sh
         git checkout $GITHUB_BASE_REF
         git reset HEAD --hard
-        ./autogen.sh
-        fakeroot dpkg-buildpackage -us -uc -b
+        dpkg-buildpackage -rfakeroot -us -uc -b -Pnoyangmod,nopython2 -j$(nproc)
         popd
-        dpkg-deb -x libswsscommon_1.0.0_amd64.deb $(dirname $GITHUB_WORKSPACE)
-        dpkg-deb -x libswsscommon-dev_1.0.0_amd64.deb $(dirname $GITHUB_WORKSPACE)
+        dpkg-deb -x libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
+        dpkg-deb -x libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
+      env:
+        SWSSCOMMON_VER: "1.0.0"
 
     - name: build
       run: |
