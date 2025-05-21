@@ -38,6 +38,7 @@ namespace std {
 namespace test {
 class LinkProberTest;
 class LinkProberMockTest;
+class LinkProberHardwareTest;
 }
 
 namespace link_prober

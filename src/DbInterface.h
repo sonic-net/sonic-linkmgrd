@@ -43,6 +43,7 @@
 
 namespace test {
 class MuxManagerTest;
+class LinkProberHardwareTest;
 }
 
 namespace mux
@@ -411,7 +412,7 @@ public:
     *
     *@return triggers creation of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
     */
-    void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries);
+    virtual void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries);
 
     /**
     *@method deleteIcmpEchoSession
@@ -420,7 +421,7 @@ public:
     *
     *@return handles deletion of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
     */
-    void deleteIcmpEchoSession(std::string key);
+    virtual void deleteIcmpEchoSession(std::string key);
 
     /**
     *@method updateIntervalv4
@@ -442,7 +443,7 @@ public:
 
 private:
     friend class test::MuxManagerTest;
-
+    friend class test::LinkProberHardwareTest;
     /**
     *@method handleGetMuxState
     *
@@ -866,7 +867,7 @@ private:
     *
     *@return none
     */
-    void handleSwssNotification();
+    virtual void handleSwssNotification();
 
     /**
      * @method processDefaultRouteStateNotification

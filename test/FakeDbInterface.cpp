@@ -151,4 +151,16 @@ std::map<std::string, std::string> FakeDbInterface::getMuxModeConfig()
     return muxModeConfig;
 }
 
+void FakeDbInterface::handleSwssNotification(){
+    return;
+}
+
+void FakeDbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
+    mIcmpSessionsCount++;
+}
+
+void FakeDbInterface::deleteIcmpEchoSession(std::string key) {
+    mIcmpSessionsCount--;
+}
+
 } /* namespace test */

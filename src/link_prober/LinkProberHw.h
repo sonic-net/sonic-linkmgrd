@@ -6,6 +6,7 @@
 namespace test {
 class LinkProberTest;
 class LinkProberMockTest;
+class LinkProberHardwareTest;
 }
 
 namespace mux {
@@ -137,6 +138,10 @@ public:
     virtual ~LinkProberHw() = default;
 
 private:
+
+    friend class test::LinkProberTest;
+    friend class test::LinkProberMockTest;
+    friend class test::LinkProberHardwareTest;
 
     /**
     *@method handleTimeout

@@ -699,6 +699,18 @@ private: // testing only
      */
     void setSendPeerProbeCommandFnPtr(boost::function<void()> sendPeerProbeCommandFnPtr) { mSendPeerProbeCommandFnPtr = sendPeerProbeCommandFnPtr; }
 
+     /**
+     * @method set
+     *
+     * @brief set mHandleStateDbUpdateFnPtr. This method is used for testing
+     *
+     * @param setIcmpEchoSessionStateUpdate (in)           pointer to new sendPeerProbeCommandFnPtr
+     *
+     * @return none
+     */
+    void setIcmpEchoSessionStateUpdate(boost::function<void(const std::string& linkFailureDetectionState,
+            const std::string session_type)> handleStateDbStateUpdate) { mHandleStateDbUpdateFnPtr = handleStateDbStateUpdate; }
+
 private:
     enum class LastMuxNotificationType {
         MuxNotificationNotReceived,

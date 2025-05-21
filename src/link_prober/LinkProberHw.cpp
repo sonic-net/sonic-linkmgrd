@@ -209,7 +209,9 @@ void LinkProberHw::handlePositiveProbingTimeout(std::string hwSessionType)
 //
 void LinkProberHw::startProbing()
 {
-    mStream.cancel();
+    if(mStream.is_open()){
+	mStream.cancel();
+    }
     if((!mSuspendTx) && (!mShutdownTx))
     {
        createIcmpEchoSession(mSessionTypeSelf, getSelfGuidData());
