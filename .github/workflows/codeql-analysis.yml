@@ -56,7 +56,7 @@ jobs:
             libpython3-dev \
             libgtest-dev \
             libgmock-dev \
-            libboost-dev \
+            libboost-all-dev \
             libboost-serialization-dev \
             dh-exec \
             doxygen \
