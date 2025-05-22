@@ -674,17 +674,15 @@ std::string LinkProberBase::uuidToHexString(const boost::uuids::uuid& uuid)
 
 void LinkProberBase::getGuidStr(const IcmpPayload *icmpPayload, std::string& guidDataStr)
 {
-    const uint64_t network_guid = *reinterpret_cast<const uint64_t*>(icmpPayload->uuid);
+    uint64_t network_guid;
+    std::memcpy(&network_guid, icmpPayload->uuid, sizeof(network_guid));
     if (network_guid == 0)
     {
         MUXLOGWARNING(boost::format("Received invalid Raw GUID: {%d}") % network_guid);
         guidDataStr = "0";
     } else {
-        //MUXLOGWARNING(boost::format("Raw GUID: {0x%016llx}") % network_guid);
         uint64_t host_guid = ntohll(network_guid);
-        //MUXLOGWARNING(boost::format("ntohll GUID: {0x%016llx}") % host_guid);
         host_guid = static_cast<uint32_t>(host_guid);
-        //MUXLOGWARNING(boost::format("uint32_t  GUID: {0x0x%08x}") % host_guid);
         std::stringstream os;
         os << std::hex << std::setw(8) << std::setfill('0') << host_guid;
         guidDataStr = os.str();

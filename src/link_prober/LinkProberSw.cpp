@@ -390,7 +390,6 @@ void LinkProberSw::startTimer()
 void LinkProberSw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload)
 {
     bool isHwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getHardwareCookie();
-    bool isSwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getSoftwareCookie();
 
     if (ntohl(icmpPayload->version) <= IcmpPayload::getVersion() &&
        ((ntohs(icmpHeader->un.echo.id) == mMuxPortConfig.getServerId()) ||
@@ -400,22 +399,16 @@ void LinkProberSw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             mMuxPortConfig.getPortName() %
             mMuxPortConfig.getBladeIpv4Address().to_string()
         );
+        std::string guidDataStr;
+        getGuidStr(icmpPayload, guidDataStr);
 
-        uint64_t network_guid = *reinterpret_cast<uint64_t*>(icmpPayload->uuid);
-        if (network_guid == 0) {
-            MUXLOGWARNING(boost::format("Received invalid Raw GUID: {%d}") % network_guid);
+        if (guidDataStr == "0x0") {
+            MUXLOGWARNING(boost::format("%s: Received 0x0 GUID") %
+                    mMuxPortConfig.getPortName());
             startRecv();
             return;
         }
-        //MUXLOGWARNING(boost::format("Raw GUID: {0x%016llx}") % network_guid);
-        uint64_t host_guid = ntohll(network_guid);
-        //MUXLOGWARNING(boost::format("ntohll GUID: {0x%016llx}") % host_guid);
-        host_guid = static_cast<uint32_t>(host_guid);
-        //MUXLOGWARNING(boost::format("uint32_t  GUID: {0x0x%08x}") % host_guid);
-        std::stringstream os;
-        os << std::hex << std::setw(8) << std::setfill('0') << host_guid;
-        auto guidDataStr = os.str();
-        guidDataStr = "0x" + guidDataStr;
+
         bool isSelfGuid = getSelfGuidData() == guidDataStr;
         HeartbeatType heartbeatType;
         if (isSelfGuid) {
