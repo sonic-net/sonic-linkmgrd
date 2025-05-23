@@ -28,6 +28,7 @@ namespace link_prober
 //          link_manager::LinkManagerStateMachineBase &linkManagerStateMachinePtr,
 //          boost::asio::io_service::strand &strand,
 //          common::MuxPortConfig &muxPortConfig,
+//          bool proberTypeHardware,
 //          LinkProberState::Label label
 //      );
 //
@@ -193,6 +194,55 @@ void LinkProberStateMachineActiveActive::processEvent(MuxProbeRequestEvent &muxP
     ));
 }
 
+//
+// ---> processEvent(IcmpHwPeerActiveEvent &icmpHwPeerActiveEvent);
+//
+// process IcmpHwPeerActiveEvent
+//
+void LinkProberStateMachineActiveActive::processEvent(IcmpHwPeerActiveEvent &icmpHwPeerActiveEvent)
+{
+    LinkProberState *currentPeerState = getCurrentPeerState();
+    LinkProberState *nextPeerState = currentPeerState->handleEvent(icmpHwPeerActiveEvent);
+    if (nextPeerState == nullptr) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
+    }
+}
+
+//
+// ---> processEvent(IcmpHwPeerUnknownEvent &icmpHwPeerUnknownEvent);
+//
+// process IcmpHwPeerUnknownEvent
+//
+void LinkProberStateMachineActiveActive::processEvent(IcmpHwPeerUnknownEvent &IcmpHwPeerUnknownEvent)
+{
+    LinkProberState *currentPeerState = getCurrentPeerState();
+    LinkProberState *nextPeerState = currentPeerState->handleEvent(IcmpHwPeerUnknownEvent);
+    if (nextPeerState == nullptr) {
+        MUXLOGERROR(
+            boost::format(
+                "%s: link prober state %d could not handle event"
+            ) %
+            mMuxPortConfig.getPortName() %
+            currentPeerState->getStateLabel()
+        );
+    } else {
+        if (nextPeerState != currentPeerState) {
+            postLinkManagerPeerEvent(nextPeerState);
+        }
+        setCurrentPeerState(nextPeerState);
+    }
+}
 
 //
 // ---> postLinkManagerPeerEvent(LinkProberState* linkProberState);

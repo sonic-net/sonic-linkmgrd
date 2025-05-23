@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 
+#include <utility>
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -35,12 +36,14 @@
 #include "swss/producerstatetable.h"
 #include "swss/subscriberstatetable.h"
 #include "swss/warm_restart.h"
-
+#include "link_prober/LinkProberBase.h"
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
 #include "mux_state/MuxState.h"
 
+
 namespace test {
 class MuxManagerTest;
+class LinkProberHardwareTest;
 }
 
 namespace mux
@@ -54,10 +57,15 @@ namespace mux
 #define APP_PEER_HW_FORWARDING_STATE_TABLE_NAME    "HW_FORWARDING_STATE_PEER"
 #define STATE_PEER_HW_FORWARDING_STATE_TABLE_NAME   "HW_MUX_CABLE_TABLE_PEER"
 
+#define STATE_ICMP_ECHO_SESSION_TABLE_NAME "ICMP_ECHO_SESSION_TABLE"
+#define APP_ICMP_ECHO_SESSION_TABLE_NAME "ICMP_ECHO_SESSION_TABLE"
+
 #define STATE_MUX_SWITCH_CAUSE_TABLE_NAME "MUX_SWITCH_CAUSE"
 
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
+using IcmpHwOffloadEntries = std::vector<std::pair<std::string, std::string>>;
+using IcmpHwOffloadEntriesPtr = std::unique_ptr<IcmpHwOffloadEntries>;
 
 /**
  *@class DbInterface
@@ -397,9 +405,45 @@ public:
     */
     virtual std::map<std::string, std::string> getMuxModeConfig();
 
+    /**
+    *@method createIcmpEchoSession
+    *
+    *@brief retrieve mux mode config
+    *
+    *@return triggers creation of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+    */
+    virtual void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries);
+
+    /**
+    *@method deleteIcmpEchoSession
+    *
+    *@brief retrieve mux mode config
+    *
+    *@return handles deletion of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+    */
+    virtual void deleteIcmpEchoSession(std::string key);
+
+    /**
+    *@method updateIntervalv4
+    *
+    *@brief update v4 Interval
+    *
+    *@return handles update of interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+    */
+    virtual void updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval);
+
+    /**
+    *@method updateIntervalv6
+    *
+    *@brief update v6 Interval
+    *
+    *@return handles update of interval_v6 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+    */
+    virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval);
+
 private:
     friend class test::MuxManagerTest;
-
+    friend class test::LinkProberHardwareTest;
     /**
     *@method handleGetMuxState
     *
@@ -823,7 +867,7 @@ private:
     *
     *@return none
     */
-    void handleSwssNotification();
+    virtual void handleSwssNotification();
 
     /**
      * @method processDefaultRouteStateNotification
@@ -865,6 +909,87 @@ private:
      */
     void processTsaEnableNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
+    /**
+     * @method handleIcmpEchoSessionStateNotification
+     * 
+     * @brief extract enteries from State_DB ICMP_ECHO_SESSION_TABLE and call processing function
+     * 
+     * @return none
+     */
+    void handleIcmpEchoSessionStateNotification(swss::SubscriberStateTable &stateDbIcmpEchoSessionTable);
+
+    /**
+     * @method handleIcmpEchoSession
+     * 
+     * @brief handles creation of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+     * 
+     * @return none
+     */
+    void handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *entries);
+
+    /**
+     * @method handleDeleteIcmpEchoSession
+     * 
+     * @brief handles deletion of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+     * 
+     * @return none
+     */
+    void handleDeleteIcmpEchoSession(std::string key);
+
+    /**
+     * @method handleUpdateInterval
+     * 
+     * @brief handles update of interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+     * 
+     * @return none
+     */
+    void handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval);
+
+    /**
+     * @method handleUpdateTxIntervalv6
+     * 
+     * @brief handles update of interval_v6 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+     * 
+     * @return none
+     */
+     void handleUpdateTxIntervalv6(std::string key, uint32_t tx_interval);
+
+    /**
+     * @method processTsaEnableNotification
+     * 
+     * @brief process each entery of ICMP_ECHO_SESSION_TABLE extract Port, Session_Type(Normal/Rx) and state itself
+     * 
+     * @return none
+     */
+    void processIcmpEchoSessionStateNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+     * @method processProberType
+     * 
+     * @brief process Mux Cable Table enteries to get linkFailureDetectionType by defaut its software 
+     * 
+     * @return none
+     */
+    void processProberType(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
+     * @method getProberType
+     * 
+     * @brief retrieve the Link Failure Detection Type (HW/SW) from config
+     * 
+     * @return none
+     */
+    void getProberType(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
+     * @method extractIfnameAndSessionType
+     * 
+     * @brief helper function to extract interface name and session_type from the key
+     * 
+     * @return none
+     */
+    void extractIfnameAndSessionType(const std::string &key, std::string &ifname, std::string &sessionType);
+
 private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;
@@ -879,9 +1004,12 @@ private:
     std::shared_ptr<swss::DBConnector> mAppDbPtr;
     std::shared_ptr<swss::DBConnector> mStateDbPtr;
     std::shared_ptr<swss::Table> mMuxStateTablePtr;
+    std::shared_ptr<swss::Table> mSwitchCapTablePtr;
 
-    // for communicating with orchagent
+    // for communicating with orchagent for mux stae
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;
+    // for communicating with orchagent for icmp echo session
+    std::shared_ptr<swss::ProducerStateTable> mAppDbIcmpEchoSessionTablePtr;
     // for communication with driver (setting peer's forwarding state)
     std::shared_ptr<swss::Table> mAppDbPeerMuxTablePtr;
     // for communicating with the driver (probing the mux)
@@ -896,6 +1024,8 @@ private:
     std::shared_ptr<swss::Table> mStateDbLinkProbeStatsTablePtr;
     // for writing mux switch reason to state db 
     std::shared_ptr<swss::Table> mStateDbSwitchCauseTablePtr;
+    // for reading icmp echo session state from state db 
+    std::shared_ptr<swss::Table> mStateDbIcmpEchoSessionTablePtr;
 
     std::shared_ptr<boost::thread> mSwssThreadPtr;
 

@@ -82,6 +82,44 @@ LinkProberState *PeerWaitState::handleEvent(IcmpPeerUnknownEvent &event)
 }
 
 //
+// ---> handleEvent(IcmpHwPeerActiveEvent &event);
+//
+// handle IcmpPeerActiveEvent from LinkProber
+//
+LinkProberState *PeerWaitState::handleEvent(IcmpHwPeerActiveEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *>(getStateMachine());
+    LinkProberState *nextState;
+
+    // moving to Active state directly here,
+    // only after positive probing timer expiry
+    mPeerUnknownEvent = 0;
+    nextState = dynamic_cast<LinkProberState *>(stateMachine->getPeerActiveState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwPeerUnknownEvent &event);
+//
+// handle IcmpHwPeerUnknownEvent from LinkProber
+//
+LinkProberState *PeerWaitState::handleEvent(IcmpHwPeerUnknownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *>(getStateMachine());
+    LinkProberState *nextState;
+
+    mPeerActiveEvent = 0;
+    nextState = dynamic_cast<LinkProberState *>(stateMachine->getPeerUnknownState());
+
+    return nextState;
+}
+
+//
 // ---> resetState();
 //
 // reset current state attributes

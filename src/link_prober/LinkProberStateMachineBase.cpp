@@ -30,12 +30,22 @@ namespace link_prober
 IcmpSelfEvent LinkProberStateMachineBase::mIcmpSelfEvent;
 IcmpPeerEvent LinkProberStateMachineBase::mIcmpPeerEvent;
 IcmpUnknownEvent LinkProberStateMachineBase::mIcmpUnknownEvent;
+IcmpHwSelfEvent LinkProberStateMachineBase::mIcmpHwSelfEvent;
+IcmpHwPeerEvent LinkProberStateMachineBase::mIcmpHwPeerEvent;
+IcmpHwUnknownEvent LinkProberStateMachineBase::mIcmpHwUnknownEvent;
 SuspendTimerExpiredEvent LinkProberStateMachineBase::mSuspendTimerExpiredEvent;
 SwitchActiveCommandCompleteEvent LinkProberStateMachineBase::mSwitchActiveCommandCompleteEvent;
 SwitchActiveRequestEvent LinkProberStateMachineBase::mSwitchActiveRequestEvent;
 MuxProbeRequestEvent LinkProberStateMachineBase::mMuxProbeRequestEvent;
 IcmpPeerActiveEvent LinkProberStateMachineBase::mIcmpPeerActiveEvent;
 IcmpPeerUnknownEvent LinkProberStateMachineBase::mIcmpPeerUnknownEvent;
+IcmpWaitEvent LinkProberStateMachineBase::mIcmpWaitEvent;
+IcmpPeerWaitEvent LinkProberStateMachineBase::mIcmpPeerWaitEvent;
+IcmpHwPeerActiveEvent LinkProberStateMachineBase::mIcmpHwPeerActiveEvent;
+IcmpHwPeerUnknownEvent LinkProberStateMachineBase::mIcmpHwPeerUnknownEvent;
+IcmpHwWaitEvent LinkProberStateMachineBase::mIcmpHwWaitEvent;
+IcmpHwPeerWaitEvent LinkProberStateMachineBase::mIcmpHwPeerWaitEvent;
+
 
 LinkProberStateMachineBase::LinkProberStateMachineBase(
     link_manager::LinkManagerStateMachineBase *linkManagerStateMachinePtr,
@@ -123,6 +133,54 @@ template
 void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerUnknownEvent>(IcmpPeerUnknownEvent &event);
 
 //
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpWaitEvent &e);
+//
+// post LinkProberState IcmpWaitEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpWaitEvent>(IcmpWaitEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpPeerWaitEvent &e);
+//
+// post LinkProberState IcmpPeerWaitEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpPeerWaitEvent>(IcmpPeerWaitEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpHwSelfEvent &e);
+//
+// post LinkProberState IcmpHwSelfEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpHwSelfEvent>(IcmpHwSelfEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpHwPeerActiveEvent &e);
+//
+// post LinkProberState IcmpHwPeerActiveEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpHwPeerActiveEvent>(IcmpHwPeerActiveEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpHwUnknownEvent &e);
+//
+// post LinkProberState IcmpHwUnknownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpHwUnknownEvent>(IcmpHwUnknownEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::postLinkProberStateEvent(IcmpHwPeerUnknownEvent &e);
+//
+// post LinkProberState IcmpHwPeerUnknownEvent to the state machine
+//
+template
+void LinkProberStateMachineBase::postLinkProberStateEvent<IcmpHwPeerUnknownEvent>(IcmpHwPeerUnknownEvent &event);
+
+//
 // ---> LinkProberStateMachineBase::processEvent(T &t);
 //
 // process LinkProberState event
@@ -172,6 +230,43 @@ void LinkProberStateMachineBase::processEvent<IcmpPeerEvent&>(IcmpPeerEvent &eve
 template
 void LinkProberStateMachineBase::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &event);
 
+template
+void LinkProberStateMachineBase::processEvent<IcmpWaitEvent&>(IcmpWaitEvent &event);
+
+template
+void LinkProberStateMachineBase::processEvent<IcmpPeerWaitEvent&>(IcmpPeerWaitEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpHwSelfEvent &t);
+//
+// process LinkProberState IcmpHwSelfEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpHwSelfEvent&>(IcmpHwSelfEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpPeerEvent &t);
+//
+// process LinkProberState IcmpPeerEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpHwPeerEvent&>(IcmpHwPeerEvent &event);
+
+//
+// ---> LinkProberStateMachineBase::processEvent(IcmpHwUnknownEvent &t);
+//
+// process LinkProberState IcmpHwUnknownEvent
+//
+template
+void LinkProberStateMachineBase::processEvent<IcmpHwUnknownEvent&>(IcmpHwUnknownEvent &event);
+
+template
+void LinkProberStateMachineBase::processEvent<IcmpHwWaitEvent&>(IcmpHwWaitEvent &event);
+
+template
+void LinkProberStateMachineBase::processEvent<IcmpHwPeerWaitEvent&>(IcmpHwPeerWaitEvent &event);
+
+
 //
 // ---> processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
 //
@@ -183,9 +278,9 @@ void LinkProberStateMachineBase::processEvent(SuspendTimerExpiredEvent &suspendT
 }
 
 //
-// ---> processEvent(IcmpPeerActiveEvent &suspendTimerExpiredEvent);
+// ---> processEvent(IcmpPeerActiveEvent &icmpPeerActiveEvent);
 //
-// process LinkProberState suspend timer expiry event
+// process LinkProberState IcmpPeerActiveEvent 
 //
 void LinkProberStateMachineBase::processEvent(IcmpPeerActiveEvent &icmpPeerActiveEvent)
 {
@@ -193,11 +288,31 @@ void LinkProberStateMachineBase::processEvent(IcmpPeerActiveEvent &icmpPeerActiv
 }
 
 //
-// ---> processEvent(IcmpPeerUnknownEvent &suspendTimerExpiredEvent);
+// ---> processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent);
 //
-// process LinkProberState suspend timer expiry event
+// process LinkProberState IcmpPeerUnknownEvent
 //
 void LinkProberStateMachineBase::processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(IcmpHwPeerActiveEvent &icmpHwPeerActiveEvent);
+//
+// process LinkProberState IcmpHwPeerActiveEvent 
+//
+void LinkProberStateMachineBase::processEvent(IcmpHwPeerActiveEvent &icmpHwPeerActiveEvent)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+}
+
+//
+// ---> processEvent(IcmpHwPeerUnknownEvent &icmpHwPeerUnknownEvent);
+//
+// process LinkProberState IcmpPeerUnknownEvent
+//
+void LinkProberStateMachineBase::processEvent(IcmpHwPeerUnknownEvent &icmpHwPeerUnknownEvent)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
 }

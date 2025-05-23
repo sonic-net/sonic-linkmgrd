@@ -26,6 +26,9 @@
 
 #include "DbInterface.h"
 
+using IcmpHwOffloadEntries = std::vector<std::pair<std::string, std::string>>;
+using IcmpHwOffloadEntriesPtr = std::unique_ptr<IcmpHwOffloadEntries>;
+
 namespace test
 {
 
@@ -42,6 +45,11 @@ public:
     virtual std::map<std::string, std::string> getMuxModeConfig() override;
     virtual void probeMuxState(const std::string &portName) override;
     virtual void handleProbeForwardingState(const std::string portName) override;
+    virtual void updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval) override;
+    virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval) override;
+    virtual void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) override;
+    virtual void deleteIcmpEchoSession(std::string key) override;
+    virtual void handleSwssNotification() override;
     virtual void setMuxLinkmgrState(
         const std::string &portName,
         link_manager::LinkManagerStateMachineBase::Label label
@@ -88,6 +96,8 @@ public:
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
     uint32_t mProbeForwardingStateInvokeCount = 0;
+    uint32_t mUpdateIntervalV4Count = 0;
+    uint32_t mUpdateIntervalV6Count = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
     uint32_t mPostMetricsInvokeCount = 0;
     uint32_t mPostLinkProberMetricsInvokeCount = 0;
@@ -97,6 +107,7 @@ public:
     uint32_t mSetWarmStartStateReconciledInvokeCount = 0;
     uint32_t mPostSwitchCauseInvokeCount = 0;
     uint32_t mGetMuxModeConfigInvokeCount = 0;
+    uint32_t mIcmpSessionsCount = 0;
 
     link_manager::ActiveStandbyStateMachine::SwitchCause mLastPostedSwitchCause;
     

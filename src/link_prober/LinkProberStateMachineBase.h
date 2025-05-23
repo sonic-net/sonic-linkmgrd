@@ -69,6 +69,30 @@ public:
 };
 
 /**
+ *@class IcmpWaitEvent
+ *
+ *@brief signals a IcmpWaitEvent event to LinkProber state machine
+ */
+class IcmpWaitEvent
+{
+public:
+    IcmpWaitEvent() = default;
+    ~IcmpWaitEvent() = default;
+};
+
+/**
+ *@class IcmpPeerWaitEvent
+ *
+ *@brief signals a IcmpPeerWaitEvent event to LinkProber state machine
+ */
+class IcmpPeerWaitEvent
+{
+public:
+    IcmpPeerWaitEvent() = default;
+    ~IcmpPeerWaitEvent() = default;
+};
+
+/**
  *@class IcmpPeerActiveEvent
  *
  *@brief signals a IcmpPeerActiveEvent event to LinkProber state machine
@@ -90,6 +114,90 @@ class IcmpPeerUnknownEvent
 public:
     IcmpPeerUnknownEvent() = default;
     ~IcmpPeerUnknownEvent() = default;
+};
+
+/**
+ *@class IcmpHwSelfEvent
+ *
+ *@brief signals a IcmpHwSelfEvent event to LinkProber state machine
+ */
+class IcmpHwSelfEvent
+{
+public:
+    IcmpHwSelfEvent() = default;
+    ~IcmpHwSelfEvent() = default;
+};
+
+/**
+ *@class IcmpHwPeerEvent
+ *
+ *@brief signals a IcmpHwPeerEvent event to LinkProber state machine
+ */
+class IcmpHwPeerEvent
+{
+public:
+    IcmpHwPeerEvent() = default;
+    ~IcmpHwPeerEvent() = default;
+};
+
+/**
+ *@class IcmpHwUnknownEvent
+ *
+ *@brief signals a IcmpHwUnknownEvent event to LinkProber state machine
+ */
+class IcmpHwUnknownEvent
+{
+public:
+    IcmpHwUnknownEvent() = default;
+    ~IcmpHwUnknownEvent() = default;
+};
+
+/**
+ *@class IcmpHwWaitEvent
+ *
+ *@brief signals a IcmpHwWaitEvent event to LinkProber state machine
+ */
+class IcmpHwWaitEvent
+{
+public:
+    IcmpHwWaitEvent() = default;
+    ~IcmpHwWaitEvent() = default;
+};
+
+/**
+ *@class IcmpHwPeerWaitEvent
+ *
+ *@brief signals a IcmpHwPeerWaitEvent event to LinkProber state machine
+ */
+class IcmpHwPeerWaitEvent
+{
+public:
+    IcmpHwPeerWaitEvent() = default;
+    ~IcmpHwPeerWaitEvent() = default;
+};
+
+/**
+ *@class IcmpHwPeerActiveEvent
+ *
+ *@brief signals a IcmpHwPeerActiveEvent event to LinkProber state machine
+ */
+class IcmpHwPeerActiveEvent
+{
+public:
+    IcmpHwPeerActiveEvent() = default;
+    ~IcmpHwPeerActiveEvent() = default;
+};
+
+/**
+ *@class IcmpHwPeerUnknownEvent
+ *
+ *@brief signals a IcmpHwPeerUnknownEvent event to LinkProber state machine
+ */
+class IcmpHwPeerUnknownEvent
+{
+public:
+    IcmpHwPeerUnknownEvent() = default;
+    ~IcmpHwPeerUnknownEvent() = default;
 };
 
 /**
@@ -246,6 +354,29 @@ public:
      *@return none
      */
     virtual void processEvent(IcmpPeerUnknownEvent &icmpPeerUnknownEvent);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process IcmpPeerActiveEvent
+     *
+     *@param icmpHwPeerActiveEvent (in)  reference to the IcmpHwPeerActiveEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(IcmpHwPeerActiveEvent &icmpHwPeerActiveEvent);
+
+    /**
+     *@method processEvent
+     *
+     *@brief process IcmpHwPeerUnknownEvent
+     *
+     *@param icmpHwPeerUnknownEvent (in)  reference to the IcmpHwPeerUnknownEvent event
+     *
+     *@return none
+     */
+    virtual void processEvent(IcmpHwPeerUnknownEvent &icmpHwPeerUnknownEvent);
+
 
     /**
      *@method processEvent
@@ -436,6 +567,33 @@ public:
     static IcmpUnknownEvent &getIcmpUnknownEvent() { return mIcmpUnknownEvent; };
 
     /**
+     *@method getIcmpHwSelfEvent
+     *
+     *@brief getter for IcmpHwSelfEvent object
+     *
+     *@return pointer to IcmpHwSelfEvent object
+     */
+    static IcmpHwSelfEvent &getIcmpHwSelfEvent() { return mIcmpHwSelfEvent; };
+
+    /**
+     *@method getIcmpHwPeerEvent
+     *
+     *@brief getter for IcmpHwPeerEvent object
+     *
+     *@return pointer to IcmpHwPeerEvent object
+     */
+    static IcmpHwPeerEvent &getIcmpHwPeerEvent() { return mIcmpHwPeerEvent; };
+
+    /**
+     *@method getIcmpHwUnknownEvent
+     *
+     *@brief getter for IcmpHwUnknownEvent object
+     *
+     *@return pointer to IcmpHwUnknownEvent object
+     */
+    static IcmpHwUnknownEvent &getIcmpHwUnknownEvent() { return mIcmpHwUnknownEvent; };
+
+    /**
      *@method getSuspendTimerExpiredEvent
      *
      *@brief getter for SuspendTimerExpiredEvent object
@@ -489,6 +647,60 @@ public:
      */
     static IcmpPeerUnknownEvent &getIcmpPeerUnknownEvent() { return mIcmpPeerUnknownEvent; }
 
+     /**
+     *@method getIcmpWaitEvent
+     *
+     *@brief getter for IcmpPeerWaitEvent object
+     *
+     *@return pointer to IcmpPeerWaitEvent object
+     */
+    static IcmpPeerWaitEvent &getIcmpPeerWaitEvent() { return mIcmpPeerWaitEvent; }
+
+     /**
+     *@method getIcmpWaitEvent
+     *
+     *@brief getter for IcmpWaitEvent object
+     *
+     *@return pointer to IcmpWaitEvent object
+     */
+    static IcmpWaitEvent &getIcmpWaitEvent() { return mIcmpWaitEvent; }
+
+    /**
+     *@method getIcmpHwPeerActiveEvent
+     *
+     *@brief getter for IcmpHwPeerActiveEvent object
+     *
+     *@return pointer to IcmpHwPeerActiveEvent object
+     */
+    static IcmpHwPeerActiveEvent &getIcmpHwPeerActiveEvent() { return mIcmpHwPeerActiveEvent; }
+
+    /**
+     *@method getIcmpHwPeerUnknownEvent
+     *
+     *@brief getter for IcmpHwPeerUnknownEvent object
+     *
+     *@return pointer to IcmpHwPeerUnknownEvent object
+     */
+    static IcmpHwPeerUnknownEvent &getIcmpHwPeerUnknownEvent() { return mIcmpHwPeerUnknownEvent; }
+
+     /**
+     *@method getIcmpHwWaitEvent
+     *
+     *@brief getter for IcmpHwPeerWaitEvent object
+     *
+     *@return pointer to IcmpHwPeerWaitEvent object
+     */
+    static IcmpHwPeerWaitEvent &getIcmpHwPeerWaitEvent() { return mIcmpHwPeerWaitEvent; }
+
+     /**
+     *@method getIcmpHwWaitEvent
+     *
+     *@brief getter for IcmpHwWaitEvent object
+     *
+     *@return pointer to IcmpHwWaitEvent object
+     */
+    static IcmpHwWaitEvent &getIcmpHwWaitEvent() { return mIcmpHwWaitEvent; }
+
 private:
     /**
      *@method postLinkManagerEvent
@@ -505,12 +717,21 @@ private:
     static IcmpSelfEvent mIcmpSelfEvent;
     static IcmpPeerEvent mIcmpPeerEvent;
     static IcmpUnknownEvent mIcmpUnknownEvent;
+    static IcmpHwSelfEvent mIcmpHwSelfEvent;
+    static IcmpHwPeerEvent mIcmpHwPeerEvent;
+    static IcmpHwUnknownEvent mIcmpHwUnknownEvent;
     static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
     static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
     static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
     static MuxProbeRequestEvent mMuxProbeRequestEvent;
     static IcmpPeerActiveEvent mIcmpPeerActiveEvent;
     static IcmpPeerUnknownEvent mIcmpPeerUnknownEvent;
+    static IcmpWaitEvent mIcmpWaitEvent;
+    static IcmpPeerWaitEvent mIcmpPeerWaitEvent;
+    static IcmpHwPeerActiveEvent mIcmpHwPeerActiveEvent;
+    static IcmpHwPeerUnknownEvent mIcmpHwPeerUnknownEvent;
+    static IcmpHwWaitEvent mIcmpHwWaitEvent;
+    static IcmpHwPeerWaitEvent mIcmpHwPeerWaitEvent;
 
 private:
     friend class LinkProberStateMachineActiveStandby;

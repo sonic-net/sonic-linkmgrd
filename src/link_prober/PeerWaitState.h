@@ -92,6 +92,29 @@ public:
     virtual LinkProberState *handleEvent(IcmpPeerUnknownEvent &event) override;
 
     /**
+     *@method handleEvent
+     *
+     *@brief handle IcmpHwPeerActiveEvent from LinkProber
+     *
+     *@param event (in)  reference to IcmpHwPeerActiveEvent
+     *
+     *@return pointer to next LinkProberState
+     */
+    virtual LinkProberState *handleEvent(IcmpHwPeerActiveEvent &event) override;
+
+    /**
+     *@method handleEvent
+     *
+     *@brief handle IcmpHwPeerUnknownEvent from LinkProber
+     *
+     *@param event (in)  reference to IcmpHwPeerUnknownEvent
+     *
+     *@return pointer to next LinkProberState
+     */
+    virtual LinkProberState *handleEvent(IcmpHwPeerUnknownEvent &event) override;
+
+
+    /**
      *@method resetState
      *
      *@brief reset current state attributes

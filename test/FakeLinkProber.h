@@ -56,6 +56,7 @@ public:
     void handleSendSwitchCommand();
     void handleSwitchCommandRecv();
     void handleMuxProbeCommandRecv();
+    void handleStateDbStateUpdate();
 
 public:
     uint32_t mInitializeCallCount = 0;
@@ -75,6 +76,7 @@ public:
 
     uint32_t mDecreaseIntervalCallCount = 0;
     uint32_t mRevertIntervalCallCount = 0;
+    uint32_t mIcmpEchoSessionStateUpdateCallCount = 0;
 
 private:
     link_prober::LinkProberStateMachineBase *mLinkProberStateMachine;

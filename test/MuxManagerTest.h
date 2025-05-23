@@ -61,6 +61,7 @@ public:
     bool setUseWellKnownMacActiveActive(bool use);
     bool getIfUseToRMac(std::string port);
     bool getOscillationEnabled(std::string port);
+    common::MuxPortConfig::LinkProberType getLinkProberType(const std::string &port);
     boost::asio::ip::address getBladeIpv4Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getBladeMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getLastUpdatedMacAddress(std::string port);
@@ -96,6 +97,11 @@ public:
     void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
     void initializeThread();
     void terminate();
+    void updateLinkFailureDetectionState(const std::string &portName, const std::string
+                                        &linkFailureDetectionState, const std::string &session_type);
+    void updateProberType(const std::string &portName, const std::string &proberType);
+    void setTimeoutIpv4_msec(uint32_t timeout_msec);
+    void setTimeoutIpv6_msec(uint32_t timeout_msec);
 
 public:
     static const std::string PortName;
