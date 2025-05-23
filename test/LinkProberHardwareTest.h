@@ -44,15 +44,29 @@ public:
     std::string mPortName = "EtherTest01";
     std::string mSmartNicIpAddress = "192.168.1.20";
     uint16_t mServerId = 01;
+    boost::uuids::uuid mPeerGuid;
 
     FakeMuxPort mFakeMuxPort;
     //MuxPort mMuxPort;
     //link_prober::LinkProberStateMachineActiveActive mLinkProberStateMachine;
     link_prober::LinkProberHw mLinkProber;
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mBuffer;
 
     void runIoService(uint32_t count);
     bool getSuspendTx() {return mLinkProber.mSuspendTx;};
+    std::size_t getTxPacketSize() { return mLinkProber.mTxPacketSize; }
+    const std::size_t getPacketHeaderSize() { return mLinkProber.mPacketHeaderSize; }
+    void handleRecv() { mLinkProber.handleRecv(boost::system::error_code(), getTxPacketSize()); }
+    void computeChecksum(icmphdr* icmpHeader, size_t size) { mLinkProber.computeChecksum(icmpHeader, size); }
     link_manager::ActiveActiveStateMachine::CompositeState mTestCompositeState;
+
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getTxBuffer() { return mLinkProber.mTxBuffer; }
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getRxBuffer() { return mLinkProber.mRxBuffer; }
+    void receivePeerSoftwareIcmpReply();
+    void receivePeerHardwareIcmpReply();
+    void changePeerGuid();
+    void buildIcmpReply();
+    void TearDown();
 };
 
 } /* namespace test */
