@@ -313,6 +313,22 @@ public:
     }
 
     /**
+    * @method getNextTlvPtr
+    *
+    * @brief get the next TLV pointer
+    *
+    * @return next Tlv pointer from the offset
+    */
+    inline Tlv* getNextTLVPtr(size_t offset, size_t bytesTransferred, size_t &nextTlvSize) {
+        nextTlvSize = findNextTlv(offset, bytesTransferred);
+        if (nextTlvSize == 0)
+            return nullptr;
+
+        Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + offset);
+        return nextTlvPtr;
+    }
+
+    /**
     *@method updateEthernetFrame
     *
     *@brief update Ethernet frame of Tx Buffer

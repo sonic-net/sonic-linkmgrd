@@ -268,25 +268,25 @@ void LinkProberBase::handleTlvRecv(size_t bytesTransferred, bool isSelfGuid)
     size_t nextTlvOffset = mTlvStartOffset;
     size_t nextTlvSize = 0;
     bool stopProcessTlv = false;
-    while ((nextTlvSize = findNextTlv(nextTlvOffset, bytesTransferred)) > 0 && !stopProcessTlv) {
-    Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer.data() + nextTlvOffset);
-    switch (nextTlvPtr->tlvhead.type) {
-        case TlvType::TLV_COMMAND: {
-            handleTlvCommandRecv(nextTlvPtr, !isSelfGuid);
-            break;
+    Tlv *nextTlvPtr = nullptr;
+    while ((nextTlvPtr = getNextTLVPtr(nextTlvOffset, bytesTransferred, nextTlvSize)) && !stopProcessTlv) {
+        switch (nextTlvPtr->tlvhead.type) {
+            case TlvType::TLV_COMMAND: {
+                handleTlvCommandRecv(nextTlvPtr, !isSelfGuid);
+                break;
+            }
+            case TlvType::TLV_SENTINEL: {
+                // sentinel TLV, stop processing
+                stopProcessTlv = true;
+                break;
+            }
+            default: {
+                // try to skip unknown TLV with valid length(>0)
+                stopProcessTlv = (nextTlvSize == sizeof(Tlv));
+                break;
+            }
         }
-        case TlvType::TLV_SENTINEL: {
-            // sentinel TLV, stop processing
-            stopProcessTlv = true;
-            break;
-        }
-        default: {
-            // try to skip unknown TLV with valid length(>0)
-            stopProcessTlv = (nextTlvSize == sizeof(Tlv));
-            break;
-        }
-    }
-    nextTlvOffset += nextTlvSize;
+        nextTlvOffset += nextTlvSize;
     }
     if (nextTlvOffset < bytesTransferred) {
         size_t BytesNotProcessed = bytesTransferred - nextTlvOffset;

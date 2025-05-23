@@ -525,8 +525,15 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
                 return;
             }
 
+            // check peer TLV packets
+            bool isTlvPkt = false;
+            size_t nextTlvSize = 0;
+            auto *tlvPtr = getNextTLVPtr(mTlvStartOffset, bytesTransferred, nextTlvSize);
+            if (tlvPtr && tlvPtr->tlvhead.type != TlvType::TLV_SENTINEL)
+                isTlvPkt = true;
+
             // peer transitioned to software we need to delete peer HW session
-            if (mPeerType == SessionType::HARDWARE)
+            if (!isTlvPkt && (mPeerType == SessionType::HARDWARE))
             {
                 deleteIcmpEchoSession(mSessionTypePeer, mPeerGuid);
                 mGuidSet.erase(mPeerGuid);
