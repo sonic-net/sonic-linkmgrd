@@ -17,7 +17,7 @@ jobs:
     DIFF_COVER_ENABLE: 'true'
     DIFF_COVER_COVERAGE_FILES: linkmgrd-test-result.xml $(System.DefaultWorkingDirectory)/**/linkmgrd-test-result.xml
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-22.04'
 
   container:
     image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm:latest
