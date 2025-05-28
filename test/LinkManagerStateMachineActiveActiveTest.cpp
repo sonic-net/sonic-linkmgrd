@@ -1210,4 +1210,28 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, StateMachineInitEventWithMultipl
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteFlap)
+{
+    setMuxActive();
+
+    mMuxConfig.enableDefaultRouteFeature(true);
+    postDefaultRouteEvent("na", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 0);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Active, Standby, Up);
+
+    postDefaultRouteEvent("ok", 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 1);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 1);
+    VALIDATE_STATE(Unknown, Standby, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    handleMuxState("active", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 3);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
 } /* namespace test */
