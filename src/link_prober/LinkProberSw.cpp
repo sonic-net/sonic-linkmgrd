@@ -99,8 +99,6 @@ void LinkProberSw::initialize()
 //
 void LinkProberSw::startProbing()
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-
     mStream.cancel();
     sendHeartbeat();
     startRecv();
@@ -387,6 +385,11 @@ void LinkProberSw::startTimer()
     )));
 }
 
+//
+// ---> handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload);
+//
+// handle Icmp packet recieved on socket
+//
 void LinkProberSw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload)
 {
     bool isHwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getHardwareCookie();
@@ -418,9 +421,12 @@ void LinkProberSw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
         } else {
             mRxPeerSeqNo = mTxSeqNo;
             heartbeatType = HeartbeatType::HEARTBEAT_PEER;
-            MUXLOGWARNING(boost::format("Peer Guid Detected %s") % guidDataStr);
+            MUXLOGDEBUG(boost::format("Peer Guid Detected %s") % guidDataStr);
             // add the peer guid to the set if not present
             setPeerGuidData(guidDataStr);
+            if(isHwCookie){
+               mPeerType = SessionType::HARDWARE;
+            }
             if (mGuidSet.find(mPeerGuid) != mGuidSet.end())
             {
                 mGuidSet.insert(guidDataStr);

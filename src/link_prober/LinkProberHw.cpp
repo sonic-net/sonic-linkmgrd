@@ -103,26 +103,33 @@ void LinkProberHw::handleTimeout(boost::system::error_code errorCode)
         mMuxPortConfig.getServerId()
     );
 
-    mStream.cancel();
-    if (mPeerType == SessionType::SOFTWARE)
-    {
-        mReportHeartbeatReplyNotReceivedFuncPtr(HeartbeatType::HEARTBEAT_PEER);
+    switch (mPeerType) {
+        case SessionType::UNKNOWN:
+            // start another cycle of recv
+            break;
 
-        mIcmpPacketCount++;
-        if (mIcmpPacketCount % mMuxPortConfig.getLinkProberStatUpdateIntervalCount() == 0) {
-            boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
-            boost::asio::io_service &ioService = strand.context();
-            ioService.post(strand.wrap(boost::bind(
-                &LinkProberStateMachineBase::handlePckLossRatioUpdate,
-                mLinkProberStateMachinePtr,
-                mIcmpUnknownEventCount,
-                mIcmpPacketCount
-            )));
-        }
+        case SessionType::SOFTWARE:
+            mStream.cancel();
+            mReportHeartbeatReplyNotReceivedFuncPtr(HeartbeatType::HEARTBEAT_PEER);
 
-        // start another cycle of recv timer
-        startTimer();
+            mIcmpPacketCount++;
+            if (mIcmpPacketCount % mMuxPortConfig.getLinkProberStatUpdateIntervalCount() == 0) {
+                boost::asio::io_service::strand &strand = mLinkProberStateMachinePtr->getStrand();
+                boost::asio::io_service &ioService = strand.context();
+                ioService.post(strand.wrap(boost::bind(
+                    &LinkProberStateMachineBase::handlePckLossRatioUpdate,
+                    mLinkProberStateMachinePtr,
+                    mIcmpUnknownEventCount,
+                    mIcmpPacketCount
+                )));
+            }
+            break;
+
+        case SessionType::HARDWARE:
+            break;
     }
+    startRecv();
+    startTimer();
 }
 
 //
@@ -132,19 +139,15 @@ void LinkProberHw::handleTimeout(boost::system::error_code errorCode)
 //
 void LinkProberHw::startTimer()
 {
-    if (mPeerType == SessionType::SOFTWARE)
-    {
-        MUXLOGDEBUG(mMuxPortConfig.getPortName());
-        // time out these heartbeats
-        mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
-        mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
-            &LinkProberHw::handleTimeout,
-            this,
-            boost::asio::placeholders::error
-        )));
-    }
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    // time out these heartbeats
+    mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(getProbingInterval()));
+    mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
+        &LinkProberHw::handleTimeout,
+        this,
+        boost::asio::placeholders::error
+    )));
 }
-
 
 //
 // ---> initialize();
@@ -164,8 +167,7 @@ void LinkProberHw::initialize()
 //
 void LinkProberHw::startPositiveProbingTimer(std::string hwSessionType)
 {
-    MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    MUXLOGWARNING(boost::format("%s: Postive Probing Timer Started, session type-%s") %
+    MUXLOGDEBUG(boost::format("%s: Postive Probing Timer Started, session type-%s") %
             mMuxPortConfig.getPortName() % hwSessionType);
     // time out these heartbeats
     if(hwSessionType == mSessionTypeSelf){
@@ -210,17 +212,17 @@ void LinkProberHw::handlePositiveProbingTimeout(std::string hwSessionType)
 void LinkProberHw::startProbing()
 {
     if(mStream.is_open()){
-	mStream.cancel();
+        mStream.cancel();
     }
     if((!mSuspendTx) && (!mShutdownTx))
     {
-       createIcmpEchoSession(mSessionTypeSelf, getSelfGuidData());
+        createIcmpEchoSession(mSessionTypeSelf, getSelfGuidData());
     }
     startRecv();
 }
 
 //
-// ---> initialize();
+// ---> handleStateDbStateUpdate(const std::string& session_state, const std::string hwSessionType);
 //
 // handle state change notification from STATE_DB:ICMP_ECHO_SESSION_TABLE
 //
@@ -261,12 +263,14 @@ void LinkProberHw::handleStateDbStateUpdate(const std::string& session_state, co
 }
 
 //
-// ---> initialize();
+// ---> createIcmpEchoSession(std::string hwSessionType, std::string guid);
 //
-// intializing receiving thread and triggers creation of new icmp_echo session
+//  triggers creation of new icmp_echo_session
 //
 void LinkProberHw::createIcmpEchoSession(std::string hwSessionType, std::string guid)
 {
+    MUXLOGDEBUG(boost::format("%s: Creating the Icmp session of type %s with guid {%s}")
+                % mMuxPortConfig.getPortName() % hwSessionType % guid);
     auto entries =  std::make_unique<mux::IcmpHwOffloadEntries>();
     std::string portName = mMuxPortConfig.getPortName();
     std::string tx_interval = std::to_string(mMuxPortConfig.getTimeoutIpv4_msec());
@@ -307,10 +311,12 @@ void LinkProberHw::createIcmpEchoSession(std::string hwSessionType, std::string 
 //
 // ---> initialize();
 //
-// intializing reciving thread and triggers creation of new icmp_echo session
+// triggers deletion of icmp_echo_session
 //
 void LinkProberHw::deleteIcmpEchoSession(std::string hwSessionType, std::string guid)
 {
+    MUXLOGWARNING(boost::format("%s: Deleting the Icmp session of type %s with guid {%s} ")
+                  % mMuxPortConfig.getPortName() % hwSessionType %guid);
     std::string portName = mMuxPortConfig.getPortName();
     std::string key = mDefaultVrfName +
         mKeySeparator + portName + mKeySeparator + guid + mKeySeparator;
@@ -387,7 +393,7 @@ void LinkProberHw::restartTxProbes()
 //
 // ---> handleSuspendTimeout(boost::system::error_code errorCode);
 //
-// when suspendTimer expires start probing again and notify LinkProberStateMachine to get into origal state
+// when suspendTimer expires start probing again and notify LinkProberStateMachine to get into orignal state
 //
 void LinkProberHw::handleSuspendTimeout(boost::system::error_code errorCode)
 {
@@ -440,6 +446,11 @@ std::string LinkProberHw::etherMacArrayToString(const std::array<uint8_t, 6>& ma
     return oss.str();
 }
 
+//
+// ---> handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload);
+//
+// handle Icmp packet recieved on socket
+//
 void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload)
 {
     bool isHwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getHardwareCookie();
@@ -462,6 +473,7 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             if (guidDataStr == "0x0") {
                 MUXLOGWARNING(boost::format("%s: Received 0x0 GUID") %
                         mMuxPortConfig.getPortName());
+                //ignore this and get more packets
                 startRecv();
                 return;
             }
@@ -485,11 +497,6 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
                 {
                     mGuidSet.erase(mPeerGuid);
                     mGuidSet.insert(guidDataStr);
-                }
-                if (mPeerType == SessionType::SOFTWARE)
-                {
-                    // cancel the timer to stop software peer recv
-                    mDeadlineTimer.cancel();
                 }
                 mPeerType = LinkProberBase::HARDWARE;
                 setPeerGuidData(guidDataStr);
@@ -560,7 +567,6 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             // seq numbers are not incremented for hw prober
             mReportHeartbeatReplyReceivedFuncPtr(HeartbeatType::HEARTBEAT_PEER);
             handleTlvRecv(bytesTransferred, false);
-            startTimer();
         } else {
             MUXLOGWARNING(boost::format("%s: Received invalid packet with swcookie") %
                     mMuxPortConfig.getPortName());

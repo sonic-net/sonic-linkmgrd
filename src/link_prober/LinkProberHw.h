@@ -128,7 +128,24 @@ public:
     */
     virtual void updateEthernetFrame() final override;
 
+    /**
+    *@method handleIcmpPayload
+    *
+    *@brief handle Icmp packet recieved on socket
+    *
+    *@return none
+    */
     virtual void handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) override;
+
+    /**
+    *@method startTimer
+    *
+    *@brief start ICMP ECHOREPLY timeout timer for software peer
+    *
+    *@return none
+    */
+    void startTimer();
+
 
     /**
     *@method ~LinkProber
@@ -186,16 +203,6 @@ private:
      *@return none
      */
     void handleSuspendTimeout(boost::system::error_code errorCode);
-
-    /**
-    *@method startTimer
-    *
-    *@brief start ICMP ECHOREPLY timeout timer for software peer
-    *
-    *@return none
-    */
-    void startTimer();
-
 
     /**
      *@method createIcmpEchoSession

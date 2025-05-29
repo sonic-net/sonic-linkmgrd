@@ -66,6 +66,11 @@ LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio
     setSelfGuidData(generateGuid());
 }
 
+//
+// ---> setupSocket();
+//
+// creation of socket to recieve icmp packets only and setup recieve stream
+//
 void LinkProberBase::setupSocket() {
 	SockAddrLinkLayer addr = {0};
     addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
@@ -165,7 +170,8 @@ void LinkProberBase::handleRecv(
 )
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    if( mMuxPortConfig.getLinkProberType() == common::MuxPortConfig::LinkProberType::Hardware)
+    bool isProberHw  = mMuxPortConfig.getLinkProberType() == common::MuxPortConfig::LinkProberType::Hardware;
+    if(isProberHw)
     {
         MUXLOGWARNING(boost::format("Raw GUID PORT: {%s}") % mMuxPortConfig.getPortName());
     }
@@ -187,7 +193,6 @@ void LinkProberBase::handleRecv(
             mRxBuffer.data() + mPacketHeaderSize
         );
 
-        bool isProberHw  = mMuxPortConfig.getLinkProberType() == common::MuxPortConfig::LinkProberType::Hardware;
 
         // Handling of cookie and guids:
         // - reception of peer hw cookie is considered as hw prober in peer
@@ -203,6 +208,8 @@ void LinkProberBase::handleRecv(
         } else {
             (static_cast<LinkProberSw *>(this))->handleIcmpPayload(bytesTransferred, icmpHeader, icmpPayload);
         }
+    } else {
+        MUXLOGDEBUG(boost::format("Recv System Error {%s} for PORT: {%s}") %  errorCode.message() % mMuxPortConfig.getPortName());
     }
 }
 
@@ -306,7 +313,6 @@ void LinkProberBase::startRecv()
 {
     MUXLOGTRACE(mMuxPortConfig.getPortName());
 
-
     mStream.async_read_some(
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
         mStrand.wrap(boost::bind(
@@ -398,8 +404,10 @@ void LinkProberBase::sendPeerProbeCommand()
 //
 void LinkProberBase::probePeerTor()
 {
-    boost::asio::io_service &ioService = mStrand.context();
-    ioService.post(mStrand.wrap(boost::bind(&LinkProberBase::sendHeartbeat, this, false)));
+    if(mPeerType == SessionType::SOFTWARE) {
+        boost::asio::io_service &ioService = mStrand.context();
+        ioService.post(mStrand.wrap(boost::bind(&LinkProberBase::sendHeartbeat, this, false)));
+    }
 }
 
 //

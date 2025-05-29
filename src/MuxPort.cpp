@@ -210,6 +210,11 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
     ));
 }
 
+//
+// ---> setTimeoutIpv4_msec (uint32_t timeout_msec);
+//
+// calls DbInterface API to update Tx v4 Interval for ICMP_ECHO_SESSION
+//
 void MuxPort::setTimeoutIpv4_msec (uint32_t timeout_msec)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
@@ -218,6 +223,11 @@ void MuxPort::setTimeoutIpv4_msec (uint32_t timeout_msec)
     mDbInterfacePtr->updateIntervalv4(timeout_msec, rx_interval); 
 }
 
+//
+// ---> setTimeoutIpv6_msec (uint32_t timeout_msec)
+//
+//  calls DbInterface API to update Tx v6 Interval for ICMP_ECHO_SESSION
+//
 void MuxPort::setTimeoutIpv6_msec (uint32_t timeout_msec)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());

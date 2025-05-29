@@ -1626,6 +1626,11 @@ void DbInterface::handleIcmpEchoSession(std::string key, IcmpHwOffloadEntries *e
     delete entries;
 }
 
+//
+// ---> updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval);
+//
+// handles interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
 void DbInterface::updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval)
 {
     MUXLOGDEBUG(boost::format("Updating Interval v4 tx(%u) rx(%u)") %
@@ -1638,6 +1643,11 @@ void DbInterface::updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval)
     ));
 }
 
+//
+// ---> updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval);
+//
+//  handles update of interval_v6 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
 void DbInterface::updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval)
 {
     MUXLOGDEBUG(boost::format("Updating Interval v6 tx(%u) rx(%u)") %
@@ -1650,6 +1660,11 @@ void DbInterface::updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval)
     ));
 }
 
+//
+// --->handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval);
+//
+// handles update of tx/rx interval field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABL
+//
 void DbInterface::handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval)
 {
     std::shared_ptr<swss::DBConnector> appDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
@@ -1680,6 +1695,11 @@ void DbInterface::deleteIcmpEchoSession(std::string key)
     ));
 }
 
+//
+// ---> handleDeleteIcmpEchoSession(std::string key);
+//
+// handles deletion of a ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+//
 void DbInterface::handleDeleteIcmpEchoSession(std::string key) {
      MUXLOGDEBUG(boost::format("APP_ICMP_ECHO_SESSION_TABLE::key: %s ") %
             key

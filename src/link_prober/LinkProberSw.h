@@ -277,7 +277,13 @@ public:
      */
     void reportHeartbeatReplyNotReceivedActiveActive(HeartbeatType heartbeatType);
 
-
+    /**
+    *@method handleIcmpPayload
+    *
+    *@brief handle Icmp packet recieved on socket
+    *
+    *@return none
+    */
     virtual void handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) override;
 
 private:
