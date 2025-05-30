@@ -1338,6 +1338,7 @@ void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const Default
 {
     MUXLOGWARNING(boost::format("%s: default route state %d") % mMuxPortConfig.getPortName() % static_cast<int>(routeState));
 
+    DefaultRoute oldRouteState = mDefaultRouteState;
     mDefaultRouteState = routeState;
     shutdownOrRestartLinkProberOnDefaultRoute();
 
@@ -1350,6 +1351,19 @@ void ActiveActiveStateMachine::handleDefaultRouteStateNotification(const Default
         switchMuxState(nextState, mux_state::MuxState::Label::Standby);
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
+    }
+    if (mComponentInitState.all() &&
+        oldRouteState == DefaultRoute::NA && mDefaultRouteState == DefaultRoute::OK &&
+        ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
+        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
+        // Let's reset the link prober state if the default route flaps faster than
+        // the link prober detection.
+        MUXLOGWARNING(
+            boost::format("%s: reset link prober state, current mux state '%s' ") %
+            mMuxPortConfig.getPortName() %
+            mMuxStateName[ms(mCompositeState)]
+        );
+        initLinkProberState(mCompositeState);
     }
 
     updateMuxLinkmgrState();
