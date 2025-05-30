@@ -27,7 +27,7 @@
 #include "gtest/gtest.h"
 
 #include "FakeMuxPort.h"
-#include "link_prober/LinkProber.h"
+#include "link_prober/LinkProberSw.h"
 
 namespace test
 {
@@ -50,7 +50,7 @@ public:
     size_t appendTlvSentinel();
     size_t appendTlvDummy(size_t paddingSize, int seqNo);
     size_t findNextTlv(size_t readOffset, size_t bytesTransferred);
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mLinkProber.getTxBuffer();};
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE>& getTxBuffer() {return mLinkProber.getTxBuffer();};
     uint8_t *getTxBufferData() {return mLinkProber.mTxBuffer.data();};
     uint8_t *getRxBufferData() {return mLinkProber.mRxBuffer.data();};
 
@@ -73,7 +73,7 @@ public:
     uint16_t mServerId = 01;
 
     FakeMuxPort mFakeMuxPort;
-    link_prober::LinkProber mLinkProber;
+    link_prober::LinkProberSw mLinkProber;
 };
 
 } /* namespace test */

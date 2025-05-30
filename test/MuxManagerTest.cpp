@@ -41,7 +41,7 @@ MuxManagerTest::MuxManagerTest() :
 {
     mMuxManagerPtr->setDbInterfacePtr(mDbInterfacePtr);
 
-    link_prober::IcmpPayload::generateGuid();
+    //link_prober::IcmpPayload::generateGuid();
 }
 
 void MuxManagerTest::runIoService(uint32_t count)
@@ -186,6 +186,13 @@ void MuxManagerTest::processTsaEnableNotification(std::deque<swss::KeyOpFieldsVa
     mDbInterfacePtr->processTsaEnableNotification(entries);
 }
 
+common::MuxPortConfig::LinkProberType MuxManagerTest::getLinkProberType(const std::string &port)
+{
+   std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+   return muxPortPtr->mMuxPortConfig.getLinkProberType();
+}
+
 link_manager::LinkManagerStateMachineBase::CompositeState MuxManagerTest::getCompositeStateMachineState(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -260,6 +267,27 @@ void MuxManagerTest::processGetMuxState(const std::string &portName, const std::
 void MuxManagerTest::updatePortCableType(const std::string &port, const std::string &cableType)
 {
     mMuxManagerPtr->updatePortCableType(port, cableType);
+}
+
+void MuxManagerTest::updateLinkFailureDetectionState(const std::string &portName, const std::string
+    &linkFailureDetectionState, const std::string &session_type)
+{
+    mMuxManagerPtr->updateLinkFailureDetectionState(portName, linkFailureDetectionState, session_type);
+}
+
+void MuxManagerTest::updateProberType(const std::string &portName, const std::string &proberType)
+{
+    mMuxManagerPtr->updateProberType(portName, proberType);
+}
+
+void MuxManagerTest::setTimeoutIpv4_msec(uint32_t timeout_msec)
+{
+    mMuxManagerPtr->setTimeoutIpv4_msec(timeout_msec);
+}
+
+void MuxManagerTest::setTimeoutIpv6_msec(uint32_t timeout_msec)
+{
+    mMuxManagerPtr->setTimeoutIpv6_msec(timeout_msec);
 }
 
 void MuxManagerTest::warmRestartReconciliation(const std::string &portName)
@@ -339,6 +367,9 @@ void MuxManagerTest::initLinkProberActiveActive(std::shared_ptr<link_manager::Ac
     );
     linkManagerStateMachineActiveActive->setRestartTxFnPtr(
         boost::bind(&FakeLinkProber::restartTxProbes, mFakeLinkProber.get())
+    );
+    linkManagerStateMachineActiveActive->setIcmpEchoSessionStateUpdate(
+        boost::bind(&FakeLinkProber::handleStateDbStateUpdate, mFakeLinkProber.get())
     );
 
     linkManagerStateMachineActiveActive->mComponentInitState.set(0);
@@ -761,6 +792,53 @@ TEST_F(MuxManagerTest, ServerMacAddressException)
     EXPECT_TRUE(serverMacBefore == serverMacAfter);
 }
 
+TEST_F(MuxManagerTest, updateLinkFailureDetectionState)
+{
+    std::string port = "Ethernet0";
+    std::string linkFailureDetectionState = "Up";
+    std::string session_type = "NORMAL";
+
+    createPort(port, common::MuxPortConfig::ActiveActive);
+
+    uint32_t handleStateDbStateUpdateCallCountBefore = mFakeLinkProber->mIcmpEchoSessionStateUpdateCallCount;
+
+    updateLinkFailureDetectionState(port, linkFailureDetectionState, session_type);
+
+    runIoService(1);
+
+    EXPECT_EQ(mFakeLinkProber->mIcmpEchoSessionStateUpdateCallCount, handleStateDbStateUpdateCallCountBefore + 1);
+}
+
+TEST_F(MuxManagerTest, updateProberType)
+{
+    std::string port = "Ethernet0";
+    std::string proberType = "hardware";
+
+    createPort(port, common::MuxPortConfig::ActiveActive);
+
+    updateProberType(port, proberType);
+
+    runIoService(1);
+
+    EXPECT_EQ(getLinkProberType(port), common::MuxPortConfig::LinkProberType::Hardware);
+}
+
+TEST_F(MuxManagerTest, TxIntervalChangeTest)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    setTimeoutIpv4_msec(3000);
+
+    EXPECT_EQ(3000,getTimeoutIpv4_msec(port));
+
+    setTimeoutIpv6_msec(1000);
+
+    EXPECT_EQ(1000,getTimeoutIpv6_msec(port));
+
+}
+
 TEST_F(MuxManagerTest, ServerMacBeforeLinkProberInit)
 {
     std::string port = "Ethernet0";
@@ -906,9 +984,13 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"reset_suspend_timer", "Ethernet0"}}},
         {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV4Count, 0);
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV6Count, 0);
     processMuxLinkmgrConfigNotifiction(entries);
     runIoService(2);
 
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV4Count, 1);
+    EXPECT_EQ(mDbInterfacePtr->mUpdateIntervalV6Count, 1);
     EXPECT_TRUE(getTimeoutIpv4_msec(port) == v4PorbeInterval);
     EXPECT_TRUE(getTimeoutIpv6_msec(port) == v6ProveInterval);
     EXPECT_TRUE(getPositiveStateChangeRetryCount(port) == positiveSignalCount);

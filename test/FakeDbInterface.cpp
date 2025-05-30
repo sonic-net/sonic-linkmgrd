@@ -67,6 +67,16 @@ void FakeDbInterface::handleProbeForwardingState(const std::string portName)
     mProbeForwardingStateInvokeCount++;
 }
 
+void FakeDbInterface::updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval)
+{
+    mUpdateIntervalV4Count++;
+}
+
+void FakeDbInterface::updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval)
+{
+    mUpdateIntervalV6Count++;
+}
+
 void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachineBase::Label label)
 {
     mLastSetMuxLinkmgrState = label;
@@ -139,6 +149,18 @@ std::map<std::string, std::string> FakeDbInterface::getMuxModeConfig()
     std::map<std::string, std::string> muxModeConfig;
     muxModeConfig["Ethernet0"] = "manual";
     return muxModeConfig;
+}
+
+void FakeDbInterface::handleSwssNotification(){
+    return;
+}
+
+void FakeDbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
+    mIcmpSessionsCount++;
+}
+
+void FakeDbInterface::deleteIcmpEchoSession(std::string key) {
+    mIcmpSessionsCount--;
 }
 
 } /* namespace test */

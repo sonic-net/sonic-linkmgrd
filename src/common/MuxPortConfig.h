@@ -27,6 +27,8 @@
 #include <string>
 #include <stdint.h>
 #include <net/ethernet.h>
+#include <unordered_set>
+
 
 #include "MuxConfig.h"
 
@@ -51,7 +53,7 @@ public:
         Manual,
         Active,
         Standby,
-        Detached      // mux mode for active-active cable type only 
+        Detached      // mux mode for active-active cable type only
     };
 
     /**
@@ -63,6 +65,18 @@ public:
         ActiveStandby,
         ActiveActive,
         DefaultType = ActiveStandby
+    };
+
+
+    /**
+     * @enum LinkProberType
+     *
+     * @brief Link Prober Type
+     */
+    enum LinkProberType {
+        Software,
+        Hardware,
+        Default=Software
     };
 
 public:
@@ -310,6 +324,26 @@ public:
     inline PortCableType getPortCableType() const {return mPortCableType;};
 
     /**
+    *@method getLinkProberType
+    *
+    *@brief getter for LinkProberType
+    *
+    *@return LinkProberType 
+    */
+    inline LinkProberType getLinkProberType() const {return mLinkProberType;};
+
+    /**
+     * @method setLinkProberType
+     * 
+     * @brief Set the Link Prober Type 
+     * 
+     * @param LinkProberType link prober hardware
+     * 
+     * @return none
+     */
+    inline void setLinkProberType(LinkProberType linkProberType) { mLinkProberType = linkProberType; };
+
+    /**
     *@method getDecreasedTimeoutIpv4_msec
     *
     *@brief getter for decreased IPv4 LinkProber timeout in msec
@@ -424,6 +458,7 @@ private:
     uint16_t mServerId;
     Mode mMode = Manual;
     PortCableType mPortCableType;
+    LinkProberType mLinkProberType;
     uint32_t mAdminForwardingStateSyncUpInterval_msec = 10000;
 
 };

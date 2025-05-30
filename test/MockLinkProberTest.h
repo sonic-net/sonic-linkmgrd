@@ -20,7 +20,7 @@
 #include <boost/uuid/uuid.hpp>
 
 #include "common/MuxPortConfig.h"
-#include "link_prober/LinkProber.h"
+#include "link_prober/LinkProberSw.h"
 #include "link_prober/LinkProberStateMachineActiveStandby.h"
 #include "link_prober/LinkProberStateMachineActiveActive.h"
 
@@ -46,10 +46,11 @@ public:
     const std::size_t getPacketHeaderSize() { return mLinkProberPtr->mPacketHeaderSize; }
     std::shared_ptr<MockLinkManagerStateMachine> getLinkManagerStateMachinePtr() { return mLinkManagerStateMachinePtr; }
     std::shared_ptr<link_prober::LinkProberStateMachineBase> getLinkProberStateMachinePtr() { return mLinkProberStateMachinePtr; }
-    std::shared_ptr<link_prober::LinkProber> getLinkProberPtr() { return mLinkProberPtr; }
+    std::shared_ptr<link_prober::LinkProberSw> getLinkProberPtr() { return mLinkProberPtr; }
     void computeChecksum(icmphdr* icmpHeader, size_t size) { mLinkProberPtr->computeChecksum(icmpHeader, size); }
-    void handleRecv() { mLinkProberPtr->handleRecv(boost::system::error_code(), getTxPacketSize()); }
-    void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotRecivedFuncPtr(); }
+    void handleRecv() { mLinkProberPtr->handleRecv(boost::system::error_code(), getTxPacketSize()); 
+    }
+    void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotReceivedFuncPtr(link_prober::HeartbeatType::HEARTBEAT_SELF); }
     void receiveSelfIcmpReply();
     void receivePeerIcmpReply();
 
@@ -65,7 +66,7 @@ private:
     boost::asio::io_service::strand mStrand;
     std::shared_ptr<MockLinkManagerStateMachine> mLinkManagerStateMachinePtr;
     std::shared_ptr<link_prober::LinkProberStateMachineBase> mLinkProberStateMachinePtr;
-    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr;
+    std::shared_ptr<link_prober::LinkProberSw> mLinkProberPtr;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mBuffer;
     boost::uuids::uuid mPeerGuid;
 };
