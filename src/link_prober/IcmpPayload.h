@@ -31,7 +31,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <net/ethernet.h>
-
+#include <unordered_set>
 #include <boost/uuid/uuid.hpp>
 
 #include <sys/types.h>
@@ -39,6 +39,12 @@
 #define MUX_MAX_ICMP_BUFFER_SIZE    9100
 
 __BEGIN_DECLS
+
+#include <endian.h>
+inline uint64_t ntohll(uint64_t x)
+{
+    return be64toh(x);
+}
 
 namespace link_prober
 {
@@ -98,40 +104,22 @@ struct IcmpPayload {
     IcmpPayload();
 
     /**
-    *@method generateGuid
+    *@method getCookie
     *
-    *@brief generate GUID for the current instance of linkmgrd
+    *@brief getter for ICMP cookie by software probing
     *
-    *@return none
+    *@return ICMP cookie
     */
-    static void generateGuid();
-
-    /**
-    *@method getGuidData
-    *
-    *@brief getter for GUID data
-    *
-    *@return pointer to current GUID data
-    */
-    static uint8_t* getGuidData() {return reinterpret_cast<uint8_t *> (mGuid.data);};
-
-    /**
-    *@method getGuid
-    *
-    *@brief getter for GUID object
-    *
-    *@return reference to current GUID object
-    */
-    static boost::uuids::uuid& getGuid() {return mGuid;};
+    static uint32_t getSoftwareCookie() {return mSoftwareCookie;};
 
     /**
     *@method getCookie
     *
-    *@brief getter for ICMP cookie
+    *@brief getter for ICMP cookie by hardware probing
     *
-    *@return ICMP coolie
+    *@return ICMP cookie
     */
-    static uint32_t getCookie() {return mCookie;};
+    static uint32_t getHardwareCookie() {return mHardwareCookie;};
 
     /**
     *@method getVersion
@@ -143,9 +131,10 @@ struct IcmpPayload {
     static uint32_t getVersion() {return mVersion;};
 
 private:
-    static uint32_t mCookie;
+    static uint32_t mHardwareCookie;
+    static uint32_t mSoftwareCookie;
     static uint32_t mVersion;
-    static boost::uuids::uuid mGuid;
+    
 } __attribute__((packed));
 
 static_assert(sizeof(IcmpPayload) % 2 == 0,

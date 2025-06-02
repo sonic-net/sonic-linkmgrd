@@ -69,12 +69,12 @@ void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableTyp
             break;
         }
     }
-    mLinkProberPtr = std::make_shared<link_prober::LinkProber>(
+    mLinkProberPtr = std::make_shared<link_prober::LinkProberSw>(
         mMuxPortConfig,
         mIoService,
         mLinkProberStateMachinePtr.get()
     );
-    link_prober::IcmpPayload::generateGuid();
+    //link_prober::IcmpPayload::generateGuid();
     initializeSendBuffer();
 }
 

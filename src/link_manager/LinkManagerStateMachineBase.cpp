@@ -45,8 +45,8 @@ LinkManagerStateMachineBase::LinkManagerStateMachineBase(
     common::MuxPortConfig &muxPortConfig,
     CompositeState initialCompositeState)
     : StateMachine(strand, muxPortConfig),
-      mCompositeState(initialCompositeState),
       mMuxPortPtr(muxPortPtr),
+      mCompositeState(initialCompositeState),
       mMuxStateMachine(this, strand, muxPortConfig, ms(mCompositeState)),
       mLinkStateMachine(this, strand, muxPortConfig, ls(mCompositeState))
 {

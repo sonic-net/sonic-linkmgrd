@@ -26,8 +26,6 @@
 
 #include <string>
 #include <memory>
-
-#include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachineBase.h"
 #include "link_manager/LinkManagerStateMachineActiveActive.h"
 #include "link_manager/LinkManagerStateMachineActiveStandby.h"
@@ -42,7 +40,6 @@ class FakeMuxPort;
 
 namespace mux
 {
-
 /**
  *@class MuxPort
  *
@@ -79,7 +76,7 @@ public:
     *@param ioService (in)      reference to Boost IO Service object
     */
     MuxPort(
-        std::shared_ptr<mux::DbInterface> dbInterfacePtr,
+        std::shared_ptr<DbInterface> dbInterfacePtr,
         common::MuxConfig &muxConfig,
         const std::string &portName,
         uint16_t serverId,
@@ -382,51 +379,109 @@ public:
 
 
     /**
-     * @method handleDefaultRouteState(const std::string &routeState)
-     * 
-     * @brief handles default route state notification
-     * 
-     * @param routeState 
-     * 
-     * @return none
+    * @method handleDefaultRouteState(const std::string &routeState)
+    * 
+    * @brief handles default route state notification
+    * 
+    * @param routeState 
+    * 
+    * @return none
     */
     void handleDefaultRouteState(const std::string &routeState);
 
     /**
-     * @method resetPckLossCount
-     * 
-     * @brief reset ICMP packet loss count 
-     * 
-     * @return none
+    * @method resetPckLossCount
+    * 
+    * @brief reset ICMP packet loss count 
+    * 
+    * @return none
     */
     void resetPckLossCount();
 
     /**
-     * @method warmRestartReconciliation
-     * 
-     * @brief port warm restart reconciliation procedure
-     * 
-     * @return none
-     */
+    * @method warmRestartReconciliation
+    * 
+    * @brief port warm restart reconciliation procedure
+    * 
+    * @return none
+    */
     void warmRestartReconciliation();
 
     /**
-     * @method handleTsaEnable
-     * 
-     * @brief handle TSA Enable event 
-     * 
-     * @return none
-     */
+    * @method handleTsaEnable
+    * 
+    * @brief handle TSA Enable event 
+    * 
+    * @return none
+    */
     void handleTsaEnable(bool enable);
 
     /**
-     *@method handleResetSuspendTimer
-     *
-     *@brief handle reset suspend timer request
-     *
-     * @return none
-     */
+    *@method handleResetSuspendTimer
+    *
+    *@brief handle reset suspend timer request
+    *
+    * @return none
+    */
     void handleResetSuspendTimer();
+
+    /**
+    * @method updateLinkFailureDetectionState
+    * 
+    * @brief handles link failure detection state update for port in active-active cable type
+    * 
+    * @return none
+    */
+    void updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type);
+
+    /**
+    * @method updateProberType
+    * 
+    * @brief link failure detection type update for port in active-active cable type
+    * 
+    * @return none
+    */
+    void updateProberType(const std::string &linkFailureDetectionType);
+
+    /**
+    * @method createIcmpEchoSession
+    * 
+    * @brief calls DbInterface API to create ICMO_ECHO_SESSION
+    * 
+    * @return none
+    */
+    inline void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
+        mDbInterfacePtr->createIcmpEchoSession(key, std::move(entries));
+    }
+
+    /**
+    * @method deleteIcmpEchoSession
+    * 
+    * @brief calls DbInterface API to delete ICMO_ECHO_SESSION 
+    * 
+    * @return none
+    */
+    inline void deleteIcmpEchoSession(std::string key) {
+        mDbInterfacePtr->deleteIcmpEchoSession(key);
+    }
+
+    /**
+    * @method setTimeoutIpv4_msec
+    * 
+    * @brief calls DbInterface API to update Tx v4 Interval for ICMP_ECHO_SESSION
+    * 
+    * @return none
+    */
+     void setTimeoutIpv4_msec(uint32_t timeout_msec);
+
+    /**
+    * @method setTimeoutIpv6_msec
+    * 
+    * @brief calls DbInterface API to update Tx v6 Interval for ICMP_ECHO_SESSION
+    * 
+    * @return none
+    */
+     void setTimeoutIpv6_msec(uint32_t timeout_msec);
 
 protected:
     friend class test::MuxManagerTest;
@@ -459,7 +514,7 @@ protected:
     void resetLinkManagerStateMachinePtr(link_manager::LinkManagerStateMachineBase *stateMachinePtr) { mLinkManagerStateMachinePtr.reset(stateMachinePtr); };
 
 private:
-    std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
+    std::shared_ptr<DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 
