@@ -77,6 +77,76 @@ LinkProberState* PeerUnknownState::handleEvent(IcmpPeerUnknownEvent &event)
 }
 
 //
+// ---> handleEvent(IcmpPeerWaitEvent &event);
+//
+// handle IcmpPeerWaitEvent from LinkProber
+//
+LinkProberState* PeerUnknownState::handleEvent(IcmpPeerWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerWaitState());
+    return nextState;
+
+}
+
+//
+// ---> handleEvent(IcmpHwPeerActiveEvent &event);
+//
+// handle IcmpHwPeerActiveEvent from LinkProber
+//
+LinkProberState* PeerUnknownState::handleEvent(IcmpHwPeerActiveEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine =
+        dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerActiveState());
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwPeerUnknownEvent &event);
+//
+// handle IcmpHwPeerUnknownEvent from LinkProber
+//
+LinkProberState* PeerUnknownState::handleEvent(IcmpHwPeerUnknownEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerUnknownState());
+
+    resetState();
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(IcmpHwPeerWaitEvent &event);
+//
+// handle IcmpHwPeerWaitEvent from LinkProber
+//
+LinkProberState* PeerUnknownState::handleEvent(IcmpHwPeerWaitEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    LinkProberStateMachineBase *stateMachine = dynamic_cast<LinkProberStateMachineBase *> (getStateMachine());
+    LinkProberState *nextState;
+
+    nextState = dynamic_cast<LinkProberState *> (stateMachine->getPeerWaitState());
+    return nextState;
+
+}
+
+
+//
 // ---> resetState();
 //
 // reset current state attributes

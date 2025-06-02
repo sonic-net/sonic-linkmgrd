@@ -32,7 +32,6 @@
 #include <boost/function.hpp>
 
 #include "link_manager/LinkManagerStateMachineBase.h"
-#include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberState.h"
 #include "link_state/LinkState.h"
 #include "link_state/LinkStateMachine.h"

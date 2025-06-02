@@ -141,6 +141,13 @@ void FakeLinkProber::sendPeerProbeCommand()
     mSendPeerProbeCommand++;
 }
 
+void FakeLinkProber::handleStateDbStateUpdate()
+{
+    MUXLOGINFO("");
+
+    mIcmpEchoSessionStateUpdateCallCount++;
+}
+
 void FakeLinkProber::handleSendSwitchCommand()
 {
     // inform the composite state machine about command send completion

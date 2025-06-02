@@ -39,6 +39,8 @@
 #include "MuxPort.h"
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
+#include "link_prober/LinkProberStateMachineActiveActive.h"
+#include "link_prober/LinkProberStateMachineActiveStandby.h"
 
 namespace mux
 {
@@ -119,6 +121,37 @@ void MuxPort::handleSoCIpv4AddressUpdate(boost::asio::ip::address address)
     ));
 }
 
+// ---> updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type);
+//
+// handles link failure detection state update for port in active-active cable type
+//
+void MuxPort::updateLinkFailureDetectionState(const std::string &linkFailureDetectionState, const std::string &session_type)
+{
+    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
+
+    boost::asio::post(mStrand, boost::bind(
+        &link_manager::LinkManagerStateMachineBase::updateLinkFailureDetectionState,
+        mLinkManagerStateMachinePtr.get(),
+        linkFailureDetectionState,
+        session_type
+    ));
+}
+
+// ---> updateProberType(const std::string &linkFailureDetectionState);
+//
+// handles link failure detection type update for port in active-active cable type
+//
+void MuxPort::updateProberType(const std::string &proberType)
+{
+    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
+    if(proberType == "hardware")
+    {
+        mMuxPortConfig.setLinkProberType(common::MuxPortConfig::LinkProberType::Hardware);
+    } else {
+        mMuxPortConfig.setLinkProberType(common::MuxPortConfig::LinkProberType::Software);
+    }
+}
+
 //
 // ---> handleLinkState(const std::string &linkState);
 //
@@ -175,6 +208,32 @@ void MuxPort::handleGetServerMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN
         mLinkManagerStateMachinePtr.get(),
         address
     ));
+}
+
+//
+// ---> setTimeoutIpv4_msec (uint32_t timeout_msec);
+//
+// calls DbInterface API to update Tx v4 Interval for ICMP_ECHO_SESSION
+//
+void MuxPort::setTimeoutIpv4_msec (uint32_t timeout_msec)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    uint32_t rx_interval = timeout_msec * mMuxPortConfig.getNegativeStateChangeRetryCount();
+
+    mDbInterfacePtr->updateIntervalv4(timeout_msec, rx_interval); 
+}
+
+//
+// ---> setTimeoutIpv6_msec (uint32_t timeout_msec)
+//
+//  calls DbInterface API to update Tx v6 Interval for ICMP_ECHO_SESSION
+//
+void MuxPort::setTimeoutIpv6_msec (uint32_t timeout_msec)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+    uint32_t rx_interval = timeout_msec * mMuxPortConfig.getNegativeStateChangeRetryCount();
+
+    mDbInterfacePtr->updateIntervalv6(timeout_msec, rx_interval);
 }
 
 //
