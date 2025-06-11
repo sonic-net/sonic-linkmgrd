@@ -20,7 +20,7 @@ jobs:
     vmImage: 'ubuntu-22.04'
 
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm:latest
 
   steps:
   - script: |
@@ -82,8 +82,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib
       patterns: |
-        target/debs/bullseye/libyang-*.deb
-        target/debs/bullseye/libyang_*.deb
+        target/debs/bookworm/libyang-*.deb
+        target/debs/bookworm/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
@@ -95,7 +95,7 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifact: sonic-swss-common
+      artifact: sonic-swss-common-bookworm
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common'
@@ -124,7 +124,7 @@ jobs:
   timeoutInMinutes: 180
   pool: sonicbld-arm64
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye-arm64:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm-arm64:latest
 
   steps:
   - script: |
@@ -179,8 +179,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.arm64
       patterns: |
-        target/debs/bullseye/libyang-*.deb
-        target/debs/bullseye/libyang_*.deb
+        target/debs/bookworm/libyang-*.deb
+        target/debs/bookworm/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
@@ -192,7 +192,7 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifact: sonic-swss-common.arm64
+      artifact: sonic-swss-common-bookworm.arm64
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.arm64'
@@ -216,7 +216,7 @@ jobs:
   timeoutInMinutes: 180
   pool: sonicbld-armhf
   container:
-    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bullseye-armhf:latest
+    image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm-armhf:latest
 
   steps:
   - script: |
@@ -271,8 +271,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.armhf
       patterns: |
-        target/debs/bullseye/libyang-*.deb
-        target/debs/bullseye/libyang_*.deb
+        target/debs/bookworm/libyang-*.deb
+        target/debs/bookworm/libyang_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
@@ -284,7 +284,7 @@ jobs:
       source: specific
       project: build
       pipeline: 9
-      artifact: sonic-swss-common.armhf
+      artifact: sonic-swss-common-bookworm.armhf
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/$(sourceBranch)'
       path: '$(Build.SourcesDirectory)/sonic-swss-common.armhf'
