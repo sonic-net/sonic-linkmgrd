@@ -294,7 +294,7 @@ void MuxManager::updateProberType(const std::string &portName, const std::string
         // notify prober type for ports in active-active cable type
         muxPortPtr->updateProberType(proberType);
     } else {
-        MUXLOGERROR(boost::format("%s: Unsupported link failure detection type for : %s") % portName % proberType );
+        MUXLOGWARNING(boost::format("%s: Unsupported link failure detection type for : %s") % portName % proberType );
     }
 }
 
