@@ -33,6 +33,7 @@ SockFilter LinkProberBase::mIcmpFilter[] = {
 };
 
 // Set to hold all the session id's accross all ports of system for both Normal/Rx
+std::recursive_mutex LinkProberBase::mGuidSetMtx;
 std::unordered_set<std::string> LinkProberBase::mGuidSet;
 
 LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio::io_service &ioService,
@@ -712,6 +713,7 @@ std::string LinkProberBase::generateGuid()
     std::fill(generatedGuid.begin(), generatedGuid.end() - 4, 0);
     auto generatedGuidStr = uuidToHexString(generatedGuid);
     generatedGuidStr = "0x" + generatedGuidStr.substr(generatedGuidStr.length() - 8);
+    std::lock_guard<std::recursive_mutex> lock(mGuidSetMtx);
     if(mGuidSet.find(generatedGuidStr) == mGuidSet.end())
     {
         mGuidSet.insert(generatedGuidStr);
