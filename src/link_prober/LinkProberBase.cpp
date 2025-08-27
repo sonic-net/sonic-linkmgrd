@@ -694,7 +694,7 @@ void LinkProberBase::getGuidStr(const IcmpPayload *icmpPayload, std::string& gui
         std::stringstream os;
         os << std::hex << std::setw(8) << std::setfill('0') << host_guid;
         guidDataStr = os.str();
-        MUXLOGWARNING(boost::format("Link Prober recieved GUID: {%s}") % guidDataStr);
+        MUXLOGDEBUG(boost::format("Link Prober recieved GUID: {%s}") % guidDataStr);
     }
     guidDataStr = "0x" + guidDataStr;
 }
