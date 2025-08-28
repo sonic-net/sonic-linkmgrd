@@ -7,6 +7,7 @@
 #include <linux/filter.h>
 #include <unordered_set>
 #include <iomanip>
+#include <mutex>
 
 #include <netpacket/packet.h>
 #include <sys/socket.h>
@@ -73,6 +74,8 @@ using SockAddrLinkLayer = struct sockaddr_ll;
 class LinkProberBase
 {
 public:
+    friend class test::LinkProberMockTest;
+
     enum SessionType {
         UNKNOWN,
         SOFTWARE,
@@ -395,6 +398,7 @@ public:
 
     void resetTxBufferTlv() {mTxPacketSize = mTlvStartOffset;};
 
+    static std::recursive_mutex mGuidSetMtx;
     static std::unordered_set<std::string> mGuidSet;
     boost::uuids::uuid mSelfUUID;
 

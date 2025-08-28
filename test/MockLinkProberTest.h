@@ -53,6 +53,8 @@ public:
     void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotReceivedFuncPtr(link_prober::HeartbeatType::HEARTBEAT_SELF); }
     void receiveSelfIcmpReply();
     void receivePeerIcmpReply();
+    void postGenerateGuid(uint32_t count);
+    boost::asio::io_service &getIoService() {  return mIoService; }
 
 private:
     void buildIcmpReply();
