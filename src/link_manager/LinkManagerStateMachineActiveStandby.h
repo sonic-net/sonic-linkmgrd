@@ -885,6 +885,7 @@ private:
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void ()> mResumeTxFnPtr;
     boost::function<void ()> mSendPeerSwitchCommandFnPtr;
+    boost::function<void ()> mSendPeerSwitchCommandFnPtr_pc;
     boost::function<void ()> mResetIcmpPacketCountsFnPtr;
     boost::function<void ()> mShutdownTxFnPtr;
     boost::function<void ()> mRestartTxFnPtr;

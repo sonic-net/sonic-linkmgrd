@@ -141,6 +141,13 @@ void FakeLinkProber::sendPeerProbeCommand()
     mSendPeerProbeCommand++;
 }
 
+void FakeLinkProber::sendPeerSwitchCommand_pc()
+{
+    MUXLOGINFO("");
+
+    mSendPeerSwitchCommand++;
+}
+
 void FakeLinkProber::handleStateDbStateUpdate()
 {
     MUXLOGINFO("");

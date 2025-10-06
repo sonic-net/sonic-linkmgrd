@@ -163,4 +163,21 @@ void FakeDbInterface::deleteIcmpEchoSession(std::string key) {
     mIcmpSessionsCount--;
 }
 
+bool FakeDbInterface::getPeerDevice(std::string &peer_switch_hostname)
+{
+    if (mPeerSwitchConfigured) {
+        peer_switch_hostname = mPeerSwitchHostname;
+    }
+    return mPeerSwitchConfigured;
+}
+
+bool FakeDbInterface::getPeerSwitchAddress(const std::string &hostname, std::string &address_ipv4)
+{
+    if (mPeerSwitchConfigured && hostname == mPeerSwitchHostname) {
+        address_ipv4 = mPeerSwitchAddress;
+        return true;
+    }
+    return false;
+}
+
 } /* namespace test */

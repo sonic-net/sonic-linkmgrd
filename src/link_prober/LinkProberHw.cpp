@@ -157,6 +157,7 @@ void LinkProberHw::startTimer()
 void LinkProberHw::initialize()
 {
     setupSocket();
+    setupSocket_pc();
     createIcmpEchoSession(mSessionTypeSelf, getSelfGuidData());
 }
 
@@ -219,6 +220,7 @@ void LinkProberHw::startProbing()
         createIcmpEchoSession(mSessionTypeSelf, getSelfGuidData());
     }
     startRecv();
+    startRecv_pc();
 }
 
 //
@@ -337,6 +339,9 @@ void LinkProberHw::suspendTxProbes(uint32_t suspendTime_msec)
 {
     auto guid = getSelfGuidData();
     deleteIcmpEchoSession(mSessionTypeSelf, guid);
+    if(mStream_pc.is_open()){
+        mStream_pc.cancel();
+    }
     mSuspendTx = true;
     mCancelSuspend = false;
     MUXLOGWARNING(boost::format("%s: suspend ICMP heartbeat probing") % mMuxPortConfig.getPortName());
@@ -573,6 +578,113 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
         }
     }
     startRecv();
+}
+
+//
+// ---> handleIcmpPayload_pc(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload);
+//
+// handle Icmp packet recieved on PortChannel socket
+//
+void LinkProberHw::handleIcmpPayload_pc(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload)
+{
+    bool isHwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getHardwareCookie();
+    bool isSwCookie = ntohl(icmpPayload->cookie) == IcmpPayload::getSoftwareCookie();
+
+    if (isHwCookie)
+    {
+        if ((ntohl(icmpPayload->version) <= IcmpPayload::getVersion()) &&
+           (ntohs(icmpHeader->un.echo.id) == 0))
+        {
+            // echo.id in hw prober must not be set
+            std::string guidDataStr;
+            getGuidStr(icmpPayload, guidDataStr);
+
+            if (guidDataStr == "0x0") {
+                //ignore this and get more packets
+                startRecv_pc();
+                return;
+            }
+            bool isSelfGuid = getSelfGuidData() == guidDataStr;
+            // sequence numbers are not used by hw prober
+            if (!isSelfGuid)
+            {
+                // Received a peer guid
+                // existing peer guid session needs to be deleted, when we learn a new peer session
+                if ((mPeerType == SessionType::HARDWARE) && (mPeerGuid != "") &&
+                        (mPeerGuid != guidDataStr))
+                {
+                    deleteIcmpEchoSession(mSessionTypePeer, mPeerGuid);
+                    mPositiveProbingPeerTimer.cancel();
+                    mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
+                }
+                // insert new peer guid
+                if(mGuidSet.find(guidDataStr) != mGuidSet.end())
+                {
+                    mGuidSet.erase(mPeerGuid);
+                    mGuidSet.insert(guidDataStr);
+                }
+                mPeerType = LinkProberBase::HARDWARE;
+                setPeerGuidData(guidDataStr);
+                createIcmpEchoSession(mSessionTypePeer, getPeerGuidData());
+            }
+        }
+    } else if (isSwCookie) {
+        if ((ntohl(icmpPayload->version) <= IcmpPayload::getVersion()) &&
+           (ntohs(icmpHeader->un.echo.id) == mMuxPortConfig.getServerId()))
+        {
+            // we can get software cookie from only from peer
+            std::string guidDataStr;
+            getGuidStr(icmpPayload, guidDataStr);
+            if (guidDataStr == "0x0") {
+                startRecv_pc();
+                return;
+            }
+
+            if (guidDataStr == mSelfGuid)
+            {
+                // ignore this, software generated TLV packets are coming back.
+                startRecv_pc();
+                return;
+            }
+
+            // check peer TLV packets
+            bool isTlvPkt = false;
+            size_t nextTlvSize = 0;
+            auto *tlvPtr = getNextTLVPtr(mTlvStartOffset, bytesTransferred, nextTlvSize);
+            if (tlvPtr && tlvPtr->tlvhead.type != TlvType::TLV_SENTINEL)
+                isTlvPkt = true;
+
+            // peer transitioned to software we need to delete peer HW session
+            if (!isTlvPkt && (mPeerType == SessionType::HARDWARE))
+            {
+                deleteIcmpEchoSession(mSessionTypePeer, mPeerGuid);
+                mGuidSet.erase(mPeerGuid);
+                mPositiveProbingPeerTimer.cancel();
+                mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpHwPeerUnknownEvent());
+                mPeerType = SessionType::SOFTWARE;
+            }
+
+            // new peer guid
+            if (mPeerGuid != guidDataStr)
+            {
+                if(mGuidSet.find(guidDataStr) != mGuidSet.end())
+                {
+                    mGuidSet.insert(guidDataStr);
+                }
+                setPeerGuidData(guidDataStr);
+                mPositiveProbingPeerTimer.cancel();
+                mDeadlineTimer.cancel();
+                mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
+                startRecv_pc();
+                startTimer();
+                return;
+            }
+            // seq numbers are not incremented for hw prober
+            mReportHeartbeatReplyReceivedFuncPtr(HeartbeatType::HEARTBEAT_PEER);
+            handleTlvRecv(bytesTransferred, false);
+        }
+    }
+    startRecv_pc();
 }
 
 }

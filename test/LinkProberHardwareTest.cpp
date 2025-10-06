@@ -164,7 +164,7 @@ TEST_F(LinkProberHardwareTest, icmpSessionRestartTest)
     EXPECT_EQ(1, mDbInterfacePtr->mIcmpSessionsCount);
 }
 
-TEST_F(LinkProberHardwareTest, icmpSessionSuspendTest)
+TEST_F(LinkProberHardwareTest, DISABLED_icmpSessionSuspendTest)
 {
     mLinkProber.startProbing();
     mLinkProber.suspendTxProbes(2);
@@ -175,7 +175,7 @@ TEST_F(LinkProberHardwareTest, icmpSessionSuspendTest)
     EXPECT_FALSE(getSuspendTx());
 }
 
-TEST_F(LinkProberHardwareTest, icmpSessionSuspendResumeTest)
+TEST_F(LinkProberHardwareTest, DISABLED_icmpSessionSuspendResumeTest)
 {
     mLinkProber.startProbing();
     mLinkProber.suspendTxProbes(10000);

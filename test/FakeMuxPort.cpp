@@ -145,6 +145,9 @@ inline void FakeMuxPort::initLinkProberActiveStandby()
     getActiveStandbyStateMachinePtr()->setSendPeerSwitchCommandFnPtr(
         boost::bind(&FakeLinkProber::sendPeerSwitchCommand, mFakeLinkProber.get())
     );
+   getActiveStandbyStateMachinePtr()->mSendPeerSwitchCommandFnPtr_pc = boost::bind(
+       &FakeLinkProber::sendPeerSwitchCommand_pc, mFakeLinkProber.get()
+   );
     getActiveStandbyStateMachinePtr()->setShutdownTxFnPtr(
         boost::bind(&FakeLinkProber::shutdownTxProbes, mFakeLinkProber.get())
     );

@@ -136,6 +136,7 @@ public:
     *@return none
     */
     virtual void handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) override;
+    virtual void handleIcmpPayload_pc(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) override;
 
     /**
     *@method startTimer

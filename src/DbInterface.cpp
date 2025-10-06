@@ -1890,4 +1890,25 @@ void DbInterface::handleSwssNotification()
 
 // GCOVR_EXCL_STOP
 
-} /* namespace common */
+bool DbInterface::getPeerDevice(std::string &peer_switch_hostname)
+{
+    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+    swss::Table configDbPeerSwitchTable(configDbPtr.get(), CFG_PEER_SWITCH_TABLE_NAME);
+    std::vector<std::string> keys;
+    configDbPeerSwitchTable.getKeys(keys);
+    if (keys.empty()) {
+        return false;
+    }
+    peer_switch_hostname = keys[0];
+    return true;
+}
+
+bool DbInterface::getPeerSwitchAddress(const std::string &hostname, std::string &address_ipv4)
+{
+    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+    swss::Table configDbPeerSwitchTable(configDbPtr.get(), CFG_PEER_SWITCH_TABLE_NAME);
+    bool result = configDbPeerSwitchTable.hget(hostname, "address_ipv4", address_ipv4);
+    return result;
+}
+
+} /* namespace mux */

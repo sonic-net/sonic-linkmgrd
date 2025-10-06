@@ -48,6 +48,7 @@ public:
     void resumeTxProbes();
     void sendPeerSwitchCommand();
     void sendPeerProbeCommand();
+    void sendPeerSwitchCommand_pc();
     void resetIcmpPacketCounts();
     void shutdownTxProbes();
     void restartTxProbes();

@@ -77,6 +77,9 @@ public:
         link_manager::ActiveStandbyStateMachine::SwitchCause cause
     ) override;
 
+    bool getPeerDevice(std::string &peer_switch_hostname) override;
+    bool getPeerSwitchAddress(const std::string &hostname, std::string &address_ipv4) override;
+
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
 
 private:
@@ -114,6 +117,10 @@ public:
     bool mWarmStartFlag = false;
 
     bool mDbInterfaceRaceConditionCheckFailure = false;
+
+    std::string mPeerSwitchHostname = "peer_switch";
+    std::string mPeerSwitchAddress = "10.1.0.32";
+    bool mPeerSwitchConfigured = true;
 };
 
 } /* namespace test */

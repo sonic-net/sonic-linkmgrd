@@ -45,7 +45,8 @@ LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio
     mStream(mIoService),
     mDeadlineTimer(mIoService),
     mSuspendTimer(mIoService),
-    mSwitchoverTimer(mIoService)
+    mSwitchoverTimer(mIoService),
+    mStream_pc(mIoService)
 {
     try {
         mSockFilterPtr = std::shared_ptr<SockFilter> (
@@ -105,6 +106,61 @@ void LinkProberBase::setupSocket() {
 
     initializeSendBuffer();
     startInitRecv();
+}
+
+//
+// ---> setupSocket_pc();
+//
+// creation of socket to recieve icmp packets only and setup recieve stream for PortChannel1
+//
+void LinkProberBase::setupSocket_pc() {
+    // PortChannel1 socket
+    try {
+        mSockFilterPtr_pc = std::shared_ptr<SockFilter> (
+            new SockFilter[sizeof(mIcmpFilter) / sizeof(*mIcmpFilter)],
+            std::default_delete<SockFilter[]>()
+        );
+        memcpy(mSockFilterPtr_pc.get(), mIcmpFilter, sizeof(mIcmpFilter));
+
+        mSockFilterProg_pc.len = sizeof(mIcmpFilter) / sizeof(*mIcmpFilter);
+        mSockFilterProg_pc.filter = mSockFilterPtr_pc.get();
+    }
+    catch (const std::bad_alloc& ex) {
+        std::ostringstream errMsg;
+        errMsg << "Failed allocate memory for PortChannel. Exception details: " << ex.what();
+
+        throw MUX_ERROR(BadAlloc, errMsg.str());
+    }
+
+ SockAddrLinkLayer addr_pc = {0};
+    addr_pc.sll_ifindex = if_nametoindex("PortChannel1");
+    addr_pc.sll_family = AF_PACKET;
+    addr_pc.sll_protocol = htons(ETH_P_ALL);
+
+    mSocket_pc = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
+    if (mSocket_pc < 0) {
+        std::ostringstream errMsg;
+        errMsg << "Failed to open socket for PortChannel1 with '" << strerror(errno) << "'"
+               << std::endl;
+        throw MUX_ERROR(SocketError, errMsg.str());
+    }
+
+    if (bind(mSocket_pc, (struct sockaddr *) &addr_pc, sizeof(addr_pc))) {
+        std::ostringstream errMsg;
+        errMsg << "Failed to bind to interface 'PortChannel1' with '"
+               << strerror(errno) << "'" << std::endl;
+        throw MUX_ERROR(SocketError, errMsg.str());
+    }
+
+    mSockFilterPtr_pc.get()[3].k = mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint();
+    if (setsockopt(mSocket_pc, SOL_SOCKET, SO_ATTACH_FILTER, &mSockFilterProg_pc, sizeof(mSockFilterProg_pc)) != 0) {
+        std::ostringstream errMsg;
+        errMsg << "Failed to attach filter for PortChannel1 with '" << strerror(errno) << "'"
+               << std::endl;
+        throw MUX_ERROR(SocketError, errMsg.str());
+    }
+
+    mStream_pc.assign(mSocket_pc);
 }
 
 //
@@ -214,6 +270,54 @@ void LinkProberBase::handleRecv(
     }
 }
 
+void LinkProberBase::handleRecv_pc(
+    const boost::system::error_code& errorCode,
+    size_t bytesTransferred
+)
+{
+    bool isProberHw  = mMuxPortConfig.getLinkProberType() == common::MuxPortConfig::LinkProberType::Hardware;
+    if (!errorCode)
+    {
+        struct sockaddr_ll sll;
+        socklen_t sll_len = sizeof(sll);
+        if (getsockname(mSocket_pc, (struct sockaddr*)&sll, &sll_len) == -1) {
+            MUXLOGERROR(boost::format("Failed to get socket name for PortChannel1: %s") % strerror(errno));
+            startRecv_pc();
+            return;
+        }
+
+        if (sll.sll_pkttype == PACKET_OUTGOING) {
+            startRecv_pc();
+            return;
+        }
+
+        iphdr *ipHeader = reinterpret_cast<iphdr *> (mRxBuffer_pc.data() + sizeof(ether_header));
+        icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (
+            mRxBuffer_pc.data() + sizeof(ether_header) + sizeof(iphdr)
+        );
+
+        IcmpPayload *icmpPayload = reinterpret_cast<IcmpPayload *> (
+            mRxBuffer_pc.data() + mPacketHeaderSize
+        );
+
+
+        // Handling of cookie and guids:
+        // - reception of peer hw cookie is considered as hw prober in peer
+        //   and will trigger creation of RX session in hw recording the peer guid.
+        // - reception of new peer guid with hardware cookie will trigger deletion of old
+        //   hardware RX session and creation of new session.
+        // - TLV probe will always use software.
+        // - software peer guid may not be unique across mux ports fo backward compatibilty,
+        //   however we will record it in the global set to avoid collisions.
+        if (isProberHw)
+        {
+            (static_cast<LinkProberHw *>(this))->handleIcmpPayload_pc(bytesTransferred, icmpHeader, icmpPayload);
+        } else {
+            (static_cast<LinkProberSw *>(this))->handleIcmpPayload_pc(bytesTransferred, icmpHeader, icmpPayload);
+        }
+    }
+}
+
 //
 // ---> handleTlvCommandRecv(Tlv *tlvPtr, bool isPeer);
 //
@@ -229,7 +333,6 @@ void LinkProberBase::handleTlvCommandRecv(
 
         switch (static_cast<Command>(tlvPtr->command)) {
             case Command::COMMAND_SWITCH_ACTIVE: {
-                MUXLOGWARNING(boost::format("SwitchActiveRequestEvent"));
                 boost::asio::post(strand, boost::bind(
                     static_cast<void (LinkProberStateMachineBase::*) (SwitchActiveRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
                     mLinkProberStateMachinePtr,
@@ -238,7 +341,6 @@ void LinkProberBase::handleTlvCommandRecv(
                 break;
             }
             case Command::COMMAND_MUX_PROBE: {
-                MUXLOGWARNING(boost::format("MuxProbeRequestEvent"));
                 boost::asio::post(strand, boost::bind(
                     static_cast<void (LinkProberStateMachineBase::*) (MuxProbeRequestEvent&)>(&LinkProberStateMachineBase::processEvent),
                     mLinkProberStateMachinePtr,
@@ -277,6 +379,7 @@ void LinkProberBase::handleTlvRecv(size_t bytesTransferred, bool isSelfGuid)
     size_t nextTlvSize = 0;
     bool stopProcessTlv = false;
     Tlv *nextTlvPtr = nullptr;
+    MUXLOGWARNING(boost::format("Entered handleTlvRecv"));
     while ((nextTlvPtr = getNextTLVPtr(nextTlvOffset, bytesTransferred, nextTlvSize)) && !stopProcessTlv) {
         switch (nextTlvPtr->tlvhead.type) {
             case TlvType::TLV_COMMAND: {
@@ -305,6 +408,33 @@ void LinkProberBase::handleTlvRecv(size_t bytesTransferred, bool isSelfGuid)
     }
 }
 
+void LinkProberBase::handleTlvRecv_pc(size_t bytesTransferred, bool isSelfGuid)
+{
+    size_t nextTlvOffset = mTlvStartOffset;
+    size_t nextTlvSize = 0;
+    bool stopProcessTlv = false;
+    Tlv *nextTlvPtr = nullptr;
+    while ((nextTlvPtr = getNextTLVPtr_pc(nextTlvOffset, bytesTransferred, nextTlvSize)) && !stopProcessTlv) {
+        switch (nextTlvPtr->tlvhead.type) {
+            case TlvType::TLV_COMMAND: {
+                handleTlvCommandRecv(nextTlvPtr, !isSelfGuid);
+                break;
+            }
+            case TlvType::TLV_SENTINEL: {
+                // sentinel TLV, stop processing
+                stopProcessTlv = true;
+                break;
+            }
+            default: {
+                // try to skip unknown TLV with valid length(>0)
+                stopProcessTlv = (nextTlvSize == sizeof(Tlv));
+                break;
+            }
+        }
+        nextTlvOffset += nextTlvSize;
+    }
+}
+
 //
 // ---> startRecv();
 //
@@ -318,6 +448,25 @@ void LinkProberBase::startRecv()
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
         mStrand.wrap(boost::bind(
             &LinkProberBase::handleRecv,
+            this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred
+        ))
+    );
+
+}
+
+//
+// ---> startRecv_pc();
+//
+// start ICMP ECHOREPLY reception for PortChannel
+//
+void LinkProberBase::startRecv_pc()
+{
+    mStream_pc.async_read_some(
+        boost::asio::buffer(mRxBuffer_pc, MUX_MAX_ICMP_BUFFER_SIZE),
+        mStrand.wrap(boost::bind(
+            &LinkProberBase::handleRecv_pc,
             this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
@@ -421,6 +570,53 @@ void LinkProberBase::handleSendProbeCommand()
     initTxBufferTlvSendProbe();
 
     sendHeartbeat();
+
+    initTxBufferTlvSentinel();
+}
+
+void LinkProberBase::sendPeerSwitchCommand_pc()
+{
+    boost::asio::post(mStrand, boost::bind(&LinkProberBase::handleSendSwitchCommand_pc, this));
+}
+
+void LinkProberBase::handleSendSwitchCommand_pc()
+{
+    initTxBufferTlvSendSwitch();
+    memcpy(mTxBuffer_pc.data(), mTxBuffer.data(), mTxPacketSize);
+
+    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (sock < 0) {
+        MUXLOGERROR(boost::format("Failed to create raw socket: %s") % strerror(errno));
+        return;
+    }
+
+    struct sockaddr_in sin;
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(mMuxPortConfig.getPeerIpv4Address().to_v4().to_uint());
+
+    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer_pc.data() + sizeof(ether_header));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer_pc.data() + sizeof(ether_header) + sizeof(iphdr));
+
+    MUXLOGWARNING(boost::format("Original saddr: %s") % boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string());
+    MUXLOGWARNING(boost::format("Original daddr: %s") % boost::asio::ip::address_v4(ntohl(ipHeader->daddr)).to_string());
+    MUXLOGWARNING(boost::format("Original ICMP type: %d") % (int)icmpHeader->type);
+
+    ipHeader->saddr = htonl(mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint());
+    ipHeader->daddr = htonl(mMuxPortConfig.getPeerIpv4Address().to_v4().to_uint());
+    icmpHeader->type = ICMP_ECHOREPLY;
+
+    MUXLOGWARNING(boost::format("New saddr: %s") % boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string());
+    MUXLOGWARNING(boost::format("New daddr: %s") % boost::asio::ip::address_v4(ntohl(ipHeader->daddr)).to_string());
+    MUXLOGWARNING(boost::format("New ICMP type: %d") % (int)icmpHeader->type);
+
+    computeChecksum(icmpHeader, mTxPacketSize - sizeof(ether_header) - sizeof(iphdr));
+    computeChecksum(ipHeader, sizeof(iphdr));
+
+    if (sendto(sock, ipHeader, mTxPacketSize - sizeof(ether_header), 0, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+        MUXLOGERROR(boost::format("Failed to send probe packet: %s") % strerror(errno));
+    }
+
+    close(sock);
 
     initTxBufferTlvSentinel();
 }

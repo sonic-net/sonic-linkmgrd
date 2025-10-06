@@ -248,6 +248,10 @@ public:
         MUXLOGWARNING(boost::format("Link Prober handleIcmpPayload not implemented"));
     }
 
+    virtual void handleIcmpPayload_pc(size_t bytesTransferred, icmphdr *icmpHeader, IcmpPayload *icmpPayload) {
+        MUXLOGWARNING(boost::format("Link Prober handleIcmpPayload_pc not implemented"));
+    }
+
     /**
     *@method getSelfGuidData
     *
@@ -331,6 +335,15 @@ public:
         return nextTlvPtr;
     }
 
+    inline Tlv* getNextTLVPtr_pc(size_t offset, size_t bytesTransferred, size_t &nextTlvSize) {
+        nextTlvSize = findNextTlv(offset, bytesTransferred);
+        if (nextTlvSize == 0)
+            return nullptr;
+
+        Tlv *nextTlvPtr = reinterpret_cast<Tlv *> (mRxBuffer_pc.data() + offset);
+        return nextTlvPtr;
+    }
+
     /**
     *@method updateEthernetFrame
     *
@@ -359,6 +372,7 @@ public:
     *@return none
     */
     virtual void sendPeerProbeCommand();
+    virtual void sendPeerSwitchCommand_pc();
 
     /**
     *@method sendPeerSwitchCommand
@@ -433,6 +447,7 @@ protected:
    * @return none
    */
    void startRecv();
+   void startRecv_pc();
 
    /**
    * @method setupSocket
@@ -442,6 +457,7 @@ protected:
    * @return none
    */
    void setupSocket();
+   void setupSocket_pc();
 
    /**
    *@method handleTlvCommandRecv
@@ -462,6 +478,11 @@ protected:
         size_t bytesTransferred,
         bool isSelfGuid
    );
+
+   void handleTlvRecv_pc(
+        size_t bytesTransferred,
+        bool isSelfGuid
+   );
        /**
    *@method handleRecv
    *
@@ -473,6 +494,11 @@ protected:
    *@return none
    */
    void handleRecv(
+       const boost::system::error_code &errorCode,
+       size_t bytesTransferred
+   );
+
+   void handleRecv_pc(
        const boost::system::error_code &errorCode,
        size_t bytesTransferred
    );
@@ -500,6 +526,8 @@ protected:
    *@return none
    */
    void handleSendProbeCommand();
+   void handleSendSwitchCommand_pc();
+   void handleSendProbeCommand_pc();
 
    /**
    *@method handleSendSwitchCommand
@@ -689,6 +717,11 @@ protected:
     std::shared_ptr<SockFilter> mSockFilterPtr;
     SockFilterProg mSockFilterProg;
 
+    int mSocket_pc = 0;
+    boost::asio::posix::stream_descriptor mStream_pc;
+    std::shared_ptr<SockFilter> mSockFilterPtr_pc;
+    SockFilterProg mSockFilterProg_pc;
+
     std::string mSelfGuid;
     std::string mPeerGuid;
     SessionType mPeerType = SessionType::UNKNOWN;
@@ -699,7 +732,9 @@ protected:
 
     std::size_t mTxPacketSize;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer;
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mTxBuffer_pc;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer;
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mRxBuffer_pc;
 
     bool mCancelSuspend = false;
     bool mSuspendTx = false;

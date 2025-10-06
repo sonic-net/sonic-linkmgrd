@@ -377,6 +377,9 @@ void ActiveStandbyStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip
             mSendPeerSwitchCommandFnPtr = boost::bind(
                 &link_prober::LinkProberBase::sendPeerSwitchCommand, mLinkProberPtr.get()
             );
+            mSendPeerSwitchCommandFnPtr_pc = boost::bind(
+                &link_prober::LinkProberBase::sendPeerSwitchCommand_pc, mLinkProberPtr.get()
+            );
             mResetIcmpPacketCountsFnPtr = boost::bind(
                 &link_prober::LinkProberBase::resetIcmpPacketCounts, mLinkProberPtr.get()
             );
@@ -585,8 +588,9 @@ void ActiveStandbyStateMachine::handleStateChange(LinkStateEvent &event, link_st
                    ls(nextState) == link_state::LinkState::Down &&
                    ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             // switch MUX to standby since we are entering LinkDown state
+            
             switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown, nextState, mux_state::MuxState::Label::Standby);
-
+            mSendPeerSwitchCommandFnPtr_pc();
             mActiveUnknownUpCount = 0;
             mStandbyUnknownUpCount = 0;
 

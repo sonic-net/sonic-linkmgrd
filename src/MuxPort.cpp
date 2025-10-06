@@ -39,6 +39,7 @@
 #include "MuxPort.h"
 #include "common/MuxException.h"
 #include "common/MuxLogger.h"
+#include "swss/schema.h"
 #include "link_prober/LinkProberStateMachineActiveActive.h"
 #include "link_prober/LinkProberStateMachineActiveStandby.h"
 
@@ -92,6 +93,14 @@ MuxPort::MuxPort(
             break;
     }
     assert(mLinkManagerStateMachinePtr.get() != nullptr);
+
+    std::string peer_switch_hostname;
+    if (mDbInterfacePtr->getPeerDevice(peer_switch_hostname)) {
+        std::string address_ipv4;
+        if (mDbInterfacePtr->getPeerSwitchAddress(peer_switch_hostname, address_ipv4)) {
+            mMuxPortConfig.setPeerIpv4Address(boost::asio::ip::address::from_string(address_ipv4));
+        }
+    }
 }
 
 void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)

@@ -441,6 +441,29 @@ public:
     */
     virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval);
 
+   /**
+   *@method getPeerDevice
+   *
+   *@brief retrieve peer device hostname
+   *
+   *@param peer_switch_hostname (out)   peer switch hostname
+   *
+   *@return true if peer device is present in config
+   */
+   virtual bool getPeerDevice(std::string &peer_switch_hostname);
+
+   /**
+   *@method getPeerSwitchAddress
+   *
+   *@brief retrieve peer switch IP address
+   *
+   *@param hostname (in)       peer switch hostname
+   *@param address_ipv4 (out)  peer switch ipv4 address
+   *
+   *@return true if peer switch IP address is present in config
+   */
+   virtual bool getPeerSwitchAddress(const std::string &hostname, std::string &address_ipv4);
+
 private:
     friend class test::MuxManagerTest;
     friend class test::LinkProberHardwareTest;

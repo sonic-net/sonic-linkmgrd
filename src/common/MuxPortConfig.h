@@ -142,6 +142,17 @@ public:
     inline void setBladeMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mBladeMacAddress = address;};
 
     /**
+    *@method setPeerIpv4Address
+    *
+    *@brief setter for peer ToR IPv4 address
+    *
+    *@param address (in) peer IPv4 address
+    *
+    *@return none
+    */
+    inline void setPeerIpv4Address(const boost::asio::ip::address &address) {mPeerIpv4Address = address;};
+
+    /**
     *@method setMode
     *
     *@brief setter for MUX mode
@@ -286,6 +297,15 @@ public:
     *@return IPv4 address
     */
     inline const boost::asio::ip::address& getBladeIpv4Address() const {return mBladeIpv4Address;};
+
+    /**
+    *@method getPeerIpv4Address
+    *
+    *@brief getter for peer ToR IPv4 address
+    *
+    *@return IPv4 address
+    */
+    inline const boost::asio::ip::address& getPeerIpv4Address() const {return mPeerIpv4Address;};
 
     /**
     *@method getBladeMacAddress
@@ -452,6 +472,7 @@ private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
     boost::asio::ip::address mBladeIpv4Address;
+    boost::asio::ip::address mPeerIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     std::array<uint8_t, ETHER_ADDR_LEN> mWellKnownMacAddress = {0, 0, 0, 0, 0, 0};
     std::array<uint8_t, ETHER_ADDR_LEN> mLastUpdatedMacAddress = {0, 0, 0, 0, 0, 0};
