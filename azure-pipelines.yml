@@ -122,7 +122,7 @@ jobs:
 - job:
   displayName: "arm64"
   timeoutInMinutes: 180
-  pool: sonicbld-arm64
+  pool: sonicso1ES-arm64
   container:
     image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm-arm64:latest
 
@@ -214,7 +214,7 @@ jobs:
 - job:
   displayName: "armhf"
   timeoutInMinutes: 180
-  pool: sonicbld-armhf
+  pool: sonicso1ES-armhf
   container:
     image: sonicdev-microsoft.azurecr.io:443/sonic-slave-bookworm-armhf:latest
 
