@@ -248,6 +248,17 @@ public:
     */
     inline void setLoopbackIpv4Address(boost::asio::ip::address& address) {mMuxConfig.setLoopbackIpv4Address(address);};
 
+    /**
+    *@method setLoopback3Ipv4Address
+    *
+    *@brief setter for Loopback3 IPv4 address
+    *
+    *@param address (in)  IPv4 address
+    *
+    *@return none
+    */
+    inline void setLoopback3Ipv4Address(boost::asio::ip::address& address) {mMuxConfig.setLoopback3Ipv4Address(address);};
+
 
     /**
     *@method setUseWellKnownMacActiveActive
@@ -261,13 +272,22 @@ public:
     void setUseWellKnownMacActiveActive(bool useWellKnownMac);
 
     /**
-     * @method getLoopbackIpv4Address
-     * 
-     * @brief getter for loop back ipv4 address 
-     * 
+    * @method getLoopbackIpv4Address
+    *
+    * @brief getter for loop back ipv4 address
+    *
+    * @return IPv4 address
+    */
+    inline boost::asio::ip::address getLoopbackIpv4Address() {return mMuxConfig.getLoopbackIpv4Address();};
+
+    /**
+     * @method getLoopback3Ipv4Address
+     *
+     * @brief getter for Loopback3 IPv4 address
+     *
      * @return IPv4 address
      */
-    inline boost::asio::ip::address getLoopbackIpv4Address() {return mMuxConfig.getLoopbackIpv4Address();};
+    inline boost::asio::ip::address getLoopback3Ipv4Address() {return mMuxConfig.getLoopback3Ipv4Address();};
 
     /**
     *@method initialize

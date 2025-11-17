@@ -32,10 +32,6 @@ SockFilter LinkProberBase::mIcmpFilter[] = {
     [12] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000},
 };
 
-// Set to hold all the session id's accross all ports of system for both Normal/Rx
-std::recursive_mutex LinkProberBase::mGuidSetMtx;
-std::unordered_set<std::string> LinkProberBase::mGuidSet;
-
 LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio::io_service &ioService,
             LinkProberStateMachineBase *linkProberStateMachinePtr) :
     mMuxPortConfig(muxPortConfig),
@@ -703,27 +699,36 @@ void LinkProberBase::getGuidStr(const IcmpPayload *icmpPayload, std::string& gui
 //
 // ---> generateGuid();
 //
-// generate GUID for link_prober
+// generate unique GUID based on Loopback3 and SoC IP addresses for LinkProber session
 //
 std::string LinkProberBase::generateGuid()
 {
+    // Get the last 16 bits from Loopback3 IP address
+    boost::asio::ip::address loopback3Ip = mMuxPortConfig.getLoopback3Ipv4Address();
+    uint32_t loopback3Ipv4 = loopback3Ip.to_v4().to_uint();
+    uint16_t loopback3Last16Bits = static_cast<uint16_t>(loopback3Ipv4 & 0xFFFF);
+
+    // Get the last 16 bits from SoC/Blade IP address
+    boost::asio::ip::address socIp = mMuxPortConfig.getBladeIpv4Address();
+    uint32_t socIpv4 = socIp.to_v4().to_uint();
+    uint16_t socLast16Bits = static_cast<uint16_t>(socIpv4 & 0xFFFF);
+
+    // Combine the two 16-bit values to form a 32-bit GUID
+    uint32_t deterministicGuid = (static_cast<uint32_t>(loopback3Last16Bits) << 16) | socLast16Bits;
+    uint32_t reverseGuid =  htonl(deterministicGuid);
+
+    char guidStr[16];
+    snprintf(guidStr, sizeof(guidStr), "0x%08x", deterministicGuid);
+    std::string generatedGuidStr(guidStr);
+
     boost::uuids::uuid generatedGuid;
-    boost::uuids::random_generator gen;
-    generatedGuid = gen();
-    std::fill(generatedGuid.begin(), generatedGuid.end() - 4, 0);
-    auto generatedGuidStr = uuidToHexString(generatedGuid);
-    generatedGuidStr = "0x" + generatedGuidStr.substr(generatedGuidStr.length() - 8);
-    std::lock_guard<std::recursive_mutex> lock(mGuidSetMtx);
-    if(mGuidSet.find(generatedGuidStr) == mGuidSet.end())
-    {
-        mGuidSet.insert(generatedGuidStr);
-        MUXLOGWARNING(boost::format("Link Prober generated GUID: {%s}") % generatedGuidStr);
-    }
-    else {
-        MUXLOGWARNING(boost::format("Guid collision happened for guid : {%s}") % generatedGuidStr);
-        generatedGuidStr = generateGuid();
-    }
+    std::fill(generatedGuid.begin(), generatedGuid.end(), 0);
+    memcpy(generatedGuid.begin()+12, &reverseGuid, sizeof(reverseGuid));
     mSelfUUID = generatedGuid;
+
+    MUXLOGWARNING(boost::format("Link Prober generated GUID: {%s} from Loopback3 IP: %s, SoC IP: %s")
+                  % generatedGuidStr % loopback3Ip.to_string() % socIp.to_string());
+
     return generatedGuidStr;
 }
 

@@ -24,8 +24,6 @@
 #include <string.h>
 
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/random_generator.hpp>
-
 #include "IcmpPayload.h"
 #include "common/MuxLogger.h"
 
