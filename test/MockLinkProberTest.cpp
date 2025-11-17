@@ -15,7 +15,7 @@
  */
 
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/string_generator.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
@@ -35,9 +35,8 @@ LinkProberMockTest::LinkProberMockTest()
     : mMuxPortConfig(mMuxConfig, mPortName, mServerId, common::MuxPortConfig::PortCableType::DefaultType),
       mStrand(mIoService)
 {
-    boost::uuids::random_generator gen;
-    mPeerGuid = gen();
-
+    boost::uuids::string_generator gen;
+    PeerGuid = gen("ABCDEF12-3456-7890-ABCD-EF1234567890");
     mMuxConfig.setNegativeStateChangeRetryCount(1);
 }
 
@@ -71,12 +70,12 @@ void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableTyp
             break;
         }
     }
+    mMuxPortConfig.setBladeIpv4Address(boost::asio::ip::make_address("192.168.0.9"));
     mLinkProberPtr = std::make_shared<link_prober::LinkProberSw>(
         mMuxPortConfig,
         mIoService,
         mLinkProberStateMachinePtr.get()
     );
-    //link_prober::IcmpPayload::generateGuid();
     initializeSendBuffer();
 }
 
@@ -87,19 +86,7 @@ void LinkProberMockTest::TearDown()
     // mLinkManagerStateMachinePtr.reset();
     Mock::VerifyAndClearExpectations(mLinkManagerStateMachinePtr.get());
 
-    link_prober::LinkProberBase::mGuidSet.clear();
     mIoService.stop();
-}
-
-void LinkProberMockTest::postGenerateGuid(uint32_t count)
-{
-    for (uint32_t i = 0; i < count; ++i)
-    {
-        boost::asio::post(mIoService, boost::bind(
-            &link_prober::LinkProberBase::generateGuid,
-            mLinkProberPtr.get()
-        ));
-    }
 }
 
 void LinkProberMockTest::runIoService(uint32_t count)
@@ -150,7 +137,10 @@ void LinkProberMockTest::receivePeerIcmpReply()
     link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *>(
         getRxBuffer().data() + getPacketHeaderSize()
     );
-    memcpy(icmpPayload->uuid, mPeerGuid.data, sizeof(icmpPayload->uuid));
+    memcpy(icmpPayload->uuid, PeerGuid.data, sizeof(icmpPayload->uuid));
+    std::string tempGuid;
+    mLinkProberPtr->getGuidStr(icmpPayload, tempGuid);
+    setPeerGuidData(tempGuid);
 }
 
 TEST_F(LinkProberMockTest, LinkProberActiveActive)
@@ -236,37 +226,6 @@ TEST_F(LinkProberMockTest, LinkProberActiveStandby)
 
     handleTimeout();
     runIoService();
-
-    TearDown();
-}
-
-TEST_F(LinkProberMockTest, GuidGenRaceCondition)
-{
-    SetUp(common::MuxPortConfig::PortCableType::ActiveStandby);
-
-    std::unique_ptr<boost::asio::io_service::work> work(new boost::asio::io_service::work(getIoService()));
-
-    boost::thread_group threads;
-    for (size_t i = 0; i < 8; ++i)
-    {
-        threads.create_thread(boost::bind(&boost::asio::io_service::run, &(getIoService())));
-    }
-
-    postGenerateGuid(10000);
-
-    for (size_t i = 0; i < 100; ++i)
-    {
-        if (link_prober::LinkProberBase::mGuidSet.size() == 10001)
-        {
-            break;
-        }
-        sleep(1);
-    }
-
-    EXPECT_EQ(10001, link_prober::LinkProberBase::mGuidSet.size());
-
-    work.reset();
-    threads.join_all();
 
     TearDown();
 }
