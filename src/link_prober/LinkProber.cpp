@@ -134,6 +134,12 @@ void LinkProber::initialize()
 {
     SockAddrLinkLayer addr = {0};
     addr.sll_ifindex = if_nametoindex(mMuxPortConfig.getPortName().c_str());
+    if (addr.sll_ifindex == 0) {
+        std::ostringstream errMsg;
+        errMsg << "Failed to get interface index for '" << mMuxPortConfig.getPortName() << "': interface not found"
+               << std::endl;
+        throw MUX_ERROR(SocketError, errMsg.str());
+    }
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_ALL);
 
