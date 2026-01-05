@@ -270,6 +270,15 @@ public:
     inline boost::asio::ip::address getLoopbackIpv4Address() const {return mMuxConfig.getLoopbackIpv4Address();};
 
     /**
+    *@method getLoopback3Ipv4Address
+    *
+    *@brief getter for Loopback3 IPv4 address
+    *
+    *@return IPv4 address
+    */
+    inline boost::asio::ip::address getLoopback3Ipv4Address() const {return mMuxConfig.getLoopback3Ipv4Address();};
+
+    /**
     *@method getPortName
     *
     *@brief getter for port name

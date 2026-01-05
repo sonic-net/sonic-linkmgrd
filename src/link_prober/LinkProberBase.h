@@ -18,7 +18,6 @@
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 #include <boost/lexical_cast.hpp>
 #include "LinkProberStateMachineBase.h"
 
@@ -398,8 +397,6 @@ public:
 
     void resetTxBufferTlv() {mTxPacketSize = mTlvStartOffset;};
 
-    static std::recursive_mutex mGuidSetMtx;
-    static std::unordered_set<std::string> mGuidSet;
     boost::uuids::uuid mSelfUUID;
 
 protected:
@@ -631,13 +628,11 @@ protected:
     /**
      *@method generateGuid
      *
-     *@brief generate GUID for each link_prober
+     *@brief generate unique GUID based on Loopback3 and SoC IP addresses
      *
-     *@return newly generated guid
+     *@return generated guid
      */
-    std::string generateGuid();
-
-    /**
+    std::string generateGuid();    /**
     *@method appendTlvSentinel
     *
     *@brief append TlvSentinel to txBuffer

@@ -662,24 +662,29 @@ void DbInterface::processVlanMacAddress(std::string& mac)
 }
 
 //
-// ---> processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
+// ---> processLoopbackInterfacesInfo(std::vector<std::string> &loopbackIntfs)
 //
-// process Loopback2 interface information
+// process Loopback2 and Loopback3 interface information
 //
-void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
+void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopbackIntfs)
 {
     const std::string loopback2 = "Loopback2|";
+    const std::string loopback3 = "Loopback3|";
     bool loopback2IPv4Found = false;
+    bool loopback3IPv4Found = false;
 
     for (auto &loopbackIntf: loopbackIntfs) {
-        size_t pos = loopbackIntf.find(loopback2);
-        if (pos != std::string::npos) {
+        size_t pos2 = loopbackIntf.find(loopback2);
+        size_t pos3 = loopbackIntf.find(loopback3);
+
+        if (pos2 != std::string::npos) {
+            // Process Loopback2
             std::string ip = loopbackIntf.substr(loopback2.size(), loopbackIntf.size() - loopback2.size());
             MUXLOGINFO(boost::format("configDb Loopback2: ip: %s") % ip);
 
-            pos = ip.find("/");
-            if (pos != std::string::npos) {
-                ip.erase(pos);
+            pos2 = ip.find("/");
+            if (pos2 != std::string::npos) {
+                ip.erase(pos2);
             }
             boost::system::error_code errorCode;
             boost::asio::ip::address ipAddress = boost::asio::ip::make_address(ip, errorCode);
@@ -688,10 +693,31 @@ void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopba
                     mMuxManagerPtr->setLoopbackIpv4Address(ipAddress);
                     loopback2IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
-                    // handle IPv6 probing
+                    MUXLOGWARNING(boost::format("Ipv6 for Loopback2: ip: %s is not supported.") % ip);
                 }
             } else {
                 MUXLOGFATAL(boost::format("Received Loopback2 IP: %s, error code: %d") % ip % errorCode);
+            }
+        } else if (pos3 != std::string::npos) {
+            // Process Loopback3
+            std::string ip = loopbackIntf.substr(loopback3.size(), loopbackIntf.size() - loopback3.size());
+            MUXLOGINFO(boost::format("configDb Loopback3: ip: %s") % ip);
+
+            pos3 = ip.find("/");
+            if (pos3 != std::string::npos) {
+                ip.erase(pos3);
+            }
+            boost::system::error_code errorCode;
+            boost::asio::ip::address ipAddress = boost::asio::ip::make_address(ip, errorCode);
+            if (!errorCode) {
+                if (ipAddress.is_v4()) {
+                    mMuxManagerPtr->setLoopback3Ipv4Address(ipAddress);
+                    loopback3IPv4Found = true;
+                } else if (ipAddress.is_v6()) {
+                    MUXLOGWARNING(boost::format("Ipv6 for Loopback3: ip: %s is not supported.") % ip);
+                }
+            } else {
+                MUXLOGFATAL(boost::format("Received Loopback3 IP: %s, error code: %d") % ip % errorCode);
             }
         }
     }
@@ -699,21 +725,25 @@ void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopba
     if (!loopback2IPv4Found) {
         MUXLOGFATAL(boost::format("Config not found: Loopback2 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
     }
+
+    if (!loopback3IPv4Found) {
+        MUXLOGFATAL(boost::format("Config not found: Loopback3 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopback3Ipv4Address().to_string());
+    }
 }
 
 //
-// ---> getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
+// ---> getLoopbackInterfacesInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
 //
-// retrieve Loopback2 interface information and block until it shows as OK in the state db
+// retrieve Loopback2 and Loopback3 interface information and block until they show as OK in the state db
 //
-void DbInterface::getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector)
+void DbInterface::getLoopbackInterfacesInfo(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
-    MUXLOGINFO("Reading Loopback2 interface information");
+    MUXLOGINFO("Reading Loopback2 and Loopback3 interface information");
     swss::Table configDbLoopbackTable(configDbConnector.get(), CFG_LOOPBACK_INTERFACE_TABLE_NAME);
     std::vector<std::string> loopbackIntfs;
 
     configDbLoopbackTable.getKeys(loopbackIntfs);
-    processLoopback2InterfaceInfo(loopbackIntfs);
+    processLoopbackInterfacesInfo(loopbackIntfs);
 }
 
 //
@@ -1812,7 +1842,7 @@ void DbInterface::handleSwssNotification()
 
     getTorMacAddress(configDbPtr);
     getVlanNames(configDbPtr);
-    getLoopback2InterfaceInfo(configDbPtr);
+    getLoopbackInterfacesInfo(configDbPtr);
     getPortCableType(configDbPtr);
     getProberType(configDbPtr);
     getServerIpAddress(configDbPtr);
