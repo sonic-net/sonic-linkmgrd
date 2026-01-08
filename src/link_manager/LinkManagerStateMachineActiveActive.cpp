@@ -784,6 +784,10 @@ void ActiveActiveStateMachine::LinkProberActiveMuxActiveLinkUpTransitionFunction
     if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Standby) {
         if (mLastMuxStateNotification != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+        } else if (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
+                   mLastMuxProbeNotification != mux_state::MuxState::Label::Standby) {
+            // Toggle succeeded but periodic sync detected hardware drift, correct it
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         }
     } else if (mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) {
         // switch active to notify swss
@@ -803,6 +807,10 @@ void ActiveActiveStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunctio
         if (mLastMuxStateNotification != mux_state::MuxState::Label::Standby) {
             // last siwtch mux state to standby failed, try again
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
+        } else if (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
+                   mLastMuxProbeNotification != mux_state::MuxState::Label::Standby) {
+            // Toggle succeeded but periodic sync detected hardware drift, correct it
+            switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         }
     } else if (mDefaultRouteState != DefaultRoute::NA) {
         switchMuxState(nextState, mux_state::MuxState::Label::Active);
@@ -821,6 +829,10 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunctio
         if (mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
             // last switch mux state to active failed, try again
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+        } else if (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
+                   mLastMuxProbeNotification != mux_state::MuxState::Label::Active) {
+            // Toggle succeeded but periodic sync detected hardware drift, correct it
+            switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
         }
     } else {
         switchMuxState(nextState, mux_state::MuxState::Label::Standby);
@@ -838,6 +850,10 @@ void ActiveActiveStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFuncti
     if (mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Active) {
         if (mLastMuxStateNotification != mux_state::MuxState::Label::Active) {
             // last switch mux state to active failed, try again
+            switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
+        } else if (mLastMuxNotificationType == LastMuxNotificationType::MuxNotificationFromProbe &&
+                   mLastMuxProbeNotification != mux_state::MuxState::Label::Active) {
+            // Toggle succeeded but periodic sync detected hardware drift, correct it
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
         }
     } else if (mLastMuxStateNotification == mux_state::MuxState::Label::Unknown) {
