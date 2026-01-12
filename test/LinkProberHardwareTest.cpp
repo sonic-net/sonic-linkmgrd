@@ -23,6 +23,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/string_generator.hpp>
 
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
@@ -73,15 +74,15 @@ LinkProberHardwareTest::LinkProberHardwareTest() :
     )
 {
     mMuxConfig.setTimeoutIpv4_msec(1);
-    boost::uuids::random_generator gen;
-    mPeerGuid = gen();
+    boost::uuids::string_generator gen;
+    mPeerGuid = gen("12345678-1234-1234-1234-123456789ABC");
     mLinkProber.initializeSendBuffer();
 }
 
 void LinkProberHardwareTest::changePeerGuid()
 {
-    boost::uuids::random_generator gen;
-    mPeerGuid = gen();
+    boost::uuids::string_generator gen;
+    mPeerGuid = gen("87654321-4321-4321-4321-CBA987654321");
     mLinkProber.initializeSendBuffer();
 }
 
