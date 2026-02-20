@@ -1253,4 +1253,68 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteFlap)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigStandbyPeriodicalCheckActive)
+{
+    // Test: Config mode is Standby, toggle succeeds, then hardware drifts to Active.
+    // Periodic sync should detect and correct the drift.
+    setMuxActive();
+
+    // Set config to standby mode
+    handleMuxConfig("standby", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+
+    // Toggle succeeds
+    handleMuxState("standby", 3);
+    VALIDATE_STATE(Active, Standby, Up);
+
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    // Periodic sync fires and detects hardware as Active (simulating hardware drift)
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+
+    handleProbeMuxState("active", 4);
+
+    // Resync should be triggered
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+
+    handleMuxState("standby", 2);
+    VALIDATE_STATE(Active, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigActivePeriodicalCheckStandby)
+{
+    // Test: Config mode is Active, toggle succeeds, then hardware drifts to Standby.
+    // Periodic sync should detect and correct the drift.
+    setMuxStandby();
+
+    // Set config to active mode
+    handleMuxConfig("active", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    // Toggle succeeds
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+
+    uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    // Periodic sync fires and detects hardware as Standby (simulating hardware drift)
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    sleep(10);
+    runIoService(3);
+
+    handleProbeMuxState("standby", 4);
+
+    // Resync should be triggered
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+
+    handleMuxState("active", 2);
+    VALIDATE_STATE(Unknown, Active, Up);
+}
+
 } /* namespace test */
