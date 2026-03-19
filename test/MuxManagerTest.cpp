@@ -226,7 +226,7 @@ void MuxManagerTest::processServerMacAddress(
 
 void MuxManagerTest::processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
 {
-    mDbInterfacePtr->processLoopback2InterfaceInfo(loopbackIntfs);
+    mDbInterfacePtr->processLoopbackInterfacesInfo(loopbackIntfs);
 }
 
 void MuxManagerTest::processTorMacAddress(std::string &mac)

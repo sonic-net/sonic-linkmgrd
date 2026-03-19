@@ -53,6 +53,7 @@ public:
     void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotReceivedFuncPtr(link_prober::HeartbeatType::HEARTBEAT_SELF); }
     void receiveSelfIcmpReply();
     void receivePeerIcmpReply();
+    void setPeerGuidData(std::string l_guid) { mLinkProberPtr->setPeerGuidData(l_guid); }
     void postGenerateGuid(uint32_t count);
     boost::asio::io_service &getIoService() {  return mIoService; }
 
@@ -62,6 +63,7 @@ private:
 private:
     std::string mPortName = "Ethernet4";
     uint16_t mServerId = 4;
+    std::string peerGuid;
     common::MuxConfig mMuxConfig;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service mIoService;
@@ -70,7 +72,7 @@ private:
     std::shared_ptr<link_prober::LinkProberStateMachineBase> mLinkProberStateMachinePtr;
     std::shared_ptr<link_prober::LinkProberSw> mLinkProberPtr;
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> mBuffer;
-    boost::uuids::uuid mPeerGuid;
+    boost::uuids::uuid PeerGuid;
 };
 } // namespace test
 

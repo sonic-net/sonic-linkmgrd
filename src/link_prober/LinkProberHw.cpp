@@ -492,12 +492,6 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
                     mPositiveProbingPeerTimer.cancel();
                     mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpPeerUnknownEvent());
                 }
-                // insert new peer guid
-                if(mGuidSet.find(guidDataStr) != mGuidSet.end())
-                {
-                    mGuidSet.erase(mPeerGuid);
-                    mGuidSet.insert(guidDataStr);
-                }
                 mPeerType = LinkProberBase::HARDWARE;
                 setPeerGuidData(guidDataStr);
                 createIcmpEchoSession(mSessionTypePeer, getPeerGuidData());
@@ -543,7 +537,6 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             if (!isTlvPkt && (mPeerType == SessionType::HARDWARE))
             {
                 deleteIcmpEchoSession(mSessionTypePeer, mPeerGuid);
-                mGuidSet.erase(mPeerGuid);
                 mPositiveProbingPeerTimer.cancel();
                 mLinkProberStateMachinePtr->postLinkProberStateEvent(LinkProberStateMachineBase::getIcmpHwPeerUnknownEvent());
                 mPeerType = SessionType::SOFTWARE;
@@ -552,10 +545,6 @@ void LinkProberHw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             // new peer guid
             if (mPeerGuid != guidDataStr)
             {
-                if(mGuidSet.find(guidDataStr) != mGuidSet.end())
-                {
-                    mGuidSet.insert(guidDataStr);
-                }
                 setPeerGuidData(guidDataStr);
                 mPositiveProbingPeerTimer.cancel();
                 mDeadlineTimer.cancel();

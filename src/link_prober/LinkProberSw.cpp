@@ -422,14 +422,9 @@ void LinkProberSw::handleIcmpPayload(size_t bytesTransferred, icmphdr *icmpHeade
             mRxPeerSeqNo = mTxSeqNo;
             heartbeatType = HeartbeatType::HEARTBEAT_PEER;
             MUXLOGDEBUG(boost::format("Peer Guid Detected %s") % guidDataStr);
-            // add the peer guid to the set if not present
             setPeerGuidData(guidDataStr);
             if(isHwCookie){
                mPeerType = SessionType::HARDWARE;
-            }
-            if (mGuidSet.find(mPeerGuid) != mGuidSet.end())
-            {
-                mGuidSet.insert(guidDataStr);
             }
         }
         mReportHeartbeatReplyReceivedFuncPtr(heartbeatType);

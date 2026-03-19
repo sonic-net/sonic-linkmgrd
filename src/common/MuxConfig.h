@@ -234,6 +234,17 @@ public:
     inline void setLoopbackIpv4Address(boost::asio::ip::address& address) {mLoopbackIpv4Address = address;};
 
     /**
+    *@method setLoopback3Ipv4Address
+    *
+    *@brief setter for Loopback3 IPv4 address
+    *
+    *@param address (in)  IPv4 address
+    *
+    *@return none
+    */
+    inline void setLoopback3Ipv4Address(boost::asio::ip::address& address) {mLoopback3Ipv4Address = address;};
+
+    /**
     *@method getNumberOfThreads
     *
     *@brief getter for logging severity level
@@ -376,6 +387,15 @@ public:
     *@return IPv4 address
     */
     inline boost::asio::ip::address getLoopbackIpv4Address() {return mLoopbackIpv4Address;};
+
+    /**
+    *@method getLoopback3Ipv4Address
+    *
+    *@brief getter for Loopback3 IPv4 address
+    *
+    *@return IPv4 address
+    */
+    inline boost::asio::ip::address getLoopback3Ipv4Address() {return mLoopback3Ipv4Address;};
     
     /**
     *@method getDecreasedTimeoutIpv4_msec
@@ -490,6 +510,7 @@ private:
     std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
     std::array<uint8_t, ETHER_ADDR_LEN> mVlanMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");
+    boost::asio::ip::address mLoopback3Ipv4Address = boost::asio::ip::make_address("10.212.66.0");
 };
 
 } /* namespace common */

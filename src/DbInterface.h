@@ -601,26 +601,26 @@ private:
     void processVlanMacAddress(std::string& mac);
 
     /**
-    *@method processLoopback2InterfaceInfo
+    *@method processLoopbackInterfacesInfo
     *
-    *@brief process Loopback2 interface information
+    *@brief process Loopback2 and Loopback3 interface information by extracting their IPv4 addresses
     *
-    *@param loopbackIntfs   config_db Loopback2 entries
+    *@param loopbackIntfs (in)  reference to Loopback interface table
     *
     *@return none
     */
-    inline void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
+    inline void processLoopbackInterfacesInfo(std::vector<std::string> &loopbackIntfs);
 
     /**
-    *@method getLoopback2InterfaceInfo
+    *@method getLoopbackInterfacesInfo
     *
-    *@brief retrieve Loopback2 interface information
+    *@brief read Loopback2 and Loopback3 interface information from Config DB
     *
-    *@param configDbConnector   config db connector
+    *@param configDbConnector (in)  pointer to Config database connector object
     *
     *@return none
     */
-    void getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
+    void getLoopbackInterfacesInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
     *@method processServerIpAddress
