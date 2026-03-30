@@ -71,14 +71,28 @@ jobs:
 
     - name: build-swss-common
       run: |
-        set -x
+        set -ex
         cd ..
         git clone https://github.com/sonic-net/sonic-swss-common
         pushd sonic-swss-common
+
+        # Use the PR base branch if available (pull_request events),
+        # otherwise use the ref branch (push events), fallback to master.
+        TARGET_BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF_NAME:-master}}"
+
+        # Only checkout if the branch exists in swss-common
+        if git rev-parse --verify "origin/${TARGET_BRANCH}" >/dev/null 2>&1; then
+            git checkout "${TARGET_BRANCH}"
+        else
+            echo "Branch ${TARGET_BRANCH} not found in swss-common, using default branch"
+        fi
+
         ./autogen.sh
-        git checkout $GITHUB_BASE_REF
-        git reset HEAD --hard
-        dpkg-buildpackage -rfakeroot -us -uc -b -Pnoyangmod,nopython2 -j$(nproc)
+        # Build WITHOUT noyangmod so that gen_cfg_schema.py runs and
+        # produces cfg_schema.h with all CFG_*_TABLE_NAME defines.
+        # Install sonic-yang-models first (required by gen_cfg_schema.py).
+        sudo pip3 install sonic-yang-models || true
+        dpkg-buildpackage -rfakeroot -us -uc -b -Pnopython2 -j$(nproc)
         popd
         dpkg-deb -x libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
         dpkg-deb -x libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
