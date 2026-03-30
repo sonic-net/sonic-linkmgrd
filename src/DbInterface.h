@@ -62,6 +62,20 @@ namespace mux
 
 #define STATE_MUX_SWITCH_CAUSE_TABLE_NAME "MUX_SWITCH_CAUSE"
 
+/* CFG table name defines missing from sonic-swss-common schema.h */
+#ifndef CFG_DEVICE_METADATA_TABLE_NAME
+#define CFG_DEVICE_METADATA_TABLE_NAME      "DEVICE_METADATA"
+#endif
+#ifndef CFG_VLAN_TABLE_NAME
+#define CFG_VLAN_TABLE_NAME                 "VLAN"
+#endif
+#ifndef CFG_LOOPBACK_INTERFACE_TABLE_NAME
+#define CFG_LOOPBACK_INTERFACE_TABLE_NAME   "LOOPBACK_INTERFACE"
+#endif
+#ifndef CFG_MUX_CABLE_TABLE_NAME
+#define CFG_MUX_CABLE_TABLE_NAME            "MUX_CABLE"
+#endif
+
 class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
 using IcmpHwOffloadEntries = std::vector<std::pair<std::string, std::string>>;
