@@ -68,11 +68,6 @@ jobs:
             uuid-dev \
             libjansson-dev \
             nlohmann-json3-dev
-        git clone --depth=1 https://github.com/sonic-net/sonic-buildimage /tmp/sonic-buildimage
-        sudo mkdir -p /usr/local/yang-models
-        sudo cp /tmp/sonic-buildimage/src/sonic-yang-models/yang-models/*.yang /usr/local/yang-models/
-        pip3 install /tmp/sonic-buildimage/src/sonic-yang-models
-        rm -rf /tmp/sonic-buildimage
 
     - name: build-swss-common
       run: |
@@ -83,12 +78,53 @@ jobs:
         ./autogen.sh
         git checkout ${GITHUB_BASE_REF:-master}
         git reset HEAD --hard
-        dpkg-buildpackage -rfakeroot -us -uc -b -Pnopython2 -j$(nproc)
+        dpkg-buildpackage -rfakeroot -us -uc -b -Pnoyangmod,nopython2 -j$(nproc)
         popd
         dpkg-deb -x libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
         dpkg-deb -x libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
       env:
         SWSSCOMMON_VER: "1.0.0"
+
+    - name: generate-cfg-schema
+      run: |
+        # cfg_schema.h is normally auto-generated from YANG models by gen_cfg_schema.py
+        # during swss-common build. With -Pnoyangmod, only an empty stub is produced.
+        # Generate the CFG_* macros needed by linkmgrd from the YANG model files directly.
+        git clone --depth=1 https://github.com/sonic-net/sonic-buildimage /tmp/sonic-buildimage
+        python3 - /tmp/sonic-buildimage/src/sonic-yang-models/yang-models <<'PYEOF'
+        import sys, os, re, glob
+
+        yang_dir = sys.argv[1]
+        macros = {}
+        # Extract container names from YANG models — these become CFG_*_TABLE_NAME macros
+        for yang_file in glob.glob(os.path.join(yang_dir, '*.yang')):
+            with open(yang_file) as f:
+                content = f.read()
+            # Match top-level container names under sonic-* modules
+            for m in re.finditer(r'container\s+(\S+)\s*\{', content):
+                name = m.group(1)
+                # Convert to macro: e.g. MUX_CABLE -> CFG_MUX_CABLE_TABLE_NAME
+                macro_name = 'CFG_{}_TABLE_NAME'.format(name.replace('-', '_').upper())
+                macros[macro_name] = name.replace('_', '-') if '_' in name else name
+
+        # Write cfg_schema.h
+        schema_dir = os.path.join(os.environ.get('GITHUB_WORKSPACE', '.'), '..', 'usr', 'include', 'swss')
+        os.makedirs(schema_dir, exist_ok=True)
+        outpath = os.path.join(schema_dir, 'cfg_schema.h')
+
+        # Also patch the existing schema.h to include cfg_schema.h if not already
+        schema_h = os.path.join(schema_dir, 'schema.h')
+
+        with open(outpath, 'w') as f:
+            f.write('#ifndef CFG_SCHEMA_H\n#define CFG_SCHEMA_H\n\n')
+            f.write('#ifdef __cplusplus\nnamespace swss {\n#endif\n\n')
+            for macro in sorted(macros):
+                f.write('#define {} "{}"\n'.format(macro, macros[macro]))
+            f.write('\n#ifdef __cplusplus\n}\n#endif\n#endif\n')
+
+        print(f'Generated {len(macros)} CFG_* macros in {outpath}')
+        PYEOF
+        rm -rf /tmp/sonic-buildimage
 
     - name: build
       run: |
