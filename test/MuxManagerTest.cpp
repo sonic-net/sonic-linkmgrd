@@ -115,7 +115,7 @@ bool MuxManagerTest::getIfUseWellKnownMac(std::string port)
     return muxPortPtr->mMuxPortConfig.getIfUseWellKnownMacActiveActive();
 }
 
-bool MuxManagerTest::setUseWellKnownMacActiveActive(bool use)
+void MuxManagerTest::setUseWellKnownMacActiveActive(bool use)
 {
     mMuxManagerPtr->setUseWellKnownMacActiveActive(use);
 }
