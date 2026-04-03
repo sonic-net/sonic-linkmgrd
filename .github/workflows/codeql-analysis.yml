@@ -71,6 +71,7 @@ jobs:
         git clone --depth=1 https://github.com/sonic-net/sonic-buildimage /tmp/sonic-buildimage
         sudo mkdir -p /usr/local/yang-models
         sudo cp /tmp/sonic-buildimage/src/sonic-yang-models/yang-models/*.yang /usr/local/yang-models/
+        pip3 install /tmp/sonic-buildimage/src/sonic-yang-models
         rm -rf /tmp/sonic-buildimage
 
     - name: build-swss-common
