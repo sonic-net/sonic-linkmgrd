@@ -58,7 +58,7 @@ public:
     uint32_t getLinkWaitTimeout_msec(std::string port);
     uint32_t getOscillationInterval_sec(std::string port);
     bool getIfUseWellKnownMac(std::string port);
-    bool setUseWellKnownMacActiveActive(bool use);
+    void setUseWellKnownMacActiveActive(bool use);
     bool getIfUseToRMac(std::string port);
     bool getOscillationEnabled(std::string port);
     common::MuxPortConfig::LinkProberType getLinkProberType(const std::string &port);
