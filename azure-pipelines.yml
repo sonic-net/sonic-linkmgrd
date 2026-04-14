@@ -39,23 +39,23 @@ jobs:
     displayName: install .Net
   - script: |
       sudo apt-get install -y\
-          libboost-dev \
-          libboost-program-options-dev \
-          libboost-system-dev \
-          libboost-thread-dev \
-          libboost-atomic-dev \
-          libboost-chrono-dev \
-          libboost-container-dev \
-          libboost-context-dev \
-          libboost-contract-dev \
-          libboost-coroutine-dev \
-          libboost-date-time-dev \
-          libboost-fiber-dev \
-          libboost-filesystem-dev \
-          libboost-graph-parallel-dev \
-          libboost-log-dev \
-          libboost-regex-dev \
-          libboost-serialization-dev \
+          libboost1.74-dev \
+          libboost-program-options1.74-dev \
+          libboost-system1.74-dev \
+          libboost-thread1.74-dev \
+          libboost-atomic1.74-dev \
+          libboost-chrono1.74-dev \
+          libboost-container1.74-dev \
+          libboost-context1.74-dev \
+          libboost-contract1.74-dev \
+          libboost-coroutine1.74-dev \
+          libboost-date-time1.74-dev \
+          libboost-fiber1.74-dev \
+          libboost-filesystem1.74-dev \
+          libboost-graph-parallel1.74-dev \
+          libboost-log1.74-dev \
+          libboost-regex1.74-dev \
+          libboost-serialization1.74-dev \
           googletest \
           libgtest-dev \
           libgmock-dev \
@@ -136,23 +136,23 @@ jobs:
       set -ex
       sudo apt-get update
       sudo apt-get install -y\
-          libboost-dev \
-          libboost-program-options-dev \
-          libboost-system-dev \
-          libboost-thread-dev \
-          libboost-atomic-dev \
-          libboost-chrono-dev \
-          libboost-container-dev \
-          libboost-context-dev \
-          libboost-contract-dev \
-          libboost-coroutine-dev \
-          libboost-date-time-dev \
-          libboost-fiber-dev \
-          libboost-filesystem-dev \
-          libboost-graph-parallel-dev \
-          libboost-log-dev \
-          libboost-regex-dev \
-          libboost-serialization-dev \
+          libboost1.74-dev \
+          libboost-program-options1.74-dev \
+          libboost-system1.74-dev \
+          libboost-thread1.74-dev \
+          libboost-atomic1.74-dev \
+          libboost-chrono1.74-dev \
+          libboost-container1.74-dev \
+          libboost-context1.74-dev \
+          libboost-contract1.74-dev \
+          libboost-coroutine1.74-dev \
+          libboost-date-time1.74-dev \
+          libboost-fiber1.74-dev \
+          libboost-filesystem1.74-dev \
+          libboost-graph-parallel1.74-dev \
+          libboost-log1.74-dev \
+          libboost-regex1.74-dev \
+          libboost-serialization1.74-dev \
           googletest \
           libgtest-dev \
           libhiredis0.14 \
@@ -227,23 +227,23 @@ jobs:
       set -ex
       sudo apt-get update
       sudo apt-get install -y \
-          libboost-dev \
-          libboost-program-options-dev \
-          libboost-system-dev \
-          libboost-thread-dev \
-          libboost-atomic-dev \
-          libboost-chrono-dev \
-          libboost-container-dev \
-          libboost-context-dev \
-          libboost-contract-dev \
-          libboost-coroutine-dev \
-          libboost-date-time-dev \
-          libboost-fiber-dev \
-          libboost-filesystem-dev \
-          libboost-graph-parallel-dev \
-          libboost-log-dev \
-          libboost-regex-dev \
-          libboost-serialization-dev \
+          libboost1.74-dev \
+          libboost-program-options1.74-dev \
+          libboost-system1.74-dev \
+          libboost-thread1.74-dev \
+          libboost-atomic1.74-dev \
+          libboost-chrono1.74-dev \
+          libboost-container1.74-dev \
+          libboost-context1.74-dev \
+          libboost-contract1.74-dev \
+          libboost-coroutine1.74-dev \
+          libboost-date-time1.74-dev \
+          libboost-fiber1.74-dev \
+          libboost-filesystem1.74-dev \
+          libboost-graph-parallel1.74-dev \
+          libboost-log1.74-dev \
+          libboost-regex1.74-dev \
+          libboost-serialization1.74-dev \
           googletest \
           libgtest-dev \
           libhiredis0.14 \
