@@ -124,6 +124,13 @@ jobs:
         PYEOF
         rm -rf /tmp/sonic-buildimage
 
+    - name: debug-cfg-schema
+      run: |
+        echo "=== cfg_schema.h ==="
+        find $(dirname $GITHUB_WORKSPACE) -name 'cfg_schema.h' -exec echo "Found: {}" \; -exec head -30 {} \;
+        echo "=== schema.h (CFG_ lines) ==="
+        find $(dirname $GITHUB_WORKSPACE) -name 'schema.h' -exec grep -c 'CFG_' {} \;
+
     - name: build
       run: |
         set -x
