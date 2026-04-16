@@ -83,6 +83,13 @@ jobs:
       env:
         SWSSCOMMON_VER: "1.0.0"
 
+    - name: debug-cfg-schema
+      run: |
+        echo "=== Looking for cfg_schema.h ==="
+        find $(dirname $GITHUB_WORKSPACE) -name 'cfg_schema.h' -exec echo "Found: {}" \; -exec cat {} \; || echo "cfg_schema.h not found"
+        echo "=== Looking for schema.h ==="
+        find $(dirname $GITHUB_WORKSPACE) -name 'schema.h' -exec echo "Found: {}" \; -exec cat {} \; || echo "schema.h not found"
+
     - name: build
       run: |
         set -x
