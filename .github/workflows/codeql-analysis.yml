@@ -40,6 +40,7 @@ jobs:
 
     - name: prepare
       run: |
+        sudo add-apt-repository -y ppa:mhier/libboost-latest
         sudo apt-get update
         sudo apt-get install -y libxml-simple-perl \
             aspell \
@@ -56,8 +57,23 @@ jobs:
             libpython3-dev \
             libgtest-dev \
             libgmock-dev \
-            libboost-all-dev \
-            libboost-serialization-dev \
+            libboost1.83-dev \
+            libboost-program-options1.83-dev \
+            libboost-system1.83-dev \
+            libboost-thread1.83-dev \
+            libboost-atomic1.83-dev \
+            libboost-chrono1.83-dev \
+            libboost-container1.83-dev \
+            libboost-context1.83-dev \
+            libboost-contract1.83-dev \
+            libboost-coroutine1.83-dev \
+            libboost-date-time1.83-dev \
+            libboost-fiber1.83-dev \
+            libboost-filesystem1.83-dev \
+            libboost-graph-parallel1.83-dev \
+            libboost-log1.83-dev \
+            libboost-regex1.83-dev \
+            libboost-serialization1.83-dev \
             dh-exec \
             doxygen \
             cdbs \
@@ -128,11 +144,7 @@ jobs:
         sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
         sed -i -e "s/ -flto//g" Makefile
         sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
-        # Use --allow-shlib-undefined because the pre-built libswsscommon.so
-        # was built against boost 1.83 (in sonic-slave), but the runner has
-        # boost 1.74. CodeQL only needs compilation to succeed for tracing;
-        # a runnable binary is not required.
-        make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include" LDFLAGS="-Wl,--allow-shlib-undefined"
+        make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
