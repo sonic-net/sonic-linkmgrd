@@ -128,7 +128,11 @@ jobs:
         sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
         sed -i -e "s/ -flto//g" Makefile
         sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
-        make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
+        # Use --allow-shlib-undefined because the pre-built libswsscommon.so
+        # was built against boost 1.83 (in sonic-slave), but the runner has
+        # boost 1.74. CodeQL only needs compilation to succeed for tracing;
+        # a runnable binary is not required.
+        make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include" LDFLAGS="-Wl,--allow-shlib-undefined"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
