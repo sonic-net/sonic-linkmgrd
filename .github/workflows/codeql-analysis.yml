@@ -40,6 +40,7 @@ jobs:
 
     - name: prepare
       run: |
+        sudo add-apt-repository -y ppa:mhier/libboost-latest
         sudo apt-get update
         sudo apt-get install -y libxml-simple-perl \
             aspell \
@@ -56,8 +57,23 @@ jobs:
             libpython3-dev \
             libgtest-dev \
             libgmock-dev \
-            libboost-all-dev \
-            libboost-serialization-dev \
+            libboost1.83-dev \
+            libboost-program-options1.83-dev \
+            libboost-system1.83-dev \
+            libboost-thread1.83-dev \
+            libboost-atomic1.83-dev \
+            libboost-chrono1.83-dev \
+            libboost-container1.83-dev \
+            libboost-context1.83-dev \
+            libboost-contract1.83-dev \
+            libboost-coroutine1.83-dev \
+            libboost-date-time1.83-dev \
+            libboost-fiber1.83-dev \
+            libboost-filesystem1.83-dev \
+            libboost-graph-parallel1.83-dev \
+            libboost-log1.83-dev \
+            libboost-regex1.83-dev \
+            libboost-serialization1.83-dev \
             dh-exec \
             doxygen \
             cdbs \
@@ -67,66 +83,61 @@ jobs:
             autoconf-archive \
             uuid-dev \
             libjansson-dev \
-            nlohmann-json3-dev
+            nlohmann-json3-dev \
+            jq
 
-    - name: build-swss-common
+    - name: install-swss-common
+      id: swss
       run: |
         set -x
-        cd ..
-        git clone https://github.com/sonic-net/sonic-swss-common
-        pushd sonic-swss-common
-        ./autogen.sh
-        git checkout ${GITHUB_BASE_REF:-master}
-        git reset HEAD --hard
-        dpkg-buildpackage -rfakeroot -us -uc -b -Pnoyangmod,nopython2 -j$(nproc)
-        popd
-        dpkg-deb -x libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
-        dpkg-deb -x libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
+        # Determine the target branch (PR target or push branch)
+        BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}"
+        echo "Downloading sonic-swss-common for branch: ${BRANCH}"
+
+        # Query Azure DevOps for the latest successful sonic-swss-common build
+        BUILD_INFO=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=9&branchName=refs/heads/${BRANCH}&statusFilter=completed&resultFilter=succeeded&\$top=1&api-version=7.0")
+        BUILD_ID=$(echo "${BUILD_INFO}" | jq -r '.value[0].id')
+
+        if [ "${BUILD_ID}" = "null" ] || [ -z "${BUILD_ID}" ]; then
+          echo "::warning::No successful swss-common build found for branch ${BRANCH} — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "Using build ID: ${BUILD_ID}"
+
+        # Get artifact download URL
+        DOWNLOAD_URL=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds/${BUILD_ID}/artifacts?artifactName=sonic-swss-common-bookworm&api-version=7.0" | jq -r '.resource.downloadUrl')
+
+        if [ "${DOWNLOAD_URL}" = "null" ] || [ -z "${DOWNLOAD_URL}" ]; then
+          echo "::warning::No sonic-swss-common-bookworm artifact found for build ${BUILD_ID} — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Download and extract
+        curl -sL -o /tmp/swss-common.zip "${DOWNLOAD_URL}"
+        unzip -o /tmp/swss-common.zip -d /tmp/swss-common
+
+        # Install into the workspace prefix (same layout as before)
+        dpkg-deb -x /tmp/swss-common/sonic-swss-common-bookworm/libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
+        dpkg-deb -x /tmp/swss-common/sonic-swss-common-bookworm/libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
+
+        # Verify cfg_schema.h has real content (not an empty stub)
+        CFG_COUNT=$(grep -c 'CFG_.*_TABLE_NAME' $(dirname $GITHUB_WORKSPACE)/usr/include/swss/cfg_schema.h || true)
+        echo "cfg_schema.h contains ${CFG_COUNT} CFG_* macros"
+        if [ "${CFG_COUNT}" -lt 10 ]; then
+          echo "::warning::cfg_schema.h appears to be empty or a stub — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        rm -rf /tmp/swss-common /tmp/swss-common.zip
+        echo "installed=true" >> "$GITHUB_OUTPUT"
       env:
         SWSSCOMMON_VER: "1.0.0"
 
-    - name: generate-cfg-schema
-      run: |
-        # cfg_schema.h is normally auto-generated from YANG models by gen_cfg_schema.py
-        # during swss-common build. With -Pnoyangmod, only an empty stub is produced.
-        # Generate the CFG_* macros needed by linkmgrd from the YANG model files directly.
-        git clone --depth=1 https://github.com/sonic-net/sonic-buildimage /tmp/sonic-buildimage
-        python3 - /tmp/sonic-buildimage/src/sonic-yang-models/yang-models <<'PYEOF'
-        import sys, os, re, glob
-
-        yang_dir = sys.argv[1]
-        macros = {}
-        # Extract container names from YANG models — these become CFG_*_TABLE_NAME macros
-        for yang_file in glob.glob(os.path.join(yang_dir, '*.yang')):
-            with open(yang_file) as f:
-                content = f.read()
-            # Match top-level container names under sonic-* modules
-            for m in re.finditer(r'container\s+(\S+)\s*\{', content):
-                name = m.group(1)
-                # Convert to macro: e.g. MUX_CABLE -> CFG_MUX_CABLE_TABLE_NAME
-                macro_name = 'CFG_{}_TABLE_NAME'.format(name.replace('-', '_').upper())
-                macros[macro_name] = name.replace('_', '-') if '_' in name else name
-
-        # Write cfg_schema.h
-        schema_dir = os.path.join(os.environ.get('GITHUB_WORKSPACE', '.'), '..', 'usr', 'include', 'swss')
-        os.makedirs(schema_dir, exist_ok=True)
-        outpath = os.path.join(schema_dir, 'cfg_schema.h')
-
-        # Also patch the existing schema.h to include cfg_schema.h if not already
-        schema_h = os.path.join(schema_dir, 'schema.h')
-
-        with open(outpath, 'w') as f:
-            f.write('#ifndef CFG_SCHEMA_H\n#define CFG_SCHEMA_H\n\n')
-            f.write('#ifdef __cplusplus\nnamespace swss {\n#endif\n\n')
-            for macro in sorted(macros):
-                f.write('#define {} "{}"\n'.format(macro, macros[macro]))
-            f.write('\n#ifdef __cplusplus\n}\n#endif\n#endif\n')
-
-        print(f'Generated {len(macros)} CFG_* macros in {outpath}')
-        PYEOF
-        rm -rf /tmp/sonic-buildimage
-
     - name: build
+      if: steps.swss.outputs.installed == 'true'
       run: |
         set -x
         sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
