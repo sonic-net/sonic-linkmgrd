@@ -153,6 +153,10 @@ jobs:
         sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
         sed -i -e "s/ -flto//g" Makefile
         sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
+        # libswsscommon.so pulls in libyang.so.3 as an indirect dependency. ld
+        # does not search -L paths for indirect deps, only -rpath-link and
+        # LD_LIBRARY_PATH, so point it at the staged libyang3 in the prefix.
+        export LD_LIBRARY_PATH="$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
         make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
 
     - name: Perform CodeQL Analysis
