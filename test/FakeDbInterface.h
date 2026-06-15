@@ -50,6 +50,10 @@ public:
     virtual void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) override;
     virtual void deleteIcmpEchoSession(std::string key) override;
     virtual void handleSwssNotification() override;
+
+    std::string mLastIcmpSessionKey;
+    IcmpHwOffloadEntries mLastIcmpSessionEntries;
+
     virtual void setMuxLinkmgrState(
         const std::string &portName,
         link_manager::LinkManagerStateMachineBase::Label label
