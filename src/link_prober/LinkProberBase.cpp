@@ -1,6 +1,8 @@
 #include <memory>
 #include <stdint.h>
 #include <linux/filter.h>
+#include <netinet/ip6.h>
+#include <netinet/icmp6.h>
 #include "LinkProberBase.h"
 #include "LinkProberHw.h"
 #include "LinkProberSw.h"
@@ -32,6 +34,25 @@ SockFilter LinkProberBase::mIcmpFilter[] = {
     [12] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000},
 };
 
+SockFilter LinkProberBase::mIcmpV6Filter[] = {
+    [0]  = {.code = 0x28, .jt = 0, .jf = 0,  .k = 0x0000000c},
+    [1]  = {.code = 0x15, .jt = 0, .jf = 13, .k = 0x000086dd},
+    [2]  = {.code = 0x30, .jt = 0, .jf = 0,  .k = 0x00000014},
+    [3]  = {.code = 0x15, .jt = 0, .jf = 11, .k = 0x0000003a},
+    [4]  = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x00000016},
+    [5]  = {.code = 0x15, .jt = 0, .jf = 9,  .k = 0x00000000},
+    [6]  = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x0000001a},
+    [7]  = {.code = 0x15, .jt = 0, .jf = 7,  .k = 0x00000000},
+    [8]  = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x0000001e},
+    [9]  = {.code = 0x15, .jt = 0, .jf = 5,  .k = 0x00000000},
+    [10] = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x00000022},
+    [11] = {.code = 0x15, .jt = 0, .jf = 3,  .k = 0x00000000},
+    [12] = {.code = 0x30, .jt = 0, .jf = 0,  .k = 0x00000036},
+    [13] = {.code = 0x15, .jt = 0, .jf = 1,  .k = 0x00000081},
+    [14] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00040000},
+    [15] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000},
+};
+
 LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio::io_service &ioService,
             LinkProberStateMachineBase *linkProberStateMachinePtr) :
     mMuxPortConfig(muxPortConfig),
@@ -43,15 +64,59 @@ LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio
     mSuspendTimer(mIoService),
     mSwitchoverTimer(mIoService)
 {
+    setSelfGuidData(generateGuid());
+}
+
+bool LinkProberBase::isIpv6Probing() const
+{
+    return mMuxPortConfig.getBladeIpv4Address().is_v6();
+}
+
+size_t LinkProberBase::getIpHeaderSize() const
+{
+    return isIpv6Probing() ? sizeof(ip6_hdr) : sizeof(iphdr);
+}
+
+void LinkProberBase::updatePacketOffsets()
+{
+    mPacketHeaderSize = sizeof(ether_header) + getIpHeaderSize() + sizeof(icmphdr);
+    mTlvStartOffset = mPacketHeaderSize + sizeof(IcmpPayload);
+}
+
+uint32_t LinkProberBase::getIpv6AddressWord(const boost::asio::ip::address_v6::bytes_type &bytes, size_t offset)
+{
+    return (static_cast<uint32_t>(bytes[offset]) << 24) |
+           (static_cast<uint32_t>(bytes[offset + 1]) << 16) |
+           (static_cast<uint32_t>(bytes[offset + 2]) << 8) |
+           static_cast<uint32_t>(bytes[offset + 3]);
+}
+
+void LinkProberBase::initializeSockFilter()
+{
     try {
+        bool ipv6Probing = isIpv6Probing();
+        const SockFilter *filterTemplate = ipv6Probing ? mIcmpV6Filter : mIcmpFilter;
+        size_t filterLength = ipv6Probing ?
+            sizeof(mIcmpV6Filter) / sizeof(*mIcmpV6Filter) :
+            sizeof(mIcmpFilter) / sizeof(*mIcmpFilter);
+
         mSockFilterPtr = std::shared_ptr<SockFilter> (
-            new SockFilter[sizeof(mIcmpFilter) / sizeof(*mIcmpFilter)],
+            new SockFilter[filterLength],
             std::default_delete<SockFilter[]>()
         );
-        memcpy(mSockFilterPtr.get(), mIcmpFilter, sizeof(mIcmpFilter));
-
-        mSockFilterProg.len = sizeof(mIcmpFilter) / sizeof(*mIcmpFilter);
+        memcpy(mSockFilterPtr.get(), filterTemplate, filterLength * sizeof(SockFilter));
+        mSockFilterProg.len = filterLength;
         mSockFilterProg.filter = mSockFilterPtr.get();
+
+        if (ipv6Probing) {
+            auto bytes = mMuxPortConfig.getBladeIpv4Address().to_v6().to_bytes();
+            mSockFilterPtr.get()[5].k = getIpv6AddressWord(bytes, 0);
+            mSockFilterPtr.get()[7].k = getIpv6AddressWord(bytes, 4);
+            mSockFilterPtr.get()[9].k = getIpv6AddressWord(bytes, 8);
+            mSockFilterPtr.get()[11].k = getIpv6AddressWord(bytes, 12);
+        } else {
+            mSockFilterPtr.get()[3].k = mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint();
+        }
     }
     catch (const std::bad_alloc& ex) {
         std::ostringstream errMsg;
@@ -59,8 +124,16 @@ LinkProberBase::LinkProberBase(common::MuxPortConfig &muxPortConfig, boost::asio
 
         throw MUX_ERROR(BadAlloc, errMsg.str());
     }
+}
 
-    setSelfGuidData(generateGuid());
+boost::asio::ip::address LinkProberBase::getLoopbackAddress() const
+{
+    return isIpv6Probing() ? mMuxPortConfig.getLoopbackIpv6Address() : mMuxPortConfig.getLoopbackIpv4Address();
+}
+
+boost::asio::ip::address LinkProberBase::getLoopback3Address() const
+{
+    return isIpv6Probing() ? mMuxPortConfig.getLoopback3Ipv6Address() : mMuxPortConfig.getLoopback3Ipv4Address();
 }
 
 //
@@ -74,7 +147,7 @@ void LinkProberBase::setupSocket() {
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_ALL);
 
-    mSocket = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
+    mSocket = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, htons(ETH_P_ALL));
     if (mSocket < 0) {
         std::ostringstream errMsg;
         errMsg << "Failed to open socket with '" << strerror(errno) << "'"
@@ -89,7 +162,7 @@ void LinkProberBase::setupSocket() {
         throw MUX_ERROR(SocketError, errMsg.str());
     }
 
-    mSockFilterPtr.get()[3].k = mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint();
+    initializeSockFilter();
     if (setsockopt(mSocket, SOL_SOCKET, SO_ATTACH_FILTER, &mSockFilterProg, sizeof(mSockFilterProg)) != 0) {
         std::ostringstream errMsg;
         errMsg << "Failed to attach filter with '" << strerror(errno) << "'"
@@ -175,19 +248,72 @@ void LinkProberBase::handleRecv(
 
     if (!errorCode)
     {
-        iphdr *ipHeader = reinterpret_cast<iphdr *> (mRxBuffer.data() + sizeof(ether_header));
-        icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (
-            mRxBuffer.data() + sizeof(ether_header) + sizeof(iphdr)
-        );
+        if (bytesTransferred < sizeof(ether_header)) {
+            startRecv();
+            return;
+        }
+
+        ether_header *ethHeader = reinterpret_cast<ether_header *> (mRxBuffer.data());
+        icmphdr *icmpHeader = nullptr;
+        size_t packetHeaderSize = 0;
+        std::string sourceAddress;
+
+        if (ntohs(ethHeader->ether_type) == ETHERTYPE_IP) {
+            if (bytesTransferred < sizeof(ether_header) + sizeof(iphdr)) {
+                startRecv();
+                return;
+            }
+
+            iphdr *ipHeader = reinterpret_cast<iphdr *> (mRxBuffer.data() + sizeof(ether_header));
+            size_t ipHeaderSize = ipHeader->ihl << 2;
+            packetHeaderSize = sizeof(ether_header) + ipHeaderSize + sizeof(icmphdr);
+            if (ipHeader->protocol != IPPROTO_ICMP || bytesTransferred < packetHeaderSize) {
+                startRecv();
+                return;
+            }
+
+            icmpHeader = reinterpret_cast<icmphdr *> (mRxBuffer.data() + sizeof(ether_header) + ipHeaderSize);
+            if (icmpHeader->type != ICMP_ECHOREPLY) {
+                startRecv();
+                return;
+            }
+
+            sourceAddress = boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string();
+        } else if (ntohs(ethHeader->ether_type) == ETHERTYPE_IPV6) {
+            packetHeaderSize = sizeof(ether_header) + sizeof(ip6_hdr) + sizeof(icmphdr);
+            if (bytesTransferred < packetHeaderSize) {
+                startRecv();
+                return;
+            }
+
+            ip6_hdr *ip6Header = reinterpret_cast<ip6_hdr *> (mRxBuffer.data() + sizeof(ether_header));
+            if (ip6Header->ip6_nxt != IPPROTO_ICMPV6) {
+                startRecv();
+                return;
+            }
+
+            icmpHeader = reinterpret_cast<icmphdr *> (mRxBuffer.data() + sizeof(ether_header) + sizeof(ip6_hdr));
+            if (icmpHeader->type != ICMP6_ECHO_REPLY) {
+                startRecv();
+                return;
+            }
+
+            boost::asio::ip::address_v6::bytes_type sourceBytes;
+            memcpy(sourceBytes.data(), &ip6Header->ip6_src, sourceBytes.size());
+            sourceAddress = boost::asio::ip::address_v6(sourceBytes).to_string();
+        } else {
+            startRecv();
+            return;
+        }
 
         MUXLOGTRACE(boost::format("%s: Got data from: %s, size: %d") %
             mMuxPortConfig.getPortName() %
-            boost::asio::ip::address_v4(ntohl(ipHeader->saddr)).to_string() %
-            (bytesTransferred - sizeof(iphdr) - sizeof(ether_header))
+            sourceAddress %
+            (bytesTransferred - packetHeaderSize)
         );
 
         IcmpPayload *icmpPayload = reinterpret_cast<IcmpPayload *> (
-            mRxBuffer.data() + mPacketHeaderSize
+            mRxBuffer.data() + packetHeaderSize
         );
 
 
@@ -329,6 +455,9 @@ void LinkProberBase::startRecv()
 //
 void LinkProberBase::initializeSendBuffer()
 {
+    mTxBuffer.fill(0);
+    updatePacketOffsets();
+
     ether_header *ethHeader = reinterpret_cast<ether_header *> (mTxBuffer.data());
     memcpy(ethHeader->ether_dhost, mMuxPortConfig.getBladeMacAddress().data(), sizeof(ethHeader->ether_dhost));
     if (mMuxPortConfig.ifEnableUseTorMac()) {
@@ -336,10 +465,9 @@ void LinkProberBase::initializeSendBuffer()
     } else {
         memcpy(ethHeader->ether_shost, mMuxPortConfig.getVlanMacAddress().data(), sizeof(ethHeader->ether_shost));
     }
-    ethHeader->ether_type = htons(ETHERTYPE_IP);
+    ethHeader->ether_type = htons(isIpv6Probing() ? ETHERTYPE_IPV6 : ETHERTYPE_IP);
 
-    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + getIpHeaderSize());
 
     IcmpPayload *payloadPtr  = new (mTxBuffer.data() + mPacketHeaderSize) IcmpPayload();
     memcpy(payloadPtr->uuid, (mSelfUUID.data + 8), sizeof(payloadPtr->uuid));
@@ -347,25 +475,43 @@ void LinkProberBase::initializeSendBuffer()
     appendTlvSentinel();
     size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
 
-    ipHeader->ihl = sizeof(iphdr) >> 2;
-    ipHeader->version = IPVERSION;
-    ipHeader->tos = 0xb8;
-    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
-    ipHeader->id = static_cast<uint16_t> (rand());
-    ipHeader->frag_off = 0;
-    ipHeader->ttl = 64;
-    ipHeader->protocol = IPPROTO_ICMP;
-    ipHeader->check = 0;
-    ipHeader->saddr = htonl(mMuxPortConfig.getLoopbackIpv4Address().to_v4().to_uint());
-    ipHeader->daddr = htonl(mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint());
-    computeChecksum(ipHeader, ipHeader->ihl << 2);
+    if (isIpv6Probing()) {
+        ip6_hdr *ip6Header = reinterpret_cast<ip6_hdr *> (mTxBuffer.data() + sizeof(ether_header));
+        ip6Header->ip6_flow = htonl((6 << 28) | (0xb8 << 20));
+        ip6Header->ip6_plen = htons(sizeof(icmphdr) + totalPayloadSize);
+        ip6Header->ip6_nxt = IPPROTO_ICMPV6;
+        ip6Header->ip6_hlim = 64;
 
-    icmpHeader->type = ICMP_ECHO;
+        auto sourceBytes = getLoopbackAddress().to_v6().to_bytes();
+        auto destinationBytes = mMuxPortConfig.getBladeIpv4Address().to_v6().to_bytes();
+        memcpy(&ip6Header->ip6_src, sourceBytes.data(), sourceBytes.size());
+        memcpy(&ip6Header->ip6_dst, destinationBytes.data(), destinationBytes.size());
+    } else {
+        iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
+        ipHeader->ihl = sizeof(iphdr) >> 2;
+        ipHeader->version = IPVERSION;
+        ipHeader->tos = 0xb8;
+        ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
+        ipHeader->id = static_cast<uint16_t> (rand());
+        ipHeader->frag_off = 0;
+        ipHeader->ttl = 64;
+        ipHeader->protocol = IPPROTO_ICMP;
+        ipHeader->check = 0;
+        ipHeader->saddr = htonl(getLoopbackAddress().to_v4().to_uint());
+        ipHeader->daddr = htonl(mMuxPortConfig.getBladeIpv4Address().to_v4().to_uint());
+        computeChecksum(ipHeader, ipHeader->ihl << 2);
+    }
+
+    icmpHeader->type = isIpv6Probing() ? ICMP6_ECHO_REQUEST : ICMP_ECHO;
     icmpHeader->code = 0;
     icmpHeader->un.echo.id = htons(mMuxPortConfig.getServerId());
     icmpHeader->un.echo.sequence = htons(mTxSeqNo);
 
-    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    if (isIpv6Probing()) {
+        computeIcmpv6Checksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    } else {
+        computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    }
 }
 
 //
@@ -540,6 +686,21 @@ void LinkProberBase::computeChecksum(iphdr *ipHeader, size_t size)
     addChecksumCarryover(&ipHeader->check, mIpChecksum);
 }
 
+void LinkProberBase::computeIcmpv6Checksum(icmphdr *icmpHeader, size_t size)
+{
+    icmpHeader->checksum = 0;
+    ip6_hdr *ip6Header = reinterpret_cast<ip6_hdr *> (mTxBuffer.data() + sizeof(ether_header));
+    uint32_t upperLayerPacketLength = htonl(static_cast<uint32_t>(size));
+    uint32_t nextHeader = htonl(IPPROTO_ICMPV6);
+
+    mIcmpChecksum = calculateChecksum(reinterpret_cast<uint16_t *>(&ip6Header->ip6_src), sizeof(ip6Header->ip6_src));
+    mIcmpChecksum += calculateChecksum(reinterpret_cast<uint16_t *>(&ip6Header->ip6_dst), sizeof(ip6Header->ip6_dst));
+    mIcmpChecksum += calculateChecksum(reinterpret_cast<uint16_t *>(&upperLayerPacketLength), sizeof(upperLayerPacketLength));
+    mIcmpChecksum += calculateChecksum(reinterpret_cast<uint16_t *>(&nextHeader), sizeof(nextHeader));
+    mIcmpChecksum += calculateChecksum(reinterpret_cast<uint16_t *> (icmpHeader), size);
+    addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
+}
+
 
 
 //
@@ -553,7 +714,7 @@ void LinkProberBase::updateIcmpSequenceNo()
     mRxPeerSeqNo = mTxSeqNo;
     mRxSelfSeqNo = mTxSeqNo;
 
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + getIpHeaderSize());
     icmpHeader->un.echo.sequence = htons(++mTxSeqNo);
     mIcmpChecksum += mTxSeqNo ? 1 : 0;
     addChecksumCarryover(&icmpHeader->checksum, mIcmpChecksum);
@@ -625,11 +786,17 @@ void LinkProberBase::initTxBufferTlvSendSwitch()
 void LinkProberBase::calculateTxPacketChecksum()
 {
     size_t totalPayloadSize = mTxPacketSize - mPacketHeaderSize;
-    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
-    ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
-    computeChecksum(ipHeader, ipHeader->ihl << 2);
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (mTxBuffer.data() + sizeof(ether_header) + getIpHeaderSize());
+    if (isIpv6Probing()) {
+        ip6_hdr *ip6Header = reinterpret_cast<ip6_hdr *> (mTxBuffer.data() + sizeof(ether_header));
+        ip6Header->ip6_plen = htons(sizeof(icmphdr) + totalPayloadSize);
+        computeIcmpv6Checksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+    } else {
+        iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
+        computeChecksum(icmpHeader, sizeof(icmphdr) + totalPayloadSize);
+        ipHeader->tot_len = htons(sizeof(iphdr) + sizeof(icmphdr) + totalPayloadSize);
+        computeChecksum(ipHeader, ipHeader->ihl << 2);
+    }
 }
 
 //
@@ -704,14 +871,26 @@ void LinkProberBase::getGuidStr(const IcmpPayload *icmpPayload, std::string& gui
 std::string LinkProberBase::generateGuid()
 {
     // Get the last 16 bits from Loopback3 IP address
-    boost::asio::ip::address loopback3Ip = mMuxPortConfig.getLoopback3Ipv4Address();
-    uint32_t loopback3Ipv4 = loopback3Ip.to_v4().to_uint();
-    uint16_t loopback3Last16Bits = static_cast<uint16_t>(loopback3Ipv4 & 0xFFFF);
+    boost::asio::ip::address loopback3Ip = getLoopback3Address();
+    uint16_t loopback3Last16Bits;
+    if (loopback3Ip.is_v6()) {
+        auto bytes = loopback3Ip.to_v6().to_bytes();
+        loopback3Last16Bits = (static_cast<uint16_t>(bytes[14]) << 8) | bytes[15];
+    } else {
+        uint32_t loopback3Ipv4 = loopback3Ip.to_v4().to_uint();
+        loopback3Last16Bits = static_cast<uint16_t>(loopback3Ipv4 & 0xFFFF);
+    }
 
     // Get the last 16 bits from SoC/Blade IP address
     boost::asio::ip::address socIp = mMuxPortConfig.getBladeIpv4Address();
-    uint32_t socIpv4 = socIp.to_v4().to_uint();
-    uint16_t socLast16Bits = static_cast<uint16_t>(socIpv4 & 0xFFFF);
+    uint16_t socLast16Bits;
+    if (socIp.is_v6()) {
+        auto bytes = socIp.to_v6().to_bytes();
+        socLast16Bits = (static_cast<uint16_t>(bytes[14]) << 8) | bytes[15];
+    } else {
+        uint32_t socIpv4 = socIp.to_v4().to_uint();
+        socLast16Bits = static_cast<uint16_t>(socIpv4 & 0xFFFF);
+    }
 
     // Combine the two 16-bit values to form a 32-bit GUID
     uint32_t deterministicGuid = (static_cast<uint32_t>(loopback3Last16Bits) << 16) | socLast16Bits;

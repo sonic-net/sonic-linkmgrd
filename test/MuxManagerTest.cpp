@@ -162,6 +162,20 @@ boost::asio::ip::address MuxManagerTest::getLoopbackIpv4Address(std::string port
     return muxPortPtr->mMuxPortConfig.getLoopbackIpv4Address();
 }
 
+boost::asio::ip::address MuxManagerTest::getLoopbackIpv6Address(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getLoopbackIpv6Address();
+}
+
+boost::asio::ip::address MuxManagerTest::getLoopback3Ipv6Address(std::string port)
+{
+    std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
+
+    return muxPortPtr->mMuxPortConfig.getLoopback3Ipv6Address();
+}
+
 std::array<uint8_t, ETHER_ADDR_LEN> MuxManagerTest::getTorMacAddress(std::string port)
 {
     std::shared_ptr<mux::MuxPort> muxPortPtr = mMuxManagerPtr->mPortMap[port];
@@ -600,6 +614,27 @@ TEST_F(MuxManagerTest, Loopback2Address)
     EXPECT_TRUE(mMuxManagerPtr->getLoopbackIpv4Address() == getLoopbackIpv4Address(port));
 }
 
+TEST_F(MuxManagerTest, Loopback2AndLoopback3Ipv6Address)
+{
+    std::string port = "Ethernet0";
+
+    createPort(port);
+
+    std::string loopback2Ipv6Address = "2603:10e1:100:d::1";
+    std::string loopback3Ipv6Address = "2603:10e1:100:e::1";
+    std::vector<std::string> loopbackIntfs = {
+        "Loopback2|" + loopback2Ipv6Address + "/128",
+        "Loopback3|" + loopback3Ipv6Address + "/128",
+    };
+
+    processLoopback2InterfaceInfo(loopbackIntfs);
+
+    EXPECT_TRUE(getLoopbackIpv6Address(port).to_string() == loopback2Ipv6Address);
+    EXPECT_TRUE(getLoopback3Ipv6Address(port).to_string() == loopback3Ipv6Address);
+    EXPECT_TRUE(mMuxManagerPtr->getLoopbackIpv6Address() == getLoopbackIpv6Address(port));
+    EXPECT_TRUE(mMuxManagerPtr->getLoopback3Ipv6Address() == getLoopback3Ipv6Address(port));
+}
+
 TEST_F(MuxManagerTest, Loopback2AddressException)
 {
     std::string port = "Ethernet0";
@@ -821,6 +856,62 @@ TEST_F(MuxManagerTest, updateProberType)
     runIoService(1);
 
     EXPECT_EQ(getLinkProberType(port), common::MuxPortConfig::LinkProberType::Hardware);
+}
+
+TEST_F(MuxManagerTest, ServerIpAddressPrefersIpv4)
+{
+    std::string port = "Ethernet0";
+    createPort(port, common::MuxPortConfig::PortCableType::ActiveStandby);
+
+    std::vector<swss::KeyOpFieldsValuesTuple> servers = {
+        {port, "SET", {{"server_ipv4", "192.168.0.1/32"}, {"server_ipv6", "2603:10e1:100:f::1/128"}}},
+    };
+    processServerIpAddress(servers);
+    runIoService();
+
+    EXPECT_EQ(getBladeIpv4Address(port).to_string(), "192.168.0.1");
+}
+
+TEST_F(MuxManagerTest, ServerIpAddressFallsBackToIpv6)
+{
+    std::string port = "Ethernet0";
+    createPort(port, common::MuxPortConfig::PortCableType::ActiveStandby);
+
+    std::vector<swss::KeyOpFieldsValuesTuple> servers = {
+        {port, "SET", {{"server_ipv6", "2603:10e1:100:f::1/128"}}},
+    };
+    processServerIpAddress(servers);
+    runIoService();
+
+    EXPECT_EQ(getBladeIpv4Address(port).to_string(), "2603:10e1:100:f::1");
+}
+
+TEST_F(MuxManagerTest, SoCIpAddressPrefersIpv4)
+{
+    std::string port = "Ethernet0";
+    createPort(port, common::MuxPortConfig::PortCableType::ActiveActive);
+
+    std::vector<swss::KeyOpFieldsValuesTuple> servers = {
+        {port, "SET", {{"soc_ipv4", "192.168.0.2/32"}, {"soc_ipv6", "2603:10e1:100:f::2/128"}}},
+    };
+    processSoCIpAddress(servers);
+    runIoService();
+
+    EXPECT_EQ(getBladeIpv4Address(port).to_string(), "192.168.0.2");
+}
+
+TEST_F(MuxManagerTest, SoCIpAddressFallsBackToIpv6)
+{
+    std::string port = "Ethernet0";
+    createPort(port, common::MuxPortConfig::PortCableType::ActiveActive);
+
+    std::vector<swss::KeyOpFieldsValuesTuple> servers = {
+        {port, "SET", {{"soc_ipv6", "2603:10e1:100:f::2/128"}}},
+    };
+    processSoCIpAddress(servers);
+    runIoService();
+
+    EXPECT_EQ(getBladeIpv4Address(port).to_string(), "2603:10e1:100:f::2");
 }
 
 TEST_F(MuxManagerTest, TxIntervalChangeTest)
