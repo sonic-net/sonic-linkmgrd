@@ -88,11 +88,17 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib
       patterns: |
-        target/debs/bookworm/libyang_*.deb
+        target/debs/bookworm/libyang3_*.deb
+        target/debs/bookworm/libyang-dev_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
-      sudo dpkg -i $(find ./download -name *.deb)
+      mapfile -t libyang_debs < <(find ./download -name '*.deb' -print)
+      if (( ${#libyang_debs[@]} == 0 )); then
+        echo "No libyang packages found in downloaded common-lib artifact"
+        exit 1
+      fi
+      sudo dpkg -i "${libyang_debs[@]}"
     workingDirectory: $(Build.ArtifactStagingDirectory)
     displayName: "Install libyang from common lib"
   - task: DownloadPipelineArtifact@2
@@ -184,11 +190,17 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.arm64
       patterns: |
-        target/debs/bookworm/libyang_*.deb
+        target/debs/bookworm/libyang3_*.deb
+        target/debs/bookworm/libyang-dev_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
-      sudo dpkg -i $(find ./download -name *.deb)
+      mapfile -t libyang_debs < <(find ./download -name '*.deb' -print)
+      if (( ${#libyang_debs[@]} == 0 )); then
+        echo "No libyang packages found in downloaded common-lib artifact"
+        exit 1
+      fi
+      sudo dpkg -i "${libyang_debs[@]}"
     workingDirectory: $(Build.ArtifactStagingDirectory)
     displayName: "Install libyang from common lib"
   - task: DownloadPipelineArtifact@2
@@ -275,11 +287,17 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/download
       artifact: common-lib.armhf
       patterns: |
-        target/debs/bookworm/libyang_*.deb
+        target/debs/bookworm/libyang3_*.deb
+        target/debs/bookworm/libyang-dev_*.deb
     displayName: "Download libyang from common lib"
   - script: |
       set -ex
-      sudo dpkg -i $(find ./download -name *.deb)
+      mapfile -t libyang_debs < <(find ./download -name '*.deb' -print)
+      if (( ${#libyang_debs[@]} == 0 )); then
+        echo "No libyang packages found in downloaded common-lib artifact"
+        exit 1
+      fi
+      sudo dpkg -i "${libyang_debs[@]}"
     workingDirectory: $(Build.ArtifactStagingDirectory)
     displayName: "Install libyang from common lib"
   - task: DownloadPipelineArtifact@2
