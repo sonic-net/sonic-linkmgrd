@@ -50,7 +50,6 @@ jobs:
             libnl-genl-3-dev \
             libnl-route-3-dev \
             libnl-nf-3-dev \
-            libyang-dev \
             libzmq3-dev \
             libzmq5 \
             swig3.0 \
@@ -131,7 +130,18 @@ jobs:
           exit 0
         fi
 
-        rm -rf /tmp/swss-common /tmp/swss-common.zip
+        # libswsscommon is built against libyang3 (libyang.so.3); the distro
+        # apt libyang on this runner is libyang1, so the link would fail with
+        # "libyang.so.3 ... not found". Stage the libyang3 debs into the same
+        # prefix as swss-common. The sonic-build artifacts REST API requires an
+        # exact filename (wildcards do not resolve), so fetch the bookworm debs
+        # directory as a zip and extract just the libyang3 debs with a glob to
+        # stay version-independent across libyang3 bumps.
+        curl -sL -o /tmp/bookworm-debs.zip "https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=master&platform=vs&target=target/debs/bookworm&format=zip"
+        unzip -j -o /tmp/bookworm-debs.zip '*/libyang3_*.deb' '*/libyang-dev_*.deb' -d /tmp/libyang
+        for d in /tmp/libyang/*.deb; do dpkg-deb -x "$d" $(dirname $GITHUB_WORKSPACE); done
+
+        rm -rf /tmp/swss-common /tmp/swss-common.zip /tmp/libyang /tmp/bookworm-debs.zip
         echo "installed=true" >> "$GITHUB_OUTPUT"
       env:
         SWSSCOMMON_VER: "1.0.0"
