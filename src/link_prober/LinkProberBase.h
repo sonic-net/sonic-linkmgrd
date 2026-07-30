@@ -311,7 +311,9 @@ public:
     */
     inline uint32_t getProbingInterval() {
         MUXLOGDEBUG(mMuxPortConfig.getPortName());
-        return mDecreaseProbingInterval? mMuxPortConfig.getDecreasedTimeoutIpv4_msec():mMuxPortConfig.getTimeoutIpv4_msec();
+        return mDecreaseProbingInterval ?
+            mMuxPortConfig.getDecreasedTimeoutIpv4_msec() :
+            (isIpv6Probing() ? mMuxPortConfig.getTimeoutIpv6_msec() : mMuxPortConfig.getTimeoutIpv4_msec());
     }
 
     /**
@@ -532,6 +534,18 @@ protected:
     void computeChecksum(iphdr *ipHeader, size_t size);
 
     /**
+    *@method computeIcmpv6Checksum
+    *
+    *@brief compute ICMPv6 checksum with IPv6 pseudo-header
+    *
+    *@param icmpHeader (in, out)    pointer ICMP header
+    *@param size (in)               size of ICMPv6 payload
+    *
+    *@return none
+    */
+    void computeIcmpv6Checksum(icmphdr *icmpHeader, size_t size);
+
+    /**
     *@method updateIcmpSequenceNo
     *
     *@brief update ICMP packet checksum, used before sending new heartbeat
@@ -603,6 +617,14 @@ protected:
     */
     void initializeSendBuffer();
 
+    bool isIpv6Probing() const;
+    size_t getIpHeaderSize() const;
+    void updatePacketOffsets();
+    void initializeSockFilter();
+    boost::asio::ip::address getLoopbackAddress() const;
+    boost::asio::ip::address getLoopback3Address() const;
+    static uint32_t getIpv6AddressWord(const boost::asio::ip::address_v6::bytes_type &bytes, size_t offset);
+
     /**
     *@method appendTlvCommand
     *
@@ -661,6 +683,7 @@ protected:
 
 
     static SockFilter mIcmpFilter[];
+    static SockFilter mIcmpV6Filter[];
 
     common::MuxPortConfig &mMuxPortConfig;
     boost::asio::io_service &mIoService;
@@ -673,8 +696,8 @@ protected:
     uint32_t mIcmpChecksum = 0;
     uint32_t mIpChecksum = 0;
 
-    static const size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
-    static const size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
+    size_t mPacketHeaderSize = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr);
+    size_t mTlvStartOffset = sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr) + sizeof(IcmpPayload);
 
     boost::asio::io_service::strand mStrand;
     boost::asio::posix::stream_descriptor mStream;
