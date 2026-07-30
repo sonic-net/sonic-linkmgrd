@@ -363,6 +363,70 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkDownMuxUnknownFirsr
     VALIDATE_STATE(Unknown, Unknown, Down);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, HwProberOffloadUpBeforeLinkUpRecoversToActive)
+{
+    // Mark this port as using the hardware (ICMP-offload) link prober before
+    // the state machine is activated so that the gating in
+    // ActiveActiveStateMachine sees the correct prober type.
+    mFakeMuxPort.setLinkProberType(common::MuxPortConfig::LinkProberType::Hardware);
+
+    setMuxActive();
+    VALIDATE_STATE(Active, Active, Up);
+
+    // 1) Server/switch port goes oper-down. The state machine drives mux to Standby
+    postLinkEvent(link_state::LinkState::Label::Down, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Down);
+
+    // 2) xcvrd / ycabled gRPC becomes unreachable for this port; mux drifts to
+    //    Unknown -> (P: Active, M: Unknown, L: Down). The hardware prober is
+    //    still reporting the session as Active.
+    handleMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Unknown, Down);
+
+    uint32_t probeForwardingStateBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+
+    // 3) Kernel link comes back up. Without the fix, prober would be reset to
+    //    Wait and the FSM would stop. With the fix, prober stays Active and a
+    //    fresh mux probe is fired.
+    //
+    // count=3: iteration-2 of the link-state retry loop consumes three slots:
+    //   run1 – link-state machine processes 2nd UpEvent (Down→Up transition, posts B)
+    //   run2 – link-manager handleStateChange(Up) runs, calls startMuxProbeTimer()
+    //          which posts handler C (handleProbeForwardingState) to the DbInterface strand
+    //   run3 – DbInterface strand executes C, incrementing mProbeForwardingStateInvokeCount
+    postLinkEvent(link_state::LinkState::Label::Up, 3);
+    VALIDATE_STATE(Active, Unknown, Up);
+    EXPECT_GT(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probeForwardingStateBefore);
+
+    // 4) xcvrd finally answers the probe with Active -> recovery completes and
+    //    orchagent is told to switch the mux back to Active.
+    handleProbeMuxState("active", 4);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberActiveBeforeLinkUp)
+{
+    // When the prober is already Active and the mux is already Active at the time
+    // the link recovers, no redundant mux switch should be issued.
+    setMuxActive();
+    VALIDATE_STATE(Active, Active, Up);
+
+    postLinkEvent(link_state::LinkState::Label::Down, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Active, Standby, Down);
+
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Down);
+
+    uint32_t setMuxStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    postLinkEvent(link_state::LinkState::Label::Up, 2);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setMuxStateBefore);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
 {
     setMuxActive();
