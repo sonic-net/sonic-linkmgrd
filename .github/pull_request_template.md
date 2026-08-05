@@ -24,14 +24,12 @@ Fixes # (issue)
 
 - [ ] Bug fix
 - [ ] New feature
-- [ ] Doc/Design
-- [ ] Unit test
+- [ ] Refactor / cleanup
+- [ ] Documentation update
+- [ ] Test improvement
 
 ### Approach
 #### What is the motivation for this PR?
-
-##### Work item tracking
-- Microsoft ADO **(number only)**:
 
 #### How did you do it?
 
@@ -39,7 +37,7 @@ Fixes # (issue)
 
 #### Any platform specific information?
 
-### Documentation 
+### Documentation
 <!--
 (If it's a new feature, new test case)
 Did you update documentation/Wiki relevant to your implementation?
