@@ -509,6 +509,70 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerUnknown)
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerProbeCommand, 1);
 }
 
+// Regression test for #285: reassert peer Standby when the SoC-side forwarding
+// state resets to Active while the peer link remains unknown.
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeerUnknownReassertsStandbyAfterPeerStateReset)
+{
+    setMuxActive();
+
+    VALIDATE_PEER_STATE(PeerWait, Wait);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive, 1);
+    runIoService(1);
+    handlePeerMuxState("active", 1);
+    VALIDATE_PEER_STATE(PeerActive, Active);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
+    VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
+
+    // Confirm the commanded Standby state.
+    handlePeerMuxState("standby", 2);
+    VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+
+    // SoC-side reset: peer forwarding state unexpectedly reports Active again.
+    // This ToR remains Healthy and peer link prober is still PeerUnknown.
+    handlePeerMuxState("active", 2);
+
+    VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
+}
+
+// Verify a genuine peer recovery to Active does not reassert a stale Standby
+// command from an earlier PeerUnknown transition.
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivePeerRecoveryDoesNotReassertStaleStandby)
+{
+    setMuxActive();
+
+    VALIDATE_PEER_STATE(PeerWait, Wait);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive, 1);
+    runIoService(1);
+    handlePeerMuxState("active", 1);
+    VALIDATE_PEER_STATE(PeerActive, Active);
+
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerUnknown, 3);
+    VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
+
+    handlePeerMuxState("standby", 2);
+    VALIDATE_PEER_STATE(PeerUnknown, Standby);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+
+    // Peer genuinely recovers.
+    postPeerLinkProberEvent(link_prober::LinkProberState::PeerActive, 1);
+    runIoService(1);
+    handlePeerMuxState("active", 1);
+
+    VALIDATE_PEER_STATE(PeerActive, Active);
+    EXPECT_EQ(mDbInterfacePtr->mSetPeerMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetPeerMuxState, mux_state::MuxState::Label::Standby);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigDetachedLinkProberPeerUnknown)
 {
     setMuxActive();
