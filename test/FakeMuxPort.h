@@ -78,6 +78,10 @@ public:
     inline void initLinkProberActiveActive();
     inline void initLinkProberActiveStandby();
 
+    inline void setLinkProberType(common::MuxPortConfig::LinkProberType type)
+    {
+        mMuxPortConfig.setLinkProberType(type);
+    }
     std::shared_ptr<link_manager::ActiveActiveStateMachine> mActiveActiveStateMachinePtr;
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> mActiveStandbyStateMachinePtr;
     std::shared_ptr<FakeLinkManagerStateMachine> mFakeLinkManagerStateMachinePtr = nullptr;
