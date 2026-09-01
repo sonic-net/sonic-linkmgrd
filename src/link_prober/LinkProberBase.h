@@ -455,11 +455,22 @@ protected:
        bool isPeer
    );
 
+   /**
+   *@method handleTlvRecv
+   *
+   *@brief process TLVs from a received ICMP payload
+   *
+   *@param bytesTransferred (in)  number of bytes received
+   *@param isSelfGuid (in)        true when the GUID matches this ToR
+   *
+   *@return none
+   */
    void handleTlvRecv(
         size_t bytesTransferred,
         bool isSelfGuid
    );
-       /**
+
+   /**
    *@method handleRecv
    *
    *@brief handle packet reception

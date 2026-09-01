@@ -276,7 +276,11 @@ void LinkProberBase::handleTlvRecv(size_t bytesTransferred, bool isSelfGuid)
     while ((nextTlvPtr = getNextTLVPtr(nextTlvOffset, bytesTransferred, nextTlvSize)) && !stopProcessTlv) {
         switch (nextTlvPtr->tlvhead.type) {
             case TlvType::TLV_COMMAND: {
-                handleTlvCommandRecv(nextTlvPtr, !isSelfGuid);
+                if (ntohs(nextTlvPtr->tlvhead.length) < sizeof(Command)) {
+                    stopProcessTlv = true;
+                } else {
+                    handleTlvCommandRecv(nextTlvPtr, !isSelfGuid);
+                }
                 break;
             }
             case TlvType::TLV_SENTINEL: {
