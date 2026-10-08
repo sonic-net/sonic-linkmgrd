@@ -53,6 +53,7 @@ public:
     void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotReceivedFuncPtr(link_prober::HeartbeatType::HEARTBEAT_SELF); }
     void receiveSelfIcmpReply();
     void receivePeerIcmpReply();
+    void receivePeerIcmpReplyWithShortCommandTlv();
     void setPeerGuidData(std::string l_guid) { mLinkProberPtr->setPeerGuidData(l_guid); }
     void postGenerateGuid(uint32_t count);
     boost::asio::io_service &getIoService() {  return mIoService; }
