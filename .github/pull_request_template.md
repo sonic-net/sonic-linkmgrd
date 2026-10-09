@@ -24,8 +24,9 @@ Fixes # (issue)
 
 - [ ] Bug fix
 - [ ] New feature
-- [ ] Doc/Design
-- [ ] Unit test
+- [ ] Refactor / cleanup
+- [ ] Documentation update
+- [ ] Test improvement
 
 ### Back port request
 <!--
@@ -77,9 +78,6 @@ For example:
 ### Approach
 #### What is the motivation for this PR?
 
-##### Work item tracking
-- Microsoft ADO **(number only)**:
-
 #### How did you do it?
 
 #### How did you verify/test it?
@@ -90,7 +88,7 @@ provide branch-specific image versions and evidence in the Test result section.
 
 #### Any platform specific information?
 
-### Documentation 
+### Documentation
 <!--
 (If it's a new feature, new test case)
 Did you update documentation/Wiki relevant to your implementation?
