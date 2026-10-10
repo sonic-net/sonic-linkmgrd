@@ -23,6 +23,8 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <netinet/ip6.h>
+#include <netinet/icmp6.h>
 
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
@@ -111,6 +113,50 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
         sizeof(icmpPayload->uuid)
     ) == 0);
 
+    EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_SENTINEL);
+    EXPECT_TRUE(tlvPtr->tlvhead.length == 0);
+}
+
+TEST_F(LinkProberTest, InitializeSendBufferIpv6)
+{
+    boost::asio::ip::address loopbackIpv6Address = boost::asio::ip::make_address("fc02:1000::1");
+    boost::asio::ip::address loopback3Ipv6Address = boost::asio::ip::make_address("fc02:1002::1");
+    boost::asio::ip::address bladeIpv6Address = boost::asio::ip::make_address("fc02:1001::2");
+    mMuxConfig.setLoopbackIpv6Address(loopbackIpv6Address);
+    mMuxConfig.setLoopback3Ipv6Address(loopback3Ipv6Address);
+    mFakeMuxPort.setServerIpv4Address(bladeIpv6Address);
+
+    initializeSendBuffer();
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+
+    ether_header *ethHeader = reinterpret_cast<ether_header *> (txBuffer.data());
+    EXPECT_TRUE(ethHeader->ether_type == htons(ETHERTYPE_IPV6));
+
+    ip6_hdr *ip6Header = reinterpret_cast<ip6_hdr *> (txBuffer.data() + sizeof(ether_header));
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(ip6_hdr));
+    link_prober::IcmpPayload *icmpPayload = reinterpret_cast<link_prober::IcmpPayload *> (txBuffer.data() + sizeof(ether_header) + sizeof(ip6_hdr) + sizeof(icmphdr));
+    link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *> (txBuffer.data() + sizeof(ether_header) + sizeof(ip6_hdr) + sizeof(icmphdr) + sizeof(*icmpPayload));
+
+    EXPECT_TRUE((ntohl(ip6Header->ip6_flow) >> 28) == 6);
+    EXPECT_TRUE(ip6Header->ip6_plen == htons(sizeof(icmphdr) + sizeof(link_prober::IcmpPayload) + sizeof(link_prober::TlvHead)));
+    EXPECT_TRUE(ip6Header->ip6_nxt == IPPROTO_ICMPV6);
+    EXPECT_TRUE(ip6Header->ip6_hlim == 64);
+
+    boost::asio::ip::address_v6::bytes_type sourceBytes;
+    boost::asio::ip::address_v6::bytes_type destinationBytes;
+    memcpy(sourceBytes.data(), &ip6Header->ip6_src, sourceBytes.size());
+    memcpy(destinationBytes.data(), &ip6Header->ip6_dst, destinationBytes.size());
+    EXPECT_TRUE(boost::asio::ip::address_v6(sourceBytes) == loopbackIpv6Address.to_v6());
+    EXPECT_TRUE(boost::asio::ip::address_v6(destinationBytes) == bladeIpv6Address.to_v6());
+
+    EXPECT_TRUE(icmpHeader->type == ICMP6_ECHO_REQUEST);
+    EXPECT_TRUE(icmpHeader->code == 0);
+    EXPECT_TRUE(icmpHeader->un.echo.id == htons(mFakeMuxPort.getMuxPortConfig().getServerId()));
+    EXPECT_TRUE(icmpHeader->un.echo.sequence == htons(0xffff));
+    EXPECT_TRUE(icmpHeader->checksum != 0);
+
+    EXPECT_TRUE(icmpPayload->cookie == htonl(link_prober::IcmpPayload::getSoftwareCookie()));
+    EXPECT_TRUE(icmpPayload->version == htonl(link_prober::IcmpPayload::getVersion()));
     EXPECT_TRUE(tlvPtr->tlvhead.type == link_prober::TlvType::TLV_SENTINEL);
     EXPECT_TRUE(tlvPtr->tlvhead.length == 0);
 }

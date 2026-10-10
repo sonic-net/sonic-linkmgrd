@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
+#include <algorithm>
 
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
@@ -276,6 +277,31 @@ TEST_F(LinkProberHardwareTest, LinkProberHardwareHandleIcmpPayload)
     handleRecv();
     runIoService(1);
     TearDown();
+}
+
+TEST_F(LinkProberHardwareTest, CreateIcmpEchoSessionIpv6)
+{
+    boost::asio::ip::address loopbackIpv6Address = boost::asio::ip::make_address("fc02:1000::1");
+    boost::asio::ip::address bladeIpv6Address = boost::asio::ip::make_address("fc02:1001::2");
+    mMuxConfig.setLoopbackIpv6Address(loopbackIpv6Address);
+    mFakeMuxPort.setServerIpv4Address(bladeIpv6Address);
+
+    mLinkProber.startProbing();
+
+    auto findEntry = [&](const std::string &field) {
+        return std::find_if(
+            mDbInterfacePtr->mLastIcmpSessionEntries.begin(),
+            mDbInterfacePtr->mLastIcmpSessionEntries.end(),
+            [&](const auto &entry) { return entry.first == field; }
+        );
+    };
+
+    auto srcIpEntry = findEntry("src_ip");
+    auto dstIpEntry = findEntry("dst_ip");
+    EXPECT_TRUE(srcIpEntry != mDbInterfacePtr->mLastIcmpSessionEntries.end());
+    EXPECT_TRUE(dstIpEntry != mDbInterfacePtr->mLastIcmpSessionEntries.end());
+    EXPECT_TRUE(srcIpEntry->second == loopbackIpv6Address.to_string());
+    EXPECT_TRUE(dstIpEntry->second == bladeIpv6Address.to_string());
 }
 
 } /* namespace test */
