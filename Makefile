@@ -1,5 +1,6 @@
 -include ../makefile.init
 
+
 GCOVR := gcovr
 FIND := find
 MAKE := make
