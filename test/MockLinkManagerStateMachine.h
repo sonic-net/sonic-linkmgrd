@@ -58,6 +58,8 @@ public:
 
     MOCK_METHOD1(handlePeerLinkProberStateChange, void(link_prober::LinkProberState::Label state));
 
+    MOCK_METHOD0(handleSwitchActiveRequestEvent, void());
+
     MOCK_METHOD1(setLabel, void(link_manager::LinkManagerStateMachineBase::Label label));
 };
 
