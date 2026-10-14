@@ -591,8 +591,23 @@ void ActiveActiveStateMachine::handleStateChange(
         CompositeState nextState = mCompositeState;
         ls(nextState) = state;
         if (ls(mCompositeState) == link_state::LinkState::Down && ls(nextState) == link_state::LinkState::Up) {
-            initLinkProberState(nextState);
-            initPeerLinkProberState();
+            if (ps(mCompositeState) == link_prober::LinkProberState::Label::Active) {
+                // The link prober already holds a definitive Active state before the
+                // link-up event is processed. This happens with ICMP hardware offload,
+                // where the probing session can come up while the physical link is
+                // still down, driving the prober to Active at (P: Active, M: Unknown,
+                // L: Down). Re-initializing the prober here (the default behavior for an
+                // Unknown/Wait/Error mux maps to Wait) would discard that valid Active
+                // state and strand the port at (P: Wait, M: Unknown, L: Up) with no
+                // further transition. Preserve the Active prober state and run the
+                // normal transition function so xcvrd is probed first; orchagent only
+                // receives switchMuxState(Active) once the forwarding state is confirmed.
+                initPeerLinkProberState();
+                mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
+            } else {
+                initLinkProberState(nextState);
+                initPeerLinkProberState();
+            }
         } else if (ls(mCompositeState) == link_state::LinkState::Up && ls(nextState) == link_state::LinkState::Down && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby);
         } else {

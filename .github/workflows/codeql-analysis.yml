@@ -105,6 +105,40 @@ jobs:
         fi
         echo "Using build ID: ${BUILD_ID}"
 
+        # libswsscommon is built against SONiC libyang3. Install the matching
+        # common-lib artifact into the same workspace prefix used below.
+        COMMON_LIB_BUILD_INFO=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=465&branchName=refs/heads/${BRANCH}&statusFilter=completed&resultFilter=succeeded&\$top=1&api-version=7.0")
+        COMMON_LIB_BUILD_ID=$(echo "${COMMON_LIB_BUILD_INFO}" | jq -r '.value[0].id')
+
+        if [ "${COMMON_LIB_BUILD_ID}" = "null" ] || [ -z "${COMMON_LIB_BUILD_ID}" ]; then
+          echo "::warning::No successful common-lib build found for branch ${BRANCH} — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "Using common-lib build ID: ${COMMON_LIB_BUILD_ID}"
+
+        COMMON_LIB_DOWNLOAD_URL=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds/${COMMON_LIB_BUILD_ID}/artifacts?artifactName=common-lib&api-version=7.0" | jq -r '.resource.downloadUrl')
+
+        if [ "${COMMON_LIB_DOWNLOAD_URL}" = "null" ] || [ -z "${COMMON_LIB_DOWNLOAD_URL}" ]; then
+          echo "::warning::No common-lib artifact found for build ${COMMON_LIB_BUILD_ID} — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        curl -sL -o /tmp/common-lib.zip "${COMMON_LIB_DOWNLOAD_URL}"
+        unzip -o /tmp/common-lib.zip -d /tmp/common-lib
+
+        shopt -s nullglob
+        LIBYANG_DEBS=(/tmp/common-lib/common-lib/target/debs/bookworm/libyang3_*_amd64.deb /tmp/common-lib/common-lib/target/debs/bookworm/libyang-dev_*_amd64.deb)
+        if [ "${#LIBYANG_DEBS[@]}" -eq 0 ]; then
+          echo "::warning::No libyang packages found in common-lib artifact — skipping build step"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        for deb in "${LIBYANG_DEBS[@]}"; do
+          dpkg-deb -x "${deb}" $(dirname $GITHUB_WORKSPACE)
+        done
+
         # Get artifact download URL
         DOWNLOAD_URL=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds/${BUILD_ID}/artifacts?artifactName=sonic-swss-common-bookworm&api-version=7.0" | jq -r '.resource.downloadUrl')
 
@@ -131,7 +165,7 @@ jobs:
           exit 0
         fi
 
-        rm -rf /tmp/swss-common /tmp/swss-common.zip
+        rm -rf /tmp/common-lib /tmp/common-lib.zip /tmp/swss-common /tmp/swss-common.zip
         echo "installed=true" >> "$GITHUB_OUTPUT"
       env:
         SWSSCOMMON_VER: "1.0.0"
@@ -142,7 +176,7 @@ jobs:
         set -x
         sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
         sed -i -e "s/ -flto//g" Makefile
-        sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
+        sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
         make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
 
     - name: Perform CodeQL Analysis

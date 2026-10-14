@@ -143,6 +143,18 @@ void LinkProberMockTest::receivePeerIcmpReply()
     setPeerGuidData(tempGuid);
 }
 
+void LinkProberMockTest::receivePeerIcmpReplyWithShortCommandTlv()
+{
+    receivePeerIcmpReply();
+    size_t tlvStartOffset = getPacketHeaderSize() + sizeof(link_prober::IcmpPayload);
+    link_prober::Tlv *tlvPtr = reinterpret_cast<link_prober::Tlv *>(
+        getRxBuffer().data() + tlvStartOffset
+    );
+    tlvPtr->tlvhead.type = link_prober::TlvType::TLV_COMMAND;
+    tlvPtr->tlvhead.length = 0;
+    tlvPtr->command = static_cast<uint8_t>(link_prober::Command::COMMAND_SWITCH_ACTIVE);
+}
+
 TEST_F(LinkProberMockTest, LinkProberActiveActive)
 {
     SetUp(common::MuxPortConfig::PortCableType::ActiveActive);
@@ -225,6 +237,38 @@ TEST_F(LinkProberMockTest, LinkProberActiveStandby)
     sendHeartbeat();
 
     handleTimeout();
+    runIoService();
+
+    TearDown();
+}
+
+TEST_F(LinkProberMockTest, LinkProberActiveStandbyIgnoresShortCommandTlv)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveStandby);
+
+    EXPECT_CALL(
+        *(getLinkManagerStateMachinePtr()),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Active)
+    );
+    EXPECT_CALL(
+        *(getLinkManagerStateMachinePtr()),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Standby)
+    );
+    EXPECT_CALL(
+        *(getLinkManagerStateMachinePtr()),
+        handleSwitchActiveRequestEvent()
+    ).Times(0);
+
+    sendHeartbeat();
+
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+
+    sendHeartbeat();
+
+    receivePeerIcmpReplyWithShortCommandTlv();
+    handleRecv();
     runIoService();
 
     TearDown();
