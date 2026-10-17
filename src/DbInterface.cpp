@@ -672,6 +672,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
     const std::string loopback3 = "Loopback3|";
     bool loopback2IPv4Found = false;
     bool loopback3IPv4Found = false;
+    bool loopback2IPv6Found = false;
+    bool loopback3IPv6Found = false;
 
     for (auto &loopbackIntf: loopbackIntfs) {
         size_t pos2 = loopbackIntf.find(loopback2);
@@ -693,7 +695,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
                     mMuxManagerPtr->setLoopbackIpv4Address(ipAddress);
                     loopback2IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
-                    MUXLOGWARNING(boost::format("Ipv6 for Loopback2: ip: %s is not supported.") % ip);
+                    mMuxManagerPtr->setLoopbackIpv6Address(ipAddress);
+                    loopback2IPv6Found = true;
                 }
             } else {
                 MUXLOGFATAL(boost::format("Received Loopback2 IP: %s, error code: %d") % ip % errorCode);
@@ -714,7 +717,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
                     mMuxManagerPtr->setLoopback3Ipv4Address(ipAddress);
                     loopback3IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
-                    MUXLOGWARNING(boost::format("Ipv6 for Loopback3: ip: %s is not supported.") % ip);
+                    mMuxManagerPtr->setLoopback3Ipv6Address(ipAddress);
+                    loopback3IPv6Found = true;
                 }
             } else {
                 MUXLOGFATAL(boost::format("Received Loopback3 IP: %s, error code: %d") % ip % errorCode);
@@ -722,12 +726,12 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
         }
     }
 
-    if (!loopback2IPv4Found) {
-        MUXLOGFATAL(boost::format("Config not found: Loopback2 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
+    if (!loopback2IPv4Found && !loopback2IPv6Found) {
+        MUXLOGFATAL(boost::format("Config not found: Loopback2 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
     }
 
-    if (!loopback3IPv4Found) {
-        MUXLOGFATAL(boost::format("Config not found: Loopback3 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopback3Ipv4Address().to_string());
+    if (!loopback3IPv4Found && !loopback3IPv6Found) {
+        MUXLOGFATAL(boost::format("Config not found: Loopback3 address missing, using default value %s ") % mMuxManagerPtr->getLoopback3Ipv4Address().to_string());
     }
 }
 
@@ -758,11 +762,17 @@ void DbInterface::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTupl
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
-            fieldValues.cbegin(),
-            fieldValues.cend(),
-            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "server_ipv4";}
-        );
+        std::vector<swss::FieldValueTuple>::const_iterator cit = fieldValues.cend();
+        for (const std::string &field: {"server_ipv4", "server_ipv6"}) {
+            cit = std::find_if(
+                fieldValues.cbegin(),
+                fieldValues.cend(),
+                [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+            );
+            if (cit != fieldValues.cend()) {
+                break;
+            }
+        }
         if (cit != fieldValues.cend()) {
             const std::string f = cit->first;
             std::string smartNicIpAddress = cit->second;
@@ -914,11 +924,17 @@ void DbInterface::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> 
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
-            fieldValues.cbegin(),
-            fieldValues.cend(),
-            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "soc_ipv4";}
-        );
+        std::vector<swss::FieldValueTuple>::const_iterator cit = fieldValues.cend();
+        for (const std::string &field: {"soc_ipv4", "soc_ipv6"}) {
+            cit = std::find_if(
+                fieldValues.cbegin(),
+                fieldValues.cend(),
+                [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+            );
+            if (cit != fieldValues.cend()) {
+                break;
+            }
+        }
         if (cit != fieldValues.cend()) {
             const std::string f = cit->first;
             std::string SoCIpAddress = cit->second;

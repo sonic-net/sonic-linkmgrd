@@ -157,6 +157,8 @@ void FakeDbInterface::handleSwssNotification(){
 
 void FakeDbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
     mIcmpSessionsCount++;
+    mLastIcmpSessionKey = key;
+    mLastIcmpSessionEntries = *entries;
 }
 
 void FakeDbInterface::deleteIcmpEchoSession(std::string key) {

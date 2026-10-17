@@ -245,6 +245,28 @@ public:
     inline void setLoopback3Ipv4Address(boost::asio::ip::address& address) {mLoopback3Ipv4Address = address;};
 
     /**
+    *@method setLoopbackIpv6Address
+    *
+    *@brief setter for Loopback IPv6 address
+    *
+    *@param address (in)  IPv6 address
+    *
+    *@return none
+    */
+    inline void setLoopbackIpv6Address(boost::asio::ip::address& address) {mLoopbackIpv6Address = address;};
+
+    /**
+    *@method setLoopback3Ipv6Address
+    *
+    *@brief setter for Loopback3 IPv6 address
+    *
+    *@param address (in)  IPv6 address
+    *
+    *@return none
+    */
+    inline void setLoopback3Ipv6Address(boost::asio::ip::address& address) {mLoopback3Ipv6Address = address;};
+
+    /**
     *@method getNumberOfThreads
     *
     *@brief getter for logging severity level
@@ -396,6 +418,24 @@ public:
     *@return IPv4 address
     */
     inline boost::asio::ip::address getLoopback3Ipv4Address() {return mLoopback3Ipv4Address;};
+
+    /**
+    *@method getLoopbackIpv6Address
+    *
+    *@brief getter for Loopback IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopbackIpv6Address() {return mLoopbackIpv6Address;};
+
+    /**
+    *@method getLoopback3Ipv6Address
+    *
+    *@brief getter for Loopback3 IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopback3Ipv6Address() {return mLoopback3Ipv6Address;};
     
     /**
     *@method getDecreasedTimeoutIpv4_msec
@@ -511,6 +551,8 @@ private:
     std::array<uint8_t, ETHER_ADDR_LEN> mVlanMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");
     boost::asio::ip::address mLoopback3Ipv4Address = boost::asio::ip::make_address("10.212.66.0");
+    boost::asio::ip::address mLoopbackIpv6Address = boost::asio::ip::make_address("::");
+    boost::asio::ip::address mLoopback3Ipv6Address = boost::asio::ip::make_address("::");
 };
 
 } /* namespace common */

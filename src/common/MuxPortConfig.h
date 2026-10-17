@@ -279,6 +279,24 @@ public:
     inline boost::asio::ip::address getLoopback3Ipv4Address() const {return mMuxConfig.getLoopback3Ipv4Address();};
 
     /**
+    *@method getLoopbackIpv6Address
+    *
+    *@brief getter for Loopback IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopbackIpv6Address() const {return mMuxConfig.getLoopbackIpv6Address();};
+
+    /**
+    *@method getLoopback3Ipv6Address
+    *
+    *@brief getter for Loopback3 IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopback3Ipv6Address() const {return mMuxConfig.getLoopback3Ipv6Address();};
+
+    /**
     *@method getPortName
     *
     *@brief getter for port name

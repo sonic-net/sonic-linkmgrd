@@ -273,9 +273,11 @@ void LinkProberHw::createIcmpEchoSession(std::string hwSessionType, std::string 
                 % mMuxPortConfig.getPortName() % hwSessionType % guid);
     auto entries =  std::make_unique<mux::IcmpHwOffloadEntries>();
     std::string portName = mMuxPortConfig.getPortName();
-    std::string tx_interval = std::to_string(mMuxPortConfig.getTimeoutIpv4_msec());
-    std::string rx_interval  = std::to_string(mMuxPortConfig.getTimeoutIpv4_msec() * mMuxPortConfig.getNegativeStateChangeRetryCount());
-    std::string src_ip       = mMuxPortConfig.getLoopbackIpv4Address().to_string();
+    bool ipv6Probing = mMuxPortConfig.getBladeIpv4Address().is_v6();
+    uint32_t timeout = ipv6Probing ? mMuxPortConfig.getTimeoutIpv6_msec() : mMuxPortConfig.getTimeoutIpv4_msec();
+    std::string tx_interval = std::to_string(timeout);
+    std::string rx_interval  = std::to_string(timeout * mMuxPortConfig.getNegativeStateChangeRetryCount());
+    std::string src_ip       = ipv6Probing ? mMuxPortConfig.getLoopbackIpv6Address().to_string() : mMuxPortConfig.getLoopbackIpv4Address().to_string();
     std::string dst_ip       = mMuxPortConfig.getBladeIpv4Address().to_string();
     std::string src_mac      = "";
     std::string dst_mac      = etherMacArrayToString(mMuxPortConfig.getBladeMacAddress());

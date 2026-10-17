@@ -67,6 +67,8 @@ public:
     std::array<uint8_t, ETHER_ADDR_LEN> getLastUpdatedMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getWellKnownMacAddress(std::string port);
     boost::asio::ip::address getLoopbackIpv4Address(std::string port);
+    boost::asio::ip::address getLoopbackIpv6Address(std::string port);
+    boost::asio::ip::address getLoopback3Ipv6Address(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getTorMacAddress(std::string port);
     std::array<uint8_t, ETHER_ADDR_LEN> getVlanMacAddress(std::string port);
     common::MuxPortConfig::PortCableType getPortCableType(const std::string &port);
