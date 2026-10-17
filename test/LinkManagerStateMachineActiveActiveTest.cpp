@@ -476,6 +476,78 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, ConfigStandbySocAgentRestart)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigActiveReDrivesMuxState)
+{
+    setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    handleMuxConfig("active", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxStandbyConfigStandbyReDrivesMuxState)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    handleMuxConfig("standby", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    VALIDATE_STATE(Unknown, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigActiveAfterRestartMatchingBootstrappedState)
+{
+    // Restart: the mux state is bootstrapped from state db before the state machine is
+    // activated, so the config below matches it and calculates no state transition.
+    postLinkEvent(link_state::LinkState::Up, 0, true);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleMuxState("active", 0, true);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    activateStateMachine();
+    pollIoService();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    handleMuxConfig("active", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    VALIDATE_STATE(Wait, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigActiveBeforeInitMatchingBootstrappedState)
+{
+    // Config read before initialization is deferred and replayed once all components are up.
+    handleMuxConfig("active", 0, true);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    postLinkEvent(link_state::LinkState::Up, 0, true);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleMuxState("active", 0, true);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    activateStateMachine();
+    pollIoService();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    VALIDATE_STATE(Wait, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigAutoDoesNotReDriveMuxState)
+{
+    setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    handleMuxConfig("auto", 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberPeerActive)
 {
     setMuxActive();
@@ -634,11 +706,12 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteStateMuxConf
 
     handleMuxConfig("active", 2);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 
     postDefaultRouteEvent("na", 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
     VALIDATE_STATE(Active, Active, Up);
 }
 
