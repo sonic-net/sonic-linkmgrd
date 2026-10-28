@@ -427,6 +427,22 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveLinkProberActiveBeforeL
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setMuxStateBefore);
 }
 
+TEST_F(LinkManagerStateMachineActiveActiveTest, Ipv6StandbySuspendsForSelectedInterval)
+{
+    setMuxActive();
+    mFakeMuxPort.setServerIpv4Address(boost::asio::ip::make_address("fc02:1000::3"));
+    mMuxConfig.setTimeoutIpv4_msec(100);
+    mMuxConfig.setTimeoutIpv6_msec(1000);
+    mMuxConfig.setNegativeStateChangeRetryCount(3);
+    auto suspendCount = mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount;
+
+    handleMuxConfig("standby", 1);
+
+    EXPECT_EQ(suspendCount + 1, mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount);
+    EXPECT_EQ(4000u, mFakeMuxPort.mFakeLinkProber->mLastSuspendTime_msec);
+    VALIDATE_STATE(Active, Standby, Up);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
 {
     setMuxActive();

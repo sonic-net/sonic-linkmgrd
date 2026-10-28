@@ -49,7 +49,14 @@ public:
     virtual void updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval) override;
     virtual void createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) override;
     virtual void deleteIcmpEchoSession(std::string key) override;
+    std::vector<swss::KeyOpFieldsValuesTuple> getIcmpEchoSessions() override;
+    void setIcmpEchoSessionFields(const std::string &key, const std::vector<swss::FieldValueTuple> &fields) override;
     virtual void handleSwssNotification() override;
+
+    std::string mLastIcmpSessionKey;
+    IcmpHwOffloadEntries mLastIcmpSessionEntries;
+    std::map<std::string, std::vector<swss::FieldValueTuple>> mIcmpSessions;
+
     virtual void setMuxLinkmgrState(
         const std::string &portName,
         link_manager::LinkManagerStateMachineBase::Label label

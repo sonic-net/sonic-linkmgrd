@@ -189,14 +189,12 @@ void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
-    if (address.is_v4()) {
-        if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
-            // notify server IP address for ports in active-standby cable type
-            muxPortPtr->handleBladeIpv4AddressUpdate(address);
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveStandby) {
+        // notify server IP address for ports in active-standby cable type
+        muxPortPtr->handleBladeIpv4AddressUpdate(address);
+        if (mMuxConfig.getIfEnableDefaultRouteFeature()) {
+            muxPortPtr->handleDefaultRouteState(mIpv4DefaultRouteState, mIpv6DefaultRouteState);
         }
-
-    } else if (address.is_v6()) {
-        // handle IPv6 probing
     }
 }
 
@@ -212,13 +210,12 @@ void MuxManager::addOrUpdateMuxPortSoCAddress(const std::string &portName, boost
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     common::MuxPortConfig::PortCableType portCableType = getMuxPortCableType(portName);
 
-    if (address.is_v4()) {
-        if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
-            // notify NiC IP address for ports in active-active cable type
-            muxPortPtr->handleSoCIpv4AddressUpdate(address);
+    if (portCableType == common::MuxPortConfig::PortCableType::ActiveActive) {
+        // notify NiC IP address for ports in active-active cable type
+        muxPortPtr->handleSoCIpv4AddressUpdate(address);
+        if (mMuxConfig.getIfEnableDefaultRouteFeature()) {
+            muxPortPtr->handleDefaultRouteState(mIpv4DefaultRouteState, mIpv6DefaultRouteState);
         }
-    } else if (address.is_v6()) {
-        // handle IPv6 probing
     }
 }
 
@@ -447,17 +444,9 @@ void MuxManager::addOrUpdateDefaultRouteState(bool is_v4, const std::string &rou
         mIpv6DefaultRouteState = routeState;
     }
 
-    std::string nextState = "na";
-    // For now we only need IPv4 default route state to be "ok". If we switch to IPv6 in the furture, this will cause an issue. 
-    if (mIpv4DefaultRouteState == "ok") {
-        nextState = "ok";
-    }
-
-    MUXLOGINFO(boost::format("Default route state: %s") % nextState);
-
     PortMapIterator portMapIterator = mPortMap.begin();
     while (portMapIterator != mPortMap.end()) {
-        portMapIterator->second->handleDefaultRouteState(nextState);
+        portMapIterator->second->handleDefaultRouteState(mIpv4DefaultRouteState, mIpv6DefaultRouteState);
         portMapIterator ++;
     }
 }

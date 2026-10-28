@@ -204,7 +204,10 @@ public:
     *
     *@return suspend timer timeout
     */
-    inline uint32_t getLinkWaitTimeout_msec() const {return mMuxConfig.getSuspendTimeout_msec();};
+    inline uint32_t getLinkWaitTimeout_msec() const {
+        uint32_t interval = getBladeIpv4Address().is_v6() ? getTimeoutIpv6_msec() : getTimeoutIpv4_msec();
+        return (getNegativeStateChangeRetryCount() + 1) * interval;
+    };
 
     /**
     *@method getIfOscillationEnabled
@@ -277,6 +280,24 @@ public:
     *@return IPv4 address
     */
     inline boost::asio::ip::address getLoopback3Ipv4Address() const {return mMuxConfig.getLoopback3Ipv4Address();};
+
+    /**
+    *@method getLoopbackIpv6Address
+    *
+    *@brief getter for Loopback IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopbackIpv6Address() const {return mMuxConfig.getLoopbackIpv6Address();};
+
+    /**
+    *@method getLoopback3Ipv6Address
+    *
+    *@brief getter for Loopback3 IPv6 address
+    *
+    *@return IPv6 address
+    */
+    inline boost::asio::ip::address getLoopback3Ipv6Address() const {return mMuxConfig.getLoopback3Ipv6Address();};
 
     /**
     *@method getPortName
