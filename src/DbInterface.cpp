@@ -310,8 +310,8 @@ void DbInterface::postPckLossRatio(
 void DbInterface::initialize()
 {
     try {
-        mAppDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
-        mStateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
+        mAppDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0, false, "", true);
+        mStateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0, false, "", true);
 
         mAppDbMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
             mAppDbPtr.get(), APP_MUX_CABLE_TABLE_NAME
@@ -1040,7 +1040,7 @@ void DbInterface::handleSetMuxMode(const std::string &portName, const std::strin
 {
     MUXLOGWARNING(boost::format("%s: configuring mux mode to %s after warm restart") % portName % state);
 
-    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0, false, "", true);
     std::shared_ptr<swss::Table> configDbMuxCableTablePtr = std::make_shared<swss::Table> (
         configDbPtr.get(), CFG_MUX_CABLE_TABLE_NAME
     );
