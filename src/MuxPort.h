@@ -106,10 +106,13 @@ public:
     *@brief set MUX state in APP DB for orchagent processing
     *
     *@param label (in)      label of target state
+    *@param adminInitiated (in) true if the switchover was requested by config,
+    *                           false if it was driven by the link prober
     *
     *@return none
     */
-    virtual inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
+    virtual inline void setMuxState(mux_state::MuxState::Label label, bool adminInitiated = false)
+        {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label, adminInitiated);};
 
     /**
     *@method setPeerMuxState

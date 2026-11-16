@@ -38,9 +38,10 @@ FakeDbInterface::FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_se
 {
 }
 
-void FakeDbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label)
+void FakeDbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label, bool adminInitiated)
 {
     mLastSetMuxState = label;
+    mLastSetMuxStateAdminInitiated = adminInitiated;
     mSetMuxStateInvokeCount++;
 
     mDbInterfaceRaceConditionCheckFailure = false;

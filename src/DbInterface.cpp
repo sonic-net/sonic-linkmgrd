@@ -47,6 +47,9 @@ namespace mux
 {
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
+// Admin-initiated spellings of MuxState::Label::Active and MuxState::Label::Standby.
+// Indexed by label, so this must stay aligned with the head of mMuxState.
+std::vector<std::string> DbInterface::mAdminMuxState = {"admin_active", "admin_standby"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
 std::vector<std::string> DbInterface::mLinkProbeMetrics = {"link_prober_unknown_start", "link_prober_unknown_end", "link_prober_wait_start", "link_prober_active_start", "link_prober_standby_start"};
@@ -83,19 +86,35 @@ void DbInterface::getMuxState(const std::string &portName)
 }
 
 //
-// ---> setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+// ---> getAppDbMuxState(mux_state::MuxState::Label label, bool adminInitiated);
+//
+// APP DB MUX_CABLE_TABLE state value for a target mux state
+//
+const std::string& DbInterface::getAppDbMuxState(mux_state::MuxState::Label label, bool adminInitiated)
+{
+    if (adminInitiated &&
+        (label == mux_state::MuxState::Label::Active || label == mux_state::MuxState::Label::Standby)) {
+        return mAdminMuxState[label];
+    }
+
+    return mMuxState[label];
+}
+
+//
+// ---> setMuxState(const std::string &portName, mux_state::MuxState::Label label, bool adminInitiated);
 //
 // set MUX state in APP DB for orchagent processing
 //
-void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
+void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label, bool adminInitiated)
 {
-    MUXLOGDEBUG(boost::format("%s: setting mux to %s") % portName % mMuxState[label]);
+    MUXLOGDEBUG(boost::format("%s: setting mux to %s") % portName % getAppDbMuxState(label, adminInitiated));
 
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleSetMuxState,
         this,
         portName,
-        label
+        label,
+        adminInitiated
     ));
 }
 
@@ -401,17 +420,19 @@ void DbInterface::handleGetMuxState(const std::string portName)
 }
 
 //
-// ---> handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
+// ---> handleSetMuxState(const std::string portName, mux_state::MuxState::Label label, bool adminInitiated);
 //
 // set MUX state in APP DB for orchagent processing
 //
-void DbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label)
+void DbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label, bool adminInitiated)
 {
-    MUXLOGDEBUG(boost::format("%s: setting mux state to %s") % portName % mMuxState[label]);
+    const std::string &state = getAppDbMuxState(label, adminInitiated);
+
+    MUXLOGDEBUG(boost::format("%s: setting mux state to %s") % portName % state);
 
     if (label <= mux_state::MuxState::Label::Unknown) {
         std::vector<swss::FieldValueTuple> values = {
-            {"state", mMuxState[label]},
+            {"state", state},
         };
         mAppDbMuxTablePtr->set(portName, values);
     }

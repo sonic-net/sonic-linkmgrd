@@ -568,6 +568,46 @@ public:
     DefaultRoute getDefaultRouteState() {return mDefaultRouteState;};
 
 protected:
+    /**
+     * @method isModePinnedTo
+     *
+     * @brief check whether a mux mode pins the mux to the given forwarding side.
+     *        Takes the mode explicitly because handleMuxConfigNotification() does not
+     *        commit it to MuxPortConfig at the same point in every state machine.
+     *
+     * @param mode (in)  mux mode to evaluate
+     * @param label (in) label of target state
+     *
+     * @return true if mode pins the mux to label
+     */
+    static inline bool isModePinnedTo(
+        common::MuxPortConfig::Mode mode,
+        mux_state::MuxState::Label label
+    )
+    {
+        return ((mode == common::MuxPortConfig::Mode::Active &&
+                 label == mux_state::MuxState::Label::Active) ||
+                (mode == common::MuxPortConfig::Mode::Standby &&
+                 label == mux_state::MuxState::Label::Standby));
+    }
+
+    /**
+     * @method isAdminPinnedTo
+     *
+     * @brief check whether config has pinned the mux to the given forwarding side,
+     *        which makes a switchover to that side admin-initiated rather than
+     *        link prober driven
+     *
+     * @param label (in) label of target state
+     *
+     * @return true if config pins the mux to label
+     */
+    inline bool isAdminPinnedTo(mux_state::MuxState::Label label) const
+    {
+        return isModePinnedTo(getMuxPortConfig().getMode(), label);
+    }
+
+protected:
     mux::MuxPort *mMuxPortPtr;
 
 private:

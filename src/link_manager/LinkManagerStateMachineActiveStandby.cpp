@@ -296,6 +296,27 @@ void ActiveStandbyStateMachine::enterMuxWaitState(CompositeState &nextState)
 }
 
 //
+// ---> isAdminInitiatedSwitch(SwitchCause cause, mux_state::MuxState::Label label);
+//
+// check if a switchover is admin-initiated (config driven) rather than link prober driven
+//
+bool ActiveStandbyStateMachine::isAdminInitiatedSwitch(
+    link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+    mux_state::MuxState::Label label
+) const
+{
+    // handleMuxConfigNotification() kicks off the switchover before it commits the new
+    // mode to MuxPortConfig, so for that first switchover the cause is the only signal.
+    if (cause == link_manager::ActiveStandbyStateMachine::SwitchCause::ConfigMuxMode) {
+        return true;
+    }
+
+    // Any later re-assertion of the pinned side, e.g. to match the driver state, is
+    // still the operator's choice and must keep orchagent's admin role in place.
+    return isAdminPinnedTo(label);
+}
+
+//
 // ---> switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch);
 //
 // switch Mux to switch via xcvrd to state label provider
@@ -325,7 +346,7 @@ void ActiveStandbyStateMachine::switchMuxState(
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mMuxPortPtr->postSwitchCause(cause);
-        mMuxPortPtr->setMuxState(label);
+        mMuxPortPtr->setMuxState(label, isAdminInitiatedSwitch(cause, label));
         if(mMuxPortConfig.ifEnableSwitchoverMeasurement()) {
             mDecreaseIntervalFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec()); 
         }
@@ -686,7 +707,7 @@ void ActiveStandbyStateMachine::handleProbeMuxStateNotification(mux_state::MuxSt
         // mux state was probed during initialization, update the mux state
         enterMuxState(mCompositeState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
-        mMuxPortPtr->setMuxState(label);
+        mMuxPortPtr->setMuxState(label, isAdminPinnedTo(label));
     } else {
         MUXLOGWARNING(boost::format("%s: xcvrd reports MUX state as '%s' during init. phase! Is there a functioning MUX?") %
             mMuxPortConfig.getPortName() %
@@ -824,6 +845,13 @@ void ActiveStandbyStateMachine::handleMuxConfigNotification(const common::MuxPor
                 LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
                 mCompositeState = nextState;
             } else {
+                // Config pinned the mux to the side it already forwards on, so there is
+                // no switchover to make. Orchagent still has to learn that the trigger
+                // is now admin driven, so re-publish the same state with the admin_
+                // spelling. mMuxPortConfig still holds the old mode at this point.
+                if (isModePinnedTo(mode, ms(mCompositeState))) {
+                    mMuxPortPtr->setMuxState(ms(mCompositeState), true);
+                }
                 startMuxProbeTimer();
             }
         }

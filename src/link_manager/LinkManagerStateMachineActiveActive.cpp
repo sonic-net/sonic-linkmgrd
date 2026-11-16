@@ -279,8 +279,16 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
             MUXLOGINFO(boost::format("%s: reset link prober state") % mMuxPortConfig.getPortName());
             initLinkProberState(nextState);
         } else {
+            const mux_state::MuxState::Label muxStateBefore = ms(nextState);
             // enforce a state transtion calculation based on current states
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](nextState);
+            // Config pinned the mux to the side it already forwards on, so the handler
+            // had no switchover to make. Orchagent still has to learn that the trigger
+            // is now admin driven, so re-publish with the admin_ spelling. Skipped when
+            // the handler did switch, since switchMuxState() already published it.
+            if (ms(nextState) == muxStateBefore && isAdminPinnedTo(muxStateBefore)) {
+                mMuxPortPtr->setMuxState(muxStateBefore, true);
+            }
         }
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
@@ -1109,7 +1117,9 @@ void ActiveActiveStateMachine::switchMuxState(
         enterMuxState(nextState, label);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
-        mMuxPortPtr->setMuxState(label);
+        // handleMuxConfigNotification() commits the new mode before switching, so the
+        // pinned side is enough to tell an admin-initiated switchover apart here.
+        mMuxPortPtr->setMuxState(label, isAdminPinnedTo(label));
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
