@@ -39,7 +39,11 @@ public:
     FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_service *ioService);
     virtual ~FakeDbInterface() = default;
 
-    virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label) override;
+    virtual void handleSetMuxState(
+        const std::string portName,
+        mux_state::MuxState::Label label,
+        bool adminInitiated = false
+    ) override;
     virtual void handleSetPeerMuxState(const std::string portName, mux_state::MuxState::Label label) override;
     virtual void getMuxState(const std::string &portName) override;
     virtual std::map<std::string, std::string> getMuxModeConfig() override;
@@ -88,6 +92,7 @@ public:
     uint32_t mMuxStateRequest[mux_state::MuxState::Label::Count] = {0, 0, 0, 0};
 
     mux_state::MuxState::Label mLastSetMuxState;
+    bool mLastSetMuxStateAdminInitiated = false;
     mux_state::MuxState::Label mLastSetPeerMuxState;
     link_manager::LinkManagerStateMachineBase::Label mLastSetMuxLinkmgrState;
 

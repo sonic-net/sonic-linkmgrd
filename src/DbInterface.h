@@ -145,10 +145,16 @@ public:
     *
     *@param portName (in)   MUX/port name
     *@param label (in)      label of target state
+    *@param adminInitiated (in) true if the switchover was requested by config,
+    *                           false if it was driven by the link prober
     *
     *@return none
     */
-    void setMuxState(const std::string &portName, mux_state::MuxState::Label label);
+    void setMuxState(
+        const std::string &portName,
+        mux_state::MuxState::Label label,
+        bool adminInitiated = false
+    );
 
     /**
     *@method handleSetMuxState
@@ -157,10 +163,16 @@ public:
     *
     *@param portName (in)   MUX/port name
     *@param label (in)      label of target state
+    *@param adminInitiated (in) true if the switchover was requested by config,
+    *                           false if it was driven by the link prober
     *
     *@return none
     */
-    virtual void handleSetMuxState(const std::string portName, mux_state::MuxState::Label label);
+    virtual void handleSetMuxState(
+        const std::string portName,
+        mux_state::MuxState::Label label,
+        bool adminInitiated = false
+    );
 
     /**
     *@method setPeerMuxState
@@ -990,8 +1002,23 @@ private:
      */
     void extractIfnameAndSessionType(const std::string &key, std::string &ifname, std::string &sessionType);
 
+    /**
+     * @method getAppDbMuxState
+     *
+     * @brief APP DB MUX_CABLE_TABLE state value for a target mux state. Admin-initiated
+     *        switchovers use the admin_ prefixed values so that orchagent can tell them
+     *        apart from link prober driven ones.
+     *
+     * @param label (in)            label of target state
+     * @param adminInitiated (in)   true if the switchover was requested by config
+     *
+     * @return state value to publish in APP DB
+     */
+    static const std::string& getAppDbMuxState(mux_state::MuxState::Label label, bool adminInitiated);
+
 private:
     static std::vector<std::string> mMuxState;
+    static std::vector<std::string> mAdminMuxState;
     static std::vector<std::string> mMuxLinkmgrState;
     static std::vector<std::string> mMuxMetrics;
     static std::vector<std::string> mLinkProbeMetrics;
