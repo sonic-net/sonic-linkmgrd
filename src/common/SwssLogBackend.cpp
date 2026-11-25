@@ -59,7 +59,7 @@ void SwssSyslogBackend::consume(const boost::log::record_view& record, const str
 //
 void SwssSyslogBackend::send(boost_syslog_level level, const string_type& formatted_message)
 {
-    mSwssLogger.write(static_cast<swss::Logger::Priority>(level), formatted_message.c_str());
+    mSwssLogger.write(static_cast<swss::Logger::Priority>(level), "%s", formatted_message.c_str());
 }
 
 } /* namespace common */

@@ -1,0 +1,12 @@
+common --registry=https://raw.githubusercontent.com/sonic-net/sonic-bazel-registry/main
+common --registry=https://bcr.bazel.build
+common --lockfile_mode=update
+common --platforms=@sonic_build_infra//platforms:x86_64_trixie
+common --host_platform=@sonic_build_infra//platforms:x86_64_trixie
+build --compilation_mode=opt
+build --@sonic_swss_common//tools/bazel:yang_modules=true
+test --test_output=errors
+try-import %workspace%/.bazelrc.user
+
+# Materialize cached kernel tools through their directory aliases.
+build --remote_download_regex=(^|.*/)tools/build_tools/kernel_runtime_(amd64|arm64)(/.*)?$

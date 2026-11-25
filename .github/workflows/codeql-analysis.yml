@@ -1,185 +1,100 @@
-# For more infomation, please visit: https://github.com/github/codeql-action
-
-name: "CodeQL"
+name: CodeQL
 
 on:
   push:
-    branches:
-      - 'master'
-      - '202[0-9][0-9][0-9]'
+    branches: [master, '202[0-9][0-9][0-9]']
   pull_request:
-    branches:
-      - 'master'
-      - '202[0-9][0-9][0-9]'
+    branches: [master, '202[0-9][0-9][0-9]']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  analyze:
-    name: Analyze
-    runs-on: ubuntu-22.04
+  cpp:
+    name: Analyze native source (cpp, AMD64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    container: debian:trixie-20260918@sha256:9cc080028c43b27d2074d63a5f9caf7166d731494965616c1a6d2827a004585c
     permissions:
       actions: read
       contents: read
       security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'cpp' ]
-
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      BAZELISK_GITHUB_TOKEN: ""
+      CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    defaults:
+      run:
+        shell: bash
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Install execution tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends binutils binutils-gold build-essential ca-certificates curl file git patch pkg-config python3 python3-defusedxml tar unzip xz-utils zstd
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-version: 1.29.0
+          bazelisk-cache: true
+          repository-cache: true
+          cache-version: "8.5.1"
+      - name: Preserve Bazel cache settings
+        run: python3 tools/bazel/prepare_ci.py
+      - name: Verify evidence and shallow-checkout guards
+        run: python3 -B tools/bazel/evidence_test.py
+      - name: Audit and prepare source-independent tools and libraries
+        run: |
+          test "$(uname -m)" = x86_64
+          output_base="$(mktemp -d "$RUNNER_TEMP/linkmgrd-codeql.XXXXXX")"
+          printf 'LINKMGRD_CODEQL_OUTPUT_BASE=%s\n' "$output_base" >> "$GITHUB_ENV"
+          export LINKMGRD_CODEQL_OUTPUT_BASE="$output_base"
+          bash tools/bazel/codeql_build.sh prepare
+      - name: Initialize manual C++ extraction
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          config-file: ./.github/codeql/codeql-config.yml
+          languages: cpp
+          build-mode: manual
+          db-location: ${{ runner.temp }}/linkmgrd-codeql-db
+          tools: https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.0/codeql-bundle-linux64.tar.gz
+      - name: Compile Linkmgrd under tracing
+        run: bash tools/bazel/codeql_build.sh trace
+      - name: Analyze compiled C++
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          category: /language:cpp
+      - name: Verify extracted owner definitions and source bytes
+        run: |
+          python3 tools/bazel/codeql_coverage.py \
+            --codeql "$CODEQL_DIST/codeql" \
+            --database "$RUNNER_TEMP/linkmgrd-codeql-db/cpp" \
+            --output bazel-evidence/codeql-owner-coverage.json
+      - name: Retain source extraction evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linkmgrd-codeql-owner-coverage-amd64
+          path: bazel-evidence/codeql-owner-coverage.json
+          if-no-files-found: error
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        config-file: ./.github/codeql/codeql-config.yml
-        languages: ${{ matrix.language }}
-
-    - name: prepare
-      run: |
-        sudo add-apt-repository -y ppa:mhier/libboost-latest
-        sudo apt-get update
-        sudo apt-get install -y libxml-simple-perl \
-            aspell \
-            aspell-en \
-            libhiredis-dev \
-            libnl-3-dev \
-            libnl-genl-3-dev \
-            libnl-route-3-dev \
-            libnl-nf-3-dev \
-            libyang-dev \
-            libzmq3-dev \
-            libzmq5 \
-            swig3.0 \
-            libpython3-dev \
-            libgtest-dev \
-            libgmock-dev \
-            libboost1.83-dev \
-            libboost-program-options1.83-dev \
-            libboost-system1.83-dev \
-            libboost-thread1.83-dev \
-            libboost-atomic1.83-dev \
-            libboost-chrono1.83-dev \
-            libboost-container1.83-dev \
-            libboost-context1.83-dev \
-            libboost-contract1.83-dev \
-            libboost-coroutine1.83-dev \
-            libboost-date-time1.83-dev \
-            libboost-fiber1.83-dev \
-            libboost-filesystem1.83-dev \
-            libboost-graph-parallel1.83-dev \
-            libboost-log1.83-dev \
-            libboost-regex1.83-dev \
-            libboost-serialization1.83-dev \
-            dh-exec \
-            doxygen \
-            cdbs \
-            bison \
-            flex \
-            graphviz \
-            autoconf-archive \
-            uuid-dev \
-            libjansson-dev \
-            nlohmann-json3-dev \
-            jq
-
-    - name: install-swss-common
-      id: swss
-      run: |
-        set -x
-        # Determine the target branch (PR target or push branch)
-        BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}"
-        echo "Downloading sonic-swss-common for branch: ${BRANCH}"
-
-        # Query Azure DevOps for the latest successful sonic-swss-common build
-        BUILD_INFO=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=9&branchName=refs/heads/${BRANCH}&statusFilter=completed&resultFilter=succeeded&\$top=1&api-version=7.0")
-        BUILD_ID=$(echo "${BUILD_INFO}" | jq -r '.value[0].id')
-
-        if [ "${BUILD_ID}" = "null" ] || [ -z "${BUILD_ID}" ]; then
-          echo "::warning::No successful swss-common build found for branch ${BRANCH} — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        echo "Using build ID: ${BUILD_ID}"
-
-        # libswsscommon is built against SONiC libyang3. Install the matching
-        # common-lib artifact into the same workspace prefix used below.
-        COMMON_LIB_BUILD_INFO=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=465&branchName=refs/heads/${BRANCH}&statusFilter=completed&resultFilter=succeeded&\$top=1&api-version=7.0")
-        COMMON_LIB_BUILD_ID=$(echo "${COMMON_LIB_BUILD_INFO}" | jq -r '.value[0].id')
-
-        if [ "${COMMON_LIB_BUILD_ID}" = "null" ] || [ -z "${COMMON_LIB_BUILD_ID}" ]; then
-          echo "::warning::No successful common-lib build found for branch ${BRANCH} — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        echo "Using common-lib build ID: ${COMMON_LIB_BUILD_ID}"
-
-        COMMON_LIB_DOWNLOAD_URL=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds/${COMMON_LIB_BUILD_ID}/artifacts?artifactName=common-lib&api-version=7.0" | jq -r '.resource.downloadUrl')
-
-        if [ "${COMMON_LIB_DOWNLOAD_URL}" = "null" ] || [ -z "${COMMON_LIB_DOWNLOAD_URL}" ]; then
-          echo "::warning::No common-lib artifact found for build ${COMMON_LIB_BUILD_ID} — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        curl -sL -o /tmp/common-lib.zip "${COMMON_LIB_DOWNLOAD_URL}"
-        unzip -o /tmp/common-lib.zip -d /tmp/common-lib
-
-        shopt -s nullglob
-        LIBYANG_DEBS=(/tmp/common-lib/common-lib/target/debs/bookworm/libyang3_*_amd64.deb /tmp/common-lib/common-lib/target/debs/bookworm/libyang-dev_*_amd64.deb)
-        if [ "${#LIBYANG_DEBS[@]}" -eq 0 ]; then
-          echo "::warning::No libyang packages found in common-lib artifact — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        for deb in "${LIBYANG_DEBS[@]}"; do
-          dpkg-deb -x "${deb}" $(dirname $GITHUB_WORKSPACE)
-        done
-
-        # Get artifact download URL
-        DOWNLOAD_URL=$(curl -s "https://dev.azure.com/mssonic/build/_apis/build/builds/${BUILD_ID}/artifacts?artifactName=sonic-swss-common-bookworm&api-version=7.0" | jq -r '.resource.downloadUrl')
-
-        if [ "${DOWNLOAD_URL}" = "null" ] || [ -z "${DOWNLOAD_URL}" ]; then
-          echo "::warning::No sonic-swss-common-bookworm artifact found for build ${BUILD_ID} — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        # Download and extract
-        curl -sL -o /tmp/swss-common.zip "${DOWNLOAD_URL}"
-        unzip -o /tmp/swss-common.zip -d /tmp/swss-common
-
-        # Install into the workspace prefix (same layout as before)
-        dpkg-deb -x /tmp/swss-common/sonic-swss-common-bookworm/libswsscommon_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
-        dpkg-deb -x /tmp/swss-common/sonic-swss-common-bookworm/libswsscommon-dev_${SWSSCOMMON_VER}_amd64.deb $(dirname $GITHUB_WORKSPACE)
-
-        # Verify cfg_schema.h has real content (not an empty stub)
-        CFG_COUNT=$(grep -c 'CFG_.*_TABLE_NAME' $(dirname $GITHUB_WORKSPACE)/usr/include/swss/cfg_schema.h || true)
-        echo "cfg_schema.h contains ${CFG_COUNT} CFG_* macros"
-        if [ "${CFG_COUNT}" -lt 10 ]; then
-          echo "::warning::cfg_schema.h appears to be empty or a stub — skipping build step"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        rm -rf /tmp/common-lib /tmp/common-lib.zip /tmp/swss-common /tmp/swss-common.zip
-        echo "installed=true" >> "$GITHUB_OUTPUT"
-      env:
-        SWSSCOMMON_VER: "1.0.0"
-
-    - name: build
-      if: steps.swss.outputs.installed == 'true'
-      run: |
-        set -x
-        sed -i "/JOBS := \$(subst -j,,\$(JOB_FLAG))/a JOBS := 1" Makefile
-        sed -i -e "s/ -flto//g" Makefile
-        sed -i '/-include objects.mk/a LIBS := -L'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,'"$(dirname $GITHUB_WORKSPACE)"'/usr/lib/x86_64-linux-gnu \$(LIBS)' Makefile
-        make all INCLUDES="-L$(dirname $GITHUB_WORKSPACE)/usr/lib/x86_64-linux-gnu -I$(dirname $GITHUB_WORKSPACE)/usr/include"
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+  python:
+    name: Analyze Python acceptance helpers
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          config-file: ./.github/codeql/codeql-config.yml
+          languages: python
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          category: /language:python

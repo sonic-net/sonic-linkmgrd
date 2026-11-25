@@ -14,3 +14,11 @@ debian/files
 linkmgrd
 linkmgrd-test
 
+
+# Local Bazel outputs and generated dependency evidence.
+/bazel-*
+/.bazelrc.user
+MODULE.bazel.lock
+/bazel-evidence/
+
+__pycache__/

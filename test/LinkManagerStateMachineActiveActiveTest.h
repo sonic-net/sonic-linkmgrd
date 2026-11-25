@@ -41,6 +41,7 @@ public:
     void handleMuxState(std::string, uint32_t count = 0, bool poll = false);
     void handlePeerMuxState(std::string, uint32_t count = 0);
     void handleProbeMuxState(std::string, uint32_t count = 0);
+    void reportDriftOnPeriodicProbe(const std::string &hardwareState);
     void handleLinkState(std::string linkState, uint32_t count = 0);
     void handleMuxConfig(std::string config, uint32_t count = 0, bool poll = false);
     void handleResetSuspendTimer(uint32_t count = 0);
