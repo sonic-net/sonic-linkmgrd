@@ -14,6 +14,8 @@
  *  limitations under the License.
  */
 
+#include <chrono>
+
 #include "LinkManagerStateMachineActiveActiveTest.h"
 #include "link_prober/LinkProberStateMachineBase.h"
 
@@ -1317,6 +1319,37 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteFlap)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+void LinkManagerStateMachineActiveActiveTest::reportDriftOnPeriodicProbe(const std::string &hardwareState)
+{
+    using namespace std::chrono;
+    const auto waitForChange = [this](const uint32_t &counter, uint32_t before, seconds timeout) {
+        const auto deadline = steady_clock::now() + timeout;
+        if (mIoService.stopped()) {
+            mIoService.restart();
+        }
+        while (counter == before && steady_clock::now() < deadline) {
+            if (mIoService.run_one_until(deadline) == 0) {
+                break;
+            }
+        }
+        return counter != before;
+    };
+
+    // FakeMuxPort skips production timer setup when it activates the state machine.
+    const auto probesBefore = mDbInterfacePtr->mProbeForwardingStateInvokeCount;
+    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
+    ASSERT_TRUE(waitForChange(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probesBefore, seconds(15)))
+        << "The periodic forwarding-state probe was not sent";
+    EXPECT_EQ(mDbInterfacePtr->mProbeForwardingStateInvokeCount, probesBefore + 1);
+
+    const auto writesBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+    for (uint8_t i = 0; i < mPositiveUpdateCount; ++i) {
+        mFakeMuxPort.handleProbeMuxState(hardwareState);
+    }
+    ASSERT_TRUE(waitForChange(mDbInterfacePtr->mSetMuxStateInvokeCount, writesBefore, seconds(2)))
+        << "The hardware probe did not trigger a corrective mux write";
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigStandbyPeriodicalCheckActive)
 {
     // Test: Config mode is Standby, toggle succeeds, then hardware drifts to Active.
@@ -1334,12 +1367,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigStandbyPeriodicalCheckA
 
     uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
 
-    // Periodic sync fires and detects hardware as Active (simulating hardware drift)
-    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
-    sleep(10);
-    runIoService(3);
-
-    handleProbeMuxState("active", 4);
+    ASSERT_NO_FATAL_FAILURE(reportDriftOnPeriodicProbe("active"));
 
     // Resync should be triggered
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);
@@ -1366,12 +1394,7 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigActivePeriodicalCheckSt
 
     uint32_t setForwardingStateBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
 
-    // Periodic sync fires and detects hardware as Standby (simulating hardware drift)
-    mFakeMuxPort.getActiveActiveStateMachinePtr()->startAdminForwardingStateSyncUpTimer();
-    sleep(10);
-    runIoService(3);
-
-    handleProbeMuxState("standby", 4);
+    ASSERT_NO_FATAL_FAILURE(reportDriftOnPeriodicProbe("standby"));
 
     // Resync should be triggered
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, setForwardingStateBefore + 1);

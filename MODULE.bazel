@@ -1,0 +1,71 @@
+module(
+    name = "sonic-linkmgrd",
+    version = "1.0.1",
+    bazel_compatibility = [
+        ">=8.5.1",
+        "<=8.5.1",
+    ],
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.22")
+bazel_dep(name = "rules_python", version = "1.9.0.sonic.2")
+bazel_dep(name = "rules_gzip", version = "1.0.0")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "googletest", version = "1.17.0")
+bazel_dep(name = "tar.bzl", version = "0.10.5.sonic.2")
+bazel_dep(name = "rules_distroless", version = "0.9.4.sonic.26")
+bazel_dep(name = "libnl3", version = "3.7.0.sonic.10")
+bazel_dep(
+    name = "sonic-build-infra",
+    version = "0.0.45-77ef625a4ddafc8cdc15f3cc6aee31eabac8a5de",
+    repo_name = "sonic_build_infra",
+)
+bazel_dep(
+    name = "sonic-swss-common",
+    version = "0.0.8-2a4ddd070edb719f2e969a880a5cfff711e64e72",
+    repo_name = "sonic_swss_common",
+)
+
+# Reuse the shared, snapshot-pinned target APT set for Boost's native ABI.
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.import_lock(lock = "@sonic_build_infra//apt:apt.lock.json")
+apt.install(
+    dependency_set = "trixie",
+    packages = [
+        "libboost-date-time1.83.0:amd64",
+        "libboost-date-time1.83-dev:amd64",
+        "libboost-filesystem1.83.0:amd64",
+        "libboost-filesystem1.83-dev:amd64",
+        "libboost-log1.83.0:amd64",
+        "libboost-log1.83-dev:amd64",
+        "libboost-program-options1.83.0:amd64",
+        "libboost-program-options1.83-dev:amd64",
+        "libboost-thread1.83.0:amd64",
+        "libboost-thread1.83-dev:amd64",
+    ],
+    suites = [
+        "trixie",
+        "trixie-updates",
+        "trixie-security",
+    ],
+)
+use_repo(apt, "trixie")
+
+gcc = use_extension("@sonic_build_infra//toolchains/gcc:extensions.bzl", "gcc")
+use_repo(gcc, "gcc_toolchains")
+
+register_toolchains("@gcc_toolchains//:all")
+
+register_toolchains("@sonic_build_infra//tools/gzip:toolchain")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.13",
+)
+
+# Common declares this extension; this C++ producer needs no Rust toolchain.
+bazel_dep(name = "rules_rs", version = "0.1.0")
+
+rust = use_extension("@rules_rs//rs:rules_rust_reexported_extensions.bzl", "rust")
+rust.toolchain(versions = [])

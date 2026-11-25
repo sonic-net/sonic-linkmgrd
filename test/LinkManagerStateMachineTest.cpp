@@ -21,6 +21,8 @@
  *      Author: Tamer Ahmed
  */
 
+#include <chrono>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -607,35 +609,62 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDown)
 
 TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDownMuxStandbyCliActiveCliAuto)
 {
+    // The fixture posts each input and runs one handler. Deliver the remaining
+    // callbacks until the composite state differs from the last VALIDATE_STATE.
+    const auto dispatchStateChange = [this](bool waitForProbeTimer = false) {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+        if (mIoService.stopped()) {
+            mIoService.restart();
+        }
+        while (mFakeMuxPort.getCompositeState() == mTestCompositeState && std::chrono::steady_clock::now() < deadline) {
+            const auto count = waitForProbeTimer ? mIoService.run_one_until(deadline) : mIoService.poll_one();
+            if (count == 0) {
+                break;
+            }
+        }
+    };
+
     setMuxStandby();
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
 
-    handleLinkState("down", 3);
+    handleLinkState("down", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Standby, Standby, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 1);
+    dispatchStateChange();
     VALIDATE_STATE(Unknown, Standby, Down);
 
-    runIoService(1);
+    const auto probesBefore = mDbInterfacePtr->mProbeMuxStateInvokeCount;
+    dispatchStateChange(true);
     VALIDATE_STATE(Unknown, Wait, Down);
+    EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, probesBefore + 1);
 
-    handleProbeMuxState("standby", 3);
+    handleProbeMuxState("standby", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Unknown, Standby, Down);
 
-    handleMuxConfig("active", 2);
+    handleMuxConfig("active", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Wait, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Active);
 
-    handleMuxState("active", 3);
+    handleMuxState("active", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Wait, Active, Down);
 
-    handleMuxConfig("auto", 2);
+    handleMuxConfig("auto", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Wait, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Standby);
 
-    handleMuxState("standby", 3);
+    handleMuxState("standby", 1);
+    dispatchStateChange();
     VALIDATE_STATE(Wait, Standby, Down);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
 }
 
 TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownPeerOvertakeLink)

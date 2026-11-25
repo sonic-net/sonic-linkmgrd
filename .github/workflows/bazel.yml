@@ -1,0 +1,76 @@
+name: Bazel Linkmgrd
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Linkmgrd source and installed TARs (AMD64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    container: debian:trixie-20260918@sha256:9cc080028c43b27d2074d63a5f9caf7166d731494965616c1a6d2827a004585c
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      BAZELISK_GITHUB_TOKEN: ""
+      CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install execution and acceptance tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends binutils binutils-gold build-essential ca-certificates curl file gdb git patch pkg-config python3 python3-defusedxml tar unzip xz-utils zstd
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-version: 1.29.0
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: linkmgrd-amd64
+          cache-version: "8.5.1"
+      - name: Check the native worker and preserve Bazel caches
+        run: |
+          test "$(uname -m)" = x86_64
+          test "$(. /etc/os-release; echo "$VERSION_CODENAME")" = trixie
+          python3 tools/bazel/prepare_ci.py
+      - name: Reject DEB-producing actions
+        run: python3 tools/bazel/validate.py audit
+      - name: Verify evidence and shallow-checkout guards
+        run: python3 -B tools/bazel/evidence_test.py
+      - name: Build TARs and run original and installed tests
+        run: python3 tools/bazel/validate.py build
+      - name: Verify cached builds and source edit restoration
+        run: python3 tools/bazel/validate.py incremental
+      - name: Collect exact artifacts and test receipts
+        run: python3 tools/bazel/validate.py collect
+      - name: Upload native artifacts and evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sonic-linkmgrd-amd64
+          path: |
+            bazel-evidence/*.tar
+            bazel-evidence/action-audit.json
+            bazel-evidence/build.json
+            bazel-evidence/source-identity.json
+            bazel-evidence/incremental.json
+            bazel-evidence/installed.json
+            bazel-evidence/provenance.json
+            bazel-evidence/runtime_packages.json
+            bazel-evidence/resolve*.txt
+            bazel-evidence/registry.bazelrc
+            bazel-evidence/MODULE.bazel.lock
+            bazel-evidence/tests/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 1

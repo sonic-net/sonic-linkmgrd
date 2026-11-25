@@ -21,6 +21,9 @@
  *      Author: taahme
  */
 
+#include <cstdlib>
+#include <sys/resource.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -71,6 +74,9 @@ size_t LinkProberTest::findNextTlv(size_t readOffset, size_t bytesTransferred)
 
 TEST_F(LinkProberTest, InitializeSendBuffer)
 {
+    // The expected packet checksum uses the first glibc rand() value. Other
+    // suites also create probe packets, so establish that fixture explicitly.
+    std::srand(1);
     initializeSendBuffer();
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
 
@@ -334,6 +340,17 @@ TEST_F(LinkProberTest, ReadWriteVariableSizedTlv)
 
 TEST_F(LinkProberTest, InitializeException)
 {
+    // Force the real socket call to fail even when the test container has
+    // CAP_NET_RAW. Restore the process limit on every test exit.
+    struct rlimit original;
+    ASSERT_EQ(getrlimit(RLIMIT_NOFILE, &original), 0);
+    struct RestoreLimit {
+        struct rlimit saved;
+        ~RestoreLimit() { EXPECT_EQ(setrlimit(RLIMIT_NOFILE, &saved), 0); }
+    } restore{original};
+    struct rlimit exhausted = original;
+    exhausted.rlim_cur = 0;
+    ASSERT_EQ(setrlimit(RLIMIT_NOFILE, &exhausted), 0);
     EXPECT_THROW(initialize(), common::SocketErrorException);
 }
 

@@ -1,0 +1,292 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_distroless//distroless:defs.bzl", "flatten")
+load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
+load("@rules_python//python:py_test.bzl", "py_test")
+load("@sonic_build_infra//binary:drop_build_rpath.bzl", "drop_build_rpath")
+load("@sonic_build_infra//cc:runtime_test.bzl", "native_runtime_test")
+load("@sonic_build_infra//cc:shared_library.bzl", "shared_library_cc_info")
+load("@sonic_build_infra//oci:runtime_packages.bzl", "runtime_packages")
+load("@sonic_build_infra//tar:sonic_deploy_tar.bzl", "sonic_deploy_tar")
+load("//:tools/bazel/swsscommon.bzl", "linkmgrd_swsscommon")
+
+package(default_visibility = ["//visibility:public"])
+
+_PLATFORM = [
+    "@platforms//os:linux",
+    "@platforms//cpu:x86_64",
+    "@sonic_build_infra//platforms:trixie",
+]
+
+_COPTS = [
+    "-std=c++17",
+    "-Wall",
+    "-fmessage-length=0",
+    "-fPIC",
+]
+
+# Forward Common's native library and its libnl DSOs with only the search
+# paths and declared files needed to resolve their Debian dependencies.
+shared_library_cc_info(
+    name = "swsscommon_dso",
+    runtime_deps = ["@sonic_swss_common//:common_deps"],
+    shared_library = "@sonic_swss_common//:libswsscommon_consolidated.so",
+    visibility = ["//visibility:private"],
+)
+
+linkmgrd_swsscommon(
+    name = "swsscommon",
+    headers = "@sonic_swss_common//:libswsscommon_shared",
+    library = ":swsscommon_dso",
+    visibility = ["//visibility:private"],
+)
+
+_DEPS = [
+    ":headers",
+    ":swsscommon",
+    "@libnl3//:headers",
+    "@trixie//libboost-date-time1.83-dev:libboost_date_time_cc",
+    "@trixie//libboost-thread1.83-dev:libboost_thread_cc",
+    "@trixie//libboost-log1.83-dev:libboost_log_cc",
+    "@trixie//libboost-log1.83-dev:libboost_log_setup_cc",
+    "@trixie//libboost-program-options1.83-dev:libboost_program_options_cc",
+    "@trixie//libboost-filesystem1.83-dev:libboost_filesystem_cc",
+]
+
+cc_library(
+    name = "headers",
+    hdrs = glob(["src/**/*.h"]),
+    includes = ["src"],
+    target_compatible_with = _PLATFORM,
+)
+
+# Keep each Make __FILENAME__ value and every original object, without repeating
+# the common dependency/flag lists for each translation unit.
+_SOURCES = glob(
+    ["src/**/*.cpp"],
+    exclude = ["src/LinkMgrdMain.cpp"],
+)
+
+[
+    cc_library(
+        name = variant + "_" + source.replace("/", "_").removesuffix(".cpp"),
+        testonly = variant == "test",
+        srcs = [source],
+        copts = _COPTS + optimization,
+        linkstatic = True,
+        local_defines = [
+            "__FILENAME__=" + source.removeprefix("src/"),
+            "BOOST_LOG_USE_NATIVE_SYSLOG",
+            "BOOST_LOG_DYN_LINK",
+        ],
+        target_compatible_with = _PLATFORM,
+        visibility = ["//visibility:private"],
+        deps = _DEPS,
+        alwayslink = True,
+    )
+    for variant, optimization in {
+        "release": [
+            "-O3",
+            "-flto",
+        ],
+        "test": ["-O0"],
+    }.items()
+    for source in _SOURCES
+]
+
+cc_library(
+    name = "linkmgrd_core",
+    linkstatic = True,
+    target_compatible_with = _PLATFORM,
+    deps = [":release_" + source.replace("/", "_").removesuffix(".cpp") for source in _SOURCES],
+)
+
+cc_library(
+    name = "linkmgrd_test_core",
+    testonly = True,
+    linkstatic = True,
+    target_compatible_with = _PLATFORM,
+    visibility = ["//visibility:private"],
+    deps = [":test_" + source.replace("/", "_").removesuffix(".cpp") for source in _SOURCES],
+)
+
+cc_binary(
+    name = "linkmgrd",
+    srcs = ["src/LinkMgrdMain.cpp"],
+    copts = _COPTS + [
+        "-O3",
+        "-flto",
+    ],
+    linkopts = ["-pthread"],
+    linkstatic = False,
+    local_defines = [
+        "__FILENAME__=LinkMgrdMain.cpp",
+        "BOOST_LOG_USE_NATIVE_SYSLOG",
+        "BOOST_LOG_DYN_LINK",
+    ],
+    target_compatible_with = _PLATFORM,
+    deps = [":linkmgrd_core"] + _DEPS,
+)
+
+drop_build_rpath(
+    name = "installed_linkmgrd",
+    src = ":linkmgrd",
+    target_compatible_with = _PLATFORM,
+    visibility = ["//visibility:private"],
+)
+
+gzip_compress(
+    name = "changelog_gz",
+    src = "debian/changelog",
+    level = 9,
+)
+
+sonic_deploy_tar(
+    name = "sonic_linkmgrd_runtime",
+    srcs = [":changelog_gz"],
+    binaries = {"./usr/sbin/linkmgrd uid=0 gid=0 mode=0755 type=file": ":installed_linkmgrd"},
+    force_debug_build = True,
+    mtree = ["./usr/share/doc/sonic-linkmgrd/changelog.Debian.gz uid=0 gid=0 mode=0644 type=file content=$(location :changelog_gz)"],
+    target_compatible_with = _PLATFORM,
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "sonic_linkmgrd_debug",
+    actual = ":sonic_linkmgrd_runtime.debug_symbols",
+)
+
+cc_library(
+    name = "test_headers",
+    testonly = True,
+    hdrs = glob(["test/*.h"]),
+    includes = ["test"],
+    visibility = ["//visibility:private"],
+)
+
+_TEST_SOURCES = glob(
+    ["test/*.cpp"],
+    exclude = ["test/LinkMgrdTestMain.cpp"],
+)
+
+[
+    cc_library(
+        name = source.replace("/", "_").removesuffix(".cpp"),
+        testonly = True,
+        srcs = [source],
+        copts = _COPTS + ["-O0"],
+        linkstatic = True,
+        local_defines = [
+            "__FILENAME__=" + source,
+            "BOOST_LOG_DYN_LINK",
+        ],
+        target_compatible_with = _PLATFORM,
+        visibility = ["//visibility:private"],
+        deps = [
+            ":linkmgrd_test_core",
+            ":test_headers",
+            "@googletest//:gtest",
+        ] + _DEPS,
+        alwayslink = True,
+    )
+    for source in _TEST_SOURCES
+]
+
+cc_binary(
+    name = "linkmgrd_test_binary",
+    testonly = True,
+    srcs = ["test/LinkMgrdTestMain.cpp"],
+    copts = _COPTS + ["-O0"],
+    linkopts = ["-pthread"],
+    linkstatic = False,
+    local_defines = [
+        "__FILENAME__=test/LinkMgrdTestMain.cpp",
+        "BOOST_LOG_DYN_LINK",
+    ],
+    target_compatible_with = _PLATFORM,
+    deps = [":" + source.replace("/", "_").removesuffix(".cpp") for source in _TEST_SOURCES] + [
+        ":linkmgrd_test_core",
+        ":test_headers",
+        "@googletest//:gtest",
+    ] + _DEPS,
+)
+
+py_test(
+    name = "source_contract_test",
+    srcs = ["tools/bazel/source_contract_test.py"],
+    data = glob([
+        "src/**/*.cpp",
+        "src/**/subdir.mk",
+        "test/*.cpp",
+    ]) + ["test/subdir.mk"],
+    main = "tools/bazel/source_contract_test.py",
+    python_version = "3.13",
+    target_compatible_with = _PLATFORM,
+)
+
+_RUNTIME_PAYLOADS = [
+    "@sonic_swss_common//tools/bazel/runtime:test_runtime",
+    "@sonic_swss_common//:libswsscommon_pkg",
+    "@libnl3//:libnl-3_pkg",
+    "@libnl3//:libnl-route-3_pkg",
+    "@trixie//libboost-date-time1.83-dev",
+    "@trixie//libboost-thread1.83-dev",
+    "@trixie//libboost-log1.83-dev",
+    "@trixie//libboost-program-options1.83-dev",
+    "@trixie//libboost-filesystem1.83-dev",
+]
+
+# Execute every original C++ test with declared Trixie runtime inputs.
+native_runtime_test(
+    name = "linkmgrd_test",
+    size = "large",
+    binary = ":linkmgrd_test_binary",
+    runtime_payloads = _RUNTIME_PAYLOADS,
+    target_compatible_with = _PLATFORM,
+)
+
+runtime_packages(
+    name = "runtime_packages.json",
+    apt_packages = {"@trixie//libboost-" + component + "1.83.0:data": "@trixie//libboost-" + component + "1.83.0:control" for component in [
+        "date-time",
+        "filesystem",
+        "log",
+        "program-options",
+        "thread",
+    ]},
+    changelog = "debian/changelog",
+    control = "debian/control",
+    dependencies = [
+        "@sonic_swss_common//:runtime_packages.json",
+        "@libnl3//:runtime_packages.json",
+    ],
+    packages = {"sonic-linkmgrd": ":sonic_linkmgrd_runtime"},
+    required_paths = {"sonic-linkmgrd": ["usr/sbin/linkmgrd"]},
+    target_compatible_with = _PLATFORM,
+)
+
+flatten(
+    name = "test_runtime",
+    testonly = True,
+    deduplicate = True,
+    tars = _RUNTIME_PAYLOADS,
+)
+
+_PACKAGE_INPUTS = [
+    ":sonic_linkmgrd_runtime",
+    ":sonic_linkmgrd_debug",
+    "debian/changelog",
+    "@sonic_build_infra//cc:runtime_test.py",
+] + [":test_runtime"]
+
+py_test(
+    name = "package_test",
+    size = "medium",
+    srcs = ["tools/bazel/package_test.py"],
+    args = ["$(location " + label + ")" for label in _PACKAGE_INPUTS],
+    data = _PACKAGE_INPUTS,
+    main = "tools/bazel/package_test.py",
+    python_version = "3.13",
+    target_compatible_with = _PLATFORM,
+    deps = ["@sonic_build_infra//deb:elf_metadata"],
+)
