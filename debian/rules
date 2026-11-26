@@ -21,6 +21,9 @@ export DEB_CXXFLAGS_MAINT_APPEND = -fstack-clash-protection $(if $(filter amd64,
 # --no-copy-dt-needed-entries omitted: requires explicit transitive dep fixes per-repo.
 export DEB_LDFLAGS_MAINT_APPEND  = -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,--as-needed
 
+include /usr/share/dpkg/buildflags.mk
+export CPPFLAGS CXXFLAGS LDFLAGS
+
 %:
 	dh $@ --parallel
 
