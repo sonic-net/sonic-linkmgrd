@@ -271,9 +271,11 @@ void ActiveActiveStateMachine::handleMuxConfigNotification(const common::MuxPort
     mMuxPortConfig.setMode(mode);
     if (mComponentInitState.all()) {
         CompositeState nextState = mCompositeState;
-        if (mode == common::MuxPortConfig::Mode::Active && ms(mCompositeState) != mux_state::MuxState::Label::Active) {
+        // Always drive an explicit config: the in-memory MUX state is bootstrapped on restart
+        // without being reconciled against the driver, so it is no proof the hardware agrees.
+        if (mode == common::MuxPortConfig::Mode::Active) {
             switchMuxState(nextState, mux_state::MuxState::Label::Active, true);
-        } else if (mode == common::MuxPortConfig::Mode::Standby && ms(mCompositeState) != mux_state::MuxState::Label::Standby) {
+        } else if (mode == common::MuxPortConfig::Mode::Standby) {
             switchMuxState(nextState, mux_state::MuxState::Label::Standby, true);
         } else if (mode == common::MuxPortConfig::Mode::Auto && ms(mCompositeState) == mux_state::MuxState::Label::Unknown) {
             MUXLOGINFO(boost::format("%s: reset link prober state") % mMuxPortConfig.getPortName());
