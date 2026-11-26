@@ -456,6 +456,53 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActiveConfigStandby)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+// Config-pinned switchovers are published as admin_active/admin_standby so orchagent
+// can tell them apart from link prober driven ones. See
+// mux_hw_protection_switching_hld.md sections 7.2 and 8.2.
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigSwitchoverIsAdminInitiated)
+{
+    setMuxActive();
+
+    // link prober drove the switchover to active while mode was auto
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_FALSE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+
+    handleMuxConfig("standby", 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+
+    // back to auto, so the switch back to active is link prober driven again
+    handleMuxConfig("auto", 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_FALSE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+// Same gap as the active-standby machine: pinning to the already-forwarding side makes
+// no switchover, so the admin_ spelling has to be re-published explicitly.
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigActiveWhenAlreadyActiveIsAdminInitiated)
+{
+    setMuxActive();
+
+    int invokeCountBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+    EXPECT_FALSE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+
+    handleMuxConfig("active", 2);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, invokeCountBefore + 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+TEST_F(LinkManagerStateMachineActiveActiveTest, MuxConfigAutoWhenActiveWritesNothing)
+{
+    setMuxActive();
+
+    int invokeCountBefore = mDbInterfacePtr->mSetMuxStateInvokeCount;
+
+    handleMuxConfig("auto", 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, invokeCountBefore);
+}
+
 TEST_F(LinkManagerStateMachineActiveActiveTest, ConfigStandbySocAgentRestart)
 {
     setMuxActive();
@@ -640,7 +687,13 @@ TEST_F(LinkManagerStateMachineActiveActiveTest, MuxActivDefaultRouteStateMuxConf
     postDefaultRouteEvent("na", 1);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mShutdownTxProbeCallCount, 0);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mRestartTxProbeCallCount, 3);
-    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    // 2 writes: the link prober driven switchover in setMuxActive(), then the
+    // handleMuxConfig("active") above. The port was already forwarding active, so that
+    // config change makes no switchover, but it is still re-published as admin_active
+    // so orchagent learns the trigger is now admin driven.
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
     VALIDATE_STATE(Active, Active, Up);
 }
 

@@ -202,6 +202,23 @@ private:
     inline void switchMuxState(link_manager::ActiveStandbyStateMachine::SwitchCause cause, CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
     /**
+    *@method isAdminInitiatedSwitch
+    *
+    *@brief check whether a switchover is admin-initiated (config driven) rather than
+    *       link prober driven. Orchagent needs to tell the two apart to decide whether
+    *       to assert the nexthop protection group's admin role.
+    *
+    *@param cause (in)             cause of the switchover
+    *@param label (in)             state to switch to
+    *
+    *@return true if the switchover is admin-initiated
+    */
+    bool isAdminInitiatedSwitch(
+        link_manager::ActiveStandbyStateMachine::SwitchCause cause,
+        mux_state::MuxState::Label label
+    ) const;
+
+    /**
      * @method shutdownOrRestartLinkProberOnDefaultRoute()
      * 
      * @brief  shutdown or restart link prober based on default route state

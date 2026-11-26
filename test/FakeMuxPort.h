@@ -57,7 +57,8 @@ public:
     ) {
         mDbInterfacePtr->handlePostMuxMetrics(mMuxPortConfig.getPortName(), metrics, label, boost::posix_time::microsec_clock::universal_time());
     };
-    virtual inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->handleSetMuxState(mMuxPortConfig.getPortName(), label);};
+    virtual inline void setMuxState(mux_state::MuxState::Label label, bool adminInitiated = false)
+        {mDbInterfacePtr->handleSetMuxState(mMuxPortConfig.getPortName(), label, adminInitiated);};
 
     std::shared_ptr<link_manager::ActiveActiveStateMachine> getActiveActiveStateMachinePtr() { return mActiveActiveStateMachinePtr; }
     std::shared_ptr<link_manager::ActiveStandbyStateMachine> getActiveStandbyStateMachinePtr() { return mActiveStandbyStateMachinePtr; }

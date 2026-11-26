@@ -574,6 +574,140 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverLinkProberFirst)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+// Orchagent needs to tell an operator-requested switchover apart from a link prober
+// driven one so it can assert the nexthop protection group's admin role. linkmgrd
+// signals that by publishing admin_active/admin_standby instead of active/standby in
+// APP_DB MUX_CABLE_TABLE. See mux_hw_protection_switching_hld.md sections 7.2 and 8.2.
+TEST_F(LinkManagerStateMachineTest, MuxConfigActiveIsAdminInitiated)
+{
+    setMuxStandby();
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+    handleMuxConfig("active", 2);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxConfigStandbyIsAdminInitiated)
+{
+    setMuxActive();
+
+    handleMuxConfig("standby");
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSendPeerSwitchCommand, 1);
+
+    // the switchover only happens once the peer has been told to go active
+    mFakeMuxPort.mFakeLinkProber->handleSendSwitchCommand();
+    runIoService(2);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+TEST_F(LinkManagerStateMachineTest, LinkProberSwitchoverIsNotAdminInitiated)
+{
+    setMuxStandby();
+
+    // link prober drives the switchover while mode is auto
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause,
+              link_manager::ActiveStandbyStateMachine::SwitchCause::PeerHeartbeatMissing);
+    EXPECT_FALSE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxConfigActiveKeepsAdminStateOnDriverResync)
+{
+    setMuxStandby();
+
+    handleMuxConfig("active", 4);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Up);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+
+    // the driver disagrees, so linkmgrd re-asserts the state it believes in. The port is
+    // still pinned active by config, so this must stay an admin-initiated switchover.
+    handleGetMuxState("standby", 2);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause,
+              link_manager::ActiveStandbyStateMachine::SwitchCause::MatchingHardwareState);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxConfigAutoClearsAdminState)
+{
+    setMuxStandby();
+
+    handleMuxConfig("active", 4);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Active, Active, Up);
+
+    // back to auto, so the port is no longer pinned to a side
+    handleMuxConfig("auto", 2);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+
+    // the next switchover is link driven, so it must be published as plain standby
+    handleLinkState("down", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 2);
+    EXPECT_EQ(mDbInterfacePtr->mLastPostedSwitchCause,
+              link_manager::ActiveStandbyStateMachine::SwitchCause::LinkDown);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_FALSE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+// Pinning a port to the side it already forwards on makes no switchover, but orchagent
+// still has to learn that the trigger moved to admin driven, otherwise it never asserts
+// the nexthop protection group's admin role for a port the operator meant to freeze.
+TEST_F(LinkManagerStateMachineTest, MuxConfigActiveWhenAlreadyActiveIsAdminInitiated)
+{
+    setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("active", 3);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Active);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxConfigStandbyWhenAlreadyStandbyIsAdminInitiated)
+{
+    setMuxStandby();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("standby", 3);
+
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterfacePtr->mLastSetMuxState, mux_state::MuxState::Label::Standby);
+    EXPECT_TRUE(mDbInterfacePtr->mLastSetMuxStateAdminInitiated);
+}
+
+// The re-publish must be limited to pinned modes, otherwise every auto/manual config
+// touch would start writing to APP DB where it previously wrote nothing.
+TEST_F(LinkManagerStateMachineTest, MuxConfigAutoWhenActiveWritesNothing)
+{
+    setMuxActive();
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("auto", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+
+    handleMuxConfig("manual", 3);
+    EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxActiveLinkDown)
 {
     setMuxActive();
