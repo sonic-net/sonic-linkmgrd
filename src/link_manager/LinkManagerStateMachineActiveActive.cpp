@@ -377,6 +377,20 @@ void ActiveActiveStateMachine::handlePeerMuxStateNotification(mux_state::MuxStat
 
     mPeerWaitTimer.cancel();
     enterPeerMuxState(label);
+
+    if (label == mux_state::MuxState::Label::Active &&
+        mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto &&
+        mLabel == Label::Healthy &&
+        mPeerLinkProberState == link_prober::LinkProberState::Label::PeerUnknown) {
+        // peer forwarding state unexpectedly reports Active (e.g. SoC-side agent
+        // restart) while this ToR still requires the peer to be Standby. Reassert
+        // the desired state.
+        MUXLOGWARNING(
+            boost::format("%s: peer forwarding state unexpectedly active while peer link prober is unknown, reasserting standby") %
+            mMuxPortConfig.getPortName()
+        );
+        switchPeerMuxState(mux_state::MuxState::Label::Standby);
+    }
 }
 
 //
