@@ -1,7 +1,6 @@
 """Exercise source identity checks against a real shallow Git merge checkout."""
 import importlib.util
 import json
-import sys
 import zipfile
 from pathlib import Path
 import subprocess
@@ -53,7 +52,6 @@ class SourceIdentityTest(unittest.TestCase):
 
 class ExtractedSourceTest(unittest.TestCase):
     def test_missing_or_changed_source_is_rejected(self):
-        import zipfile
         with tempfile.TemporaryDirectory(prefix="linkmgrd-extracted-") as temporary:
             root = Path(temporary)
             (root / "src").mkdir()
@@ -75,7 +73,6 @@ class ExtractedSourceTest(unittest.TestCase):
 
 class BuildEventsTest(unittest.TestCase):
     def test_only_current_passing_events_supply_reports(self):
-        import json
         spec = importlib.util.spec_from_file_location("linkmgrd_validate", Path(__file__).with_name("validate.py"))
         build = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(build)
