@@ -64,6 +64,7 @@ public:
     uint32_t mUpdateEthernetFrameCallCount = 0;
     uint32_t mProbePeerTorCallCount = 0;
     uint32_t mSuspendTxProbeCallCount = 0;
+    uint32_t mLastSuspendTime_msec = 0;
     uint32_t mDetectLinkCallCount = 0;
     uint32_t mResumeTxProbeCallCount = 0;
     uint32_t mSendPeerSwitchCommand = 0;

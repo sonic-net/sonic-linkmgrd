@@ -388,6 +388,7 @@ public:
     * @return none
     */
     void handleDefaultRouteState(const std::string &routeState);
+    void handleDefaultRouteState(const std::string &ipv4RouteState, const std::string &ipv6RouteState);
 
     /**
     * @method resetPckLossCount

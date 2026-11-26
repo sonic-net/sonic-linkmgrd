@@ -939,11 +939,13 @@ private:
     /**
      * @method handleUpdateInterval
      * 
-     * @brief handles update of interval_v4 field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABLE
+        * @brief updates intervals for ICMP sessions in the selected address family
      * 
      * @return none
      */
-    void handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval);
+    void handleUpdateInterval(bool isIpv4, uint32_t tx_interval, uint32_t rx_interval);
+    virtual std::vector<swss::KeyOpFieldsValuesTuple> getIcmpEchoSessions();
+    virtual void setIcmpEchoSessionFields(const std::string &key, const std::vector<swss::FieldValueTuple> &fields);
 
     /**
      * @method handleUpdateTxIntervalv6

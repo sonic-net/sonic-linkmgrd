@@ -672,6 +672,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
     const std::string loopback3 = "Loopback3|";
     bool loopback2IPv4Found = false;
     bool loopback3IPv4Found = false;
+    bool loopback2IPv6Found = false;
+    bool loopback3IPv6Found = false;
 
     for (auto &loopbackIntf: loopbackIntfs) {
         size_t pos2 = loopbackIntf.find(loopback2);
@@ -693,7 +695,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
                     mMuxManagerPtr->setLoopbackIpv4Address(ipAddress);
                     loopback2IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
-                    MUXLOGWARNING(boost::format("Ipv6 for Loopback2: ip: %s is not supported.") % ip);
+                    mMuxManagerPtr->setLoopbackIpv6Address(ipAddress);
+                    loopback2IPv6Found = true;
                 }
             } else {
                 MUXLOGFATAL(boost::format("Received Loopback2 IP: %s, error code: %d") % ip % errorCode);
@@ -714,7 +717,8 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
                     mMuxManagerPtr->setLoopback3Ipv4Address(ipAddress);
                     loopback3IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
-                    MUXLOGWARNING(boost::format("Ipv6 for Loopback3: ip: %s is not supported.") % ip);
+                    mMuxManagerPtr->setLoopback3Ipv6Address(ipAddress);
+                    loopback3IPv6Found = true;
                 }
             } else {
                 MUXLOGFATAL(boost::format("Received Loopback3 IP: %s, error code: %d") % ip % errorCode);
@@ -722,12 +726,12 @@ void DbInterface::processLoopbackInterfacesInfo(std::vector<std::string> &loopba
         }
     }
 
-    if (!loopback2IPv4Found) {
-        MUXLOGFATAL(boost::format("Config not found: Loopback2 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
+    if (!loopback2IPv4Found && !loopback2IPv6Found) {
+        MUXLOGFATAL(boost::format("Config not found: Loopback2 address missing, using default value %s ") % mMuxManagerPtr->getLoopbackIpv4Address().to_string());
     }
 
-    if (!loopback3IPv4Found) {
-        MUXLOGFATAL(boost::format("Config not found: Loopback3 IPv4 address missing, using default value %s ") % mMuxManagerPtr->getLoopback3Ipv4Address().to_string());
+    if (!loopback3IPv4Found && !loopback3IPv6Found) {
+        MUXLOGFATAL(boost::format("Config not found: Loopback3 address missing, using default value %s ") % mMuxManagerPtr->getLoopback3Ipv4Address().to_string());
     }
 }
 
@@ -758,11 +762,17 @@ void DbInterface::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTupl
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
-            fieldValues.cbegin(),
-            fieldValues.cend(),
-            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "server_ipv4";}
-        );
+        std::vector<swss::FieldValueTuple>::const_iterator cit = fieldValues.cend();
+        for (const std::string &field: {"server_ipv4", "server_ipv6"}) {
+            cit = std::find_if(
+                fieldValues.cbegin(),
+                fieldValues.cend(),
+                [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+            );
+            if (cit != fieldValues.cend()) {
+                break;
+            }
+        }
         if (cit != fieldValues.cend()) {
             const std::string f = cit->first;
             std::string smartNicIpAddress = cit->second;
@@ -914,11 +924,17 @@ void DbInterface::processSoCIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> 
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
-            fieldValues.cbegin(),
-            fieldValues.cend(),
-            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "soc_ipv4";}
-        );
+        std::vector<swss::FieldValueTuple>::const_iterator cit = fieldValues.cend();
+        for (const std::string &field: {"soc_ipv4", "soc_ipv6"}) {
+            cit = std::find_if(
+                fieldValues.cbegin(),
+                fieldValues.cend(),
+                [&field] (const swss::FieldValueTuple &fv) {return fvField(fv) == field;}
+            );
+            if (cit != fieldValues.cend()) {
+                break;
+            }
+        }
         if (cit != fieldValues.cend()) {
             const std::string f = cit->first;
             std::string SoCIpAddress = cit->second;
@@ -1668,6 +1684,7 @@ void DbInterface::updateIntervalv4(uint32_t tx_interval, uint32_t rx_interval)
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateInterval,
         this,
+        true,
         tx_interval,
         rx_interval
     ));
@@ -1685,28 +1702,57 @@ void DbInterface::updateIntervalv6(uint32_t tx_interval, uint32_t rx_interval)
     boost::asio::post(mStrand, boost::bind(
         &DbInterface::handleUpdateInterval,
         this,
+        false,
         tx_interval,
         rx_interval
     ));
 }
 
 //
-// --->handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval);
+// ---> getIcmpEchoSessions();
 //
-// handles update of tx/rx interval field for ICMP_ECHO_SESSION in APP_ICMP_ECHO_SESSION_TABL
+// reads the current ICMP echo session fields from APPL_DB
 //
-void DbInterface::handleUpdateInterval(uint32_t tx_interval, uint32_t rx_interval)
+std::vector<swss::KeyOpFieldsValuesTuple> DbInterface::getIcmpEchoSessions()
 {
     std::shared_ptr<swss::DBConnector> appDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
     swss::Table icmpAppDbTbl(appDbPtr.get(), APP_ICMP_ECHO_SESSION_TABLE_NAME);
     std::vector<std::string> keys;
     icmpAppDbTbl.getKeys(keys);
-    std::vector<swss::FieldValueTuple> fvs;
-    fvs.emplace_back("tx_interval", std::to_string(tx_interval));
-    fvs.emplace_back("rx_interval", std::to_string(rx_interval));
-    for (auto& key : keys)
-    {
-        mAppDbIcmpEchoSessionTablePtr->set(key, fvs);
+    std::vector<swss::KeyOpFieldsValuesTuple> sessions;
+    for (const auto &key : keys) {
+        std::vector<swss::FieldValueTuple> fields;
+        if (icmpAppDbTbl.get(key, fields)) {
+            sessions.emplace_back(key, "SET", std::move(fields));
+        }
+    }
+    return sessions;
+}
+
+void DbInterface::setIcmpEchoSessionFields(const std::string &key, const std::vector<swss::FieldValueTuple> &fields)
+{
+    mAppDbIcmpEchoSessionTablePtr->set(key, fields);
+}
+
+void DbInterface::handleUpdateInterval(bool isIpv4, uint32_t tx_interval, uint32_t rx_interval)
+{
+    std::vector<swss::FieldValueTuple> intervals = {
+        {"tx_interval", std::to_string(tx_interval)},
+        {"rx_interval", std::to_string(rx_interval)},
+    };
+    for (const auto &session : getIcmpEchoSessions()) {
+        const auto &fields = kfvFieldsValues(session);
+        auto destination = std::find_if(fields.begin(), fields.end(), [](const auto &field) {
+            return fvField(field) == "dst_ip";
+        });
+        if (destination == fields.end()) {
+            continue;
+        }
+        boost::system::error_code error;
+        auto address = boost::asio::ip::make_address(fvValue(*destination), error);
+        if (!error && address.is_v4() == isIpv4) {
+            setIcmpEchoSessionFields(kfvKey(session), intervals);
+        }
     }
 }
 

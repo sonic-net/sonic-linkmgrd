@@ -23,6 +23,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include <netinet/icmp6.h>
+#include <netinet/ip6.h>
+
 #include "common/MuxLogger.h"
 #include "MockLinkProberTest.h"
 
@@ -40,7 +43,7 @@ LinkProberMockTest::LinkProberMockTest()
     mMuxConfig.setNegativeStateChangeRetryCount(1);
 }
 
-void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableType)
+void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableType, bool ipv6)
 {
     mMuxPortConfig.setPortCableType(portCableType);
     mLinkManagerStateMachinePtr = std::make_shared<MockLinkManagerStateMachine>(
@@ -70,7 +73,13 @@ void LinkProberMockTest::SetUp(common::MuxPortConfig::PortCableType portCableTyp
             break;
         }
     }
-    mMuxPortConfig.setBladeIpv4Address(boost::asio::ip::make_address("192.168.0.9"));
+    mMuxPortConfig.setBladeIpv4Address(boost::asio::ip::make_address(ipv6 ? "fc02:1000::9" : "192.168.0.9"));
+    if (ipv6) {
+        auto loopback = boost::asio::ip::make_address("fc00:1::1");
+        auto loopback3 = boost::asio::ip::make_address("fc00:3::1");
+        mMuxConfig.setLoopbackIpv6Address(loopback);
+        mMuxConfig.setLoopback3Ipv6Address(loopback3);
+    }
     mLinkProberPtr = std::make_shared<link_prober::LinkProberSw>(
         mMuxPortConfig,
         mIoService,
@@ -114,6 +123,17 @@ void LinkProberMockTest::buildIcmpReply()
     memcpy(rxEtherHeader->ether_shost, txEtherHeader->ether_dhost, sizeof(rxEtherHeader->ether_shost));
     memcpy(rxEtherHeader->ether_dhost, txEtherHeader->ether_shost, sizeof(rxEtherHeader->ether_dhost));
 
+    if (mMuxPortConfig.getBladeIpv4Address().is_v6()) {
+        auto *txIpHeader = reinterpret_cast<ip6_hdr *>(getTxBuffer().data() + sizeof(ether_header));
+        auto *rxIpHeader = reinterpret_cast<ip6_hdr *>(mBuffer.data() + sizeof(ether_header));
+        memcpy(&rxIpHeader->ip6_src, &txIpHeader->ip6_dst, sizeof(rxIpHeader->ip6_src));
+        memcpy(&rxIpHeader->ip6_dst, &txIpHeader->ip6_src, sizeof(rxIpHeader->ip6_dst));
+        auto *icmpHeader = reinterpret_cast<icmphdr *>(mBuffer.data() + getPacketHeaderSize() - sizeof(icmphdr));
+        icmpHeader->type = ICMP6_ECHO_REPLY;
+        mLinkProberPtr->computeIcmpv6Checksum(icmpHeader, getTxPacketSize() - getPacketHeaderSize() + sizeof(icmphdr));
+        return;
+    }
+
     iphdr *txIpHeader = reinterpret_cast<iphdr *>(getTxBuffer().data() + sizeof(ether_header));
     iphdr *rxIpHeader = reinterpret_cast<iphdr *>(mBuffer.data() + sizeof(ether_header));
     rxIpHeader->saddr = txIpHeader->daddr;
@@ -138,6 +158,10 @@ void LinkProberMockTest::receivePeerIcmpReply()
         getRxBuffer().data() + getPacketHeaderSize()
     );
     memcpy(icmpPayload->uuid, PeerGuid.data, sizeof(icmpPayload->uuid));
+    if (mMuxPortConfig.getBladeIpv4Address().is_v6()) {
+        auto *icmpHeader = reinterpret_cast<icmphdr *>(getRxBuffer().data() + getPacketHeaderSize() - sizeof(icmphdr));
+        mLinkProberPtr->computeIcmpv6Checksum(icmpHeader, getTxPacketSize() - getPacketHeaderSize() + sizeof(icmphdr));
+    }
     std::string tempGuid;
     mLinkProberPtr->getGuidStr(icmpPayload, tempGuid);
     setPeerGuidData(tempGuid);
@@ -272,6 +296,109 @@ TEST_F(LinkProberMockTest, LinkProberActiveStandbyIgnoresShortCommandTlv)
     runIoService();
 
     TearDown();
+}
+
+TEST_F(LinkProberMockTest, RejectsRepliesFromOtherEndpoints)
+{
+    for (bool ipv6 : {false, true}) {
+        SetUp(common::MuxPortConfig::PortCableType::ActiveActive, ipv6);
+        EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+            handlePeerLinkProberStateChange(link_prober::LinkProberState::Label::PeerActive)).Times(0);
+        sendHeartbeat();
+        receivePeerIcmpReply();
+        setPeerGuidData("");
+        if (ipv6) {
+            auto *header = reinterpret_cast<ip6_hdr *>(getRxBuffer().data() + sizeof(ether_header));
+            auto source = boost::asio::ip::make_address_v6("fc02:1000::99").to_bytes();
+            memcpy(&header->ip6_src, source.data(), source.size());
+        } else {
+            auto *header = reinterpret_cast<iphdr *>(getRxBuffer().data() + sizeof(ether_header));
+            header->saddr = htonl(boost::asio::ip::make_address_v4("192.168.0.99").to_uint());
+        }
+        handleRecv();
+        runIoService();
+        EXPECT_TRUE(getLinkProberPtr()->getPeerGuidData().empty());
+        TearDown();
+    }
+}
+
+TEST_F(LinkProberMockTest, Ipv6SelfAndPeerHeartbeats)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveActive, true);
+    InSequence sequence;
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Active));
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handlePeerLinkProberStateChange(link_prober::LinkProberState::Label::PeerActive));
+
+    sendHeartbeat();
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+    receivePeerIcmpReply();
+    handleRecv();
+    runIoService();
+}
+
+TEST_F(LinkProberMockTest, Ipv6PeerSwitchCommand)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveStandby, true);
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Active));
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Standby));
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(), handleSwitchActiveRequestEvent());
+
+    sendHeartbeat();
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+    sendHeartbeat();
+    getLinkProberPtr()->initTxBufferTlvSendSwitch();
+    receivePeerIcmpReply();
+    handleRecv();
+    runIoService();
+}
+
+TEST_F(LinkProberMockTest, Ipv6TruncatedReplyDoesNotReuseSelfPayload)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveActive, true);
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Active)).Times(1);
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handleLinkProberStateChange(link_prober::LinkProberState::Label::Unknown)).Times(1);
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handlePeerLinkProberStateChange(link_prober::LinkProberState::Label::PeerUnknown)).Times(1);
+
+    sendHeartbeat();
+    receiveSelfIcmpReply();
+    handleRecv();
+    runIoService();
+    sendHeartbeat();
+    handleTimeout();
+    runIoService();
+    for (size_t payloadSize = 0; payloadSize < sizeof(link_prober::IcmpPayload); ++payloadSize) {
+        handleRecv(getPacketHeaderSize() + payloadSize);
+        runIoService();
+    }
+}
+
+TEST_F(LinkProberMockTest, Ipv6TruncatedReplyDoesNotRelearnPeer)
+{
+    SetUp(common::MuxPortConfig::PortCableType::ActiveActive, true);
+    EXPECT_CALL(*getLinkManagerStateMachinePtr(),
+        handlePeerLinkProberStateChange(link_prober::LinkProberState::Label::PeerActive));
+
+    sendHeartbeat();
+    receivePeerIcmpReply();
+    handleRecv();
+    runIoService();
+    setPeerGuidData("");
+    for (size_t payloadSize = 0; payloadSize < sizeof(link_prober::IcmpPayload); ++payloadSize) {
+        handleRecv(getPacketHeaderSize() + payloadSize);
+        runIoService();
+        EXPECT_TRUE(getLinkProberPtr()->getPeerGuidData().empty());
+    }
 }
 
 } // namespace test

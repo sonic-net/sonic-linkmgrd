@@ -33,7 +33,7 @@ class LinkProberMockTest : public ::testing::Test
 public:
     LinkProberMockTest();
     virtual ~LinkProberMockTest() = default;
-    void SetUp(common::MuxPortConfig::PortCableType portCableType);
+    void SetUp(common::MuxPortConfig::PortCableType portCableType, bool ipv6 = false);
     void TearDown() override;
     void runIoService(uint32_t count = 0);
     void initializeSendBuffer() { mLinkProberPtr->initializeSendBuffer(); }
@@ -48,8 +48,8 @@ public:
     std::shared_ptr<link_prober::LinkProberStateMachineBase> getLinkProberStateMachinePtr() { return mLinkProberStateMachinePtr; }
     std::shared_ptr<link_prober::LinkProberSw> getLinkProberPtr() { return mLinkProberPtr; }
     void computeChecksum(icmphdr* icmpHeader, size_t size) { mLinkProberPtr->computeChecksum(icmpHeader, size); }
-    void handleRecv() { mLinkProberPtr->handleRecv(boost::system::error_code(), getTxPacketSize()); 
-    }
+    void handleRecv() { handleRecv(getTxPacketSize()); }
+    void handleRecv(size_t bytesTransferred) { mLinkProberPtr->handleRecv(boost::system::error_code(), bytesTransferred); }
     void handleTimeout() { mLinkProberPtr->mReportHeartbeatReplyNotReceivedFuncPtr(link_prober::HeartbeatType::HEARTBEAT_SELF); }
     void receiveSelfIcmpReply();
     void receivePeerIcmpReply();

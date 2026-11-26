@@ -21,6 +21,8 @@
  *      Author: Tamer Ahmed
  */
 
+#include <algorithm>
+
 #include "FakeDbInterface.h"
 
 namespace test
@@ -157,10 +159,36 @@ void FakeDbInterface::handleSwssNotification(){
 
 void FakeDbInterface::createIcmpEchoSession(std::string key, IcmpHwOffloadEntriesPtr entries) {
     mIcmpSessionsCount++;
+    mLastIcmpSessionKey = key;
+    mLastIcmpSessionEntries = *entries;
 }
 
 void FakeDbInterface::deleteIcmpEchoSession(std::string key) {
     mIcmpSessionsCount--;
+}
+
+std::vector<swss::KeyOpFieldsValuesTuple> FakeDbInterface::getIcmpEchoSessions()
+{
+    std::vector<swss::KeyOpFieldsValuesTuple> sessions;
+    for (const auto &session : mIcmpSessions) {
+        sessions.emplace_back(session.first, "SET", session.second);
+    }
+    return sessions;
+}
+
+void FakeDbInterface::setIcmpEchoSessionFields(const std::string &key, const std::vector<swss::FieldValueTuple> &fields)
+{
+    auto &session = mIcmpSessions.at(key);
+    for (const auto &field : fields) {
+        auto entry = std::find_if(session.begin(), session.end(), [&](const auto &value) {
+            return value.first == field.first;
+        });
+        if (entry == session.end()) {
+            session.push_back(field);
+        } else {
+            entry->second = field.second;
+        }
+    }
 }
 
 } /* namespace test */

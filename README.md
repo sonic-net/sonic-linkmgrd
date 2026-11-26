@@ -5,6 +5,25 @@
 
 This repo tracks the source code of linkmgrd for dual-ToR topology.
 
+# IPv6 Probing
+
+- IPv4 remains preferred. Active-active ports use `soc_ipv6` only when
+    `soc_ipv4` is absent. The shared endpoint selection also allows active-standby
+    ports to use `server_ipv6` when `server_ipv4` is absent. IPv6 receive and
+    switch-command unit tests cover active-standby; live validation is scoped to
+    active-active ports.
+- Configure non-unspecified Loopback2 and Loopback3 addresses in the selected
+    family before creating probers. Missing selected-family loopbacks raise a
+    configuration exception with an ERROR log before GUID generation, socket
+    initialization, or hardware session creation.
+- Restart linkmgrd after changing the selected address family, including
+    removing `soc_ipv4` to select IPv6. Existing probers do not rebuild their
+    socket filters, GUIDs, and hardware sessions for a family change. Correct
+    incomplete loopback configuration before restarting linkmgrd as well.
+- Normal probing intervals are family-specific. The decreased interval used
+    to measure switchover overhead is intentionally shared by IPv4 and IPv6
+    (10 ms by default), despite the legacy IPv4 name of its accessor.
+
 # Coding style guide
 
 Please follow the simple rules laid out below (will update as needed):

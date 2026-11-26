@@ -406,18 +406,20 @@ void MuxPort::handlePeerMuxState(const std::string &peerMuxState)
 //
 void MuxPort::handleDefaultRouteState(const std::string &routeState)
 {
-    MUXLOGWARNING(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+    handleDefaultRouteState(routeState, routeState);
+}
 
-    link_manager::LinkManagerStateMachineBase::DefaultRoute state = link_manager::LinkManagerStateMachineBase::DefaultRoute::OK;
-    if (routeState == "na" && mMuxPortConfig.ifEnableDefaultRouteFeature()) {
-        state = link_manager::LinkManagerStateMachineBase::DefaultRoute::NA;
-    }
-
-    boost::asio::post(mStrand, boost::bind(
-        &link_manager::LinkManagerStateMachineBase::handleDefaultRouteStateNotification,
-        mLinkManagerStateMachinePtr.get(),
-        state
-    ));
+void MuxPort::handleDefaultRouteState(const std::string &ipv4RouteState, const std::string &ipv6RouteState)
+{
+    boost::asio::post(mStrand, [this, ipv4RouteState, ipv6RouteState]() {
+        const auto &routeState = mMuxPortConfig.getBladeIpv4Address().is_v6() ? ipv6RouteState : ipv4RouteState;
+        MUXLOGWARNING(boost::format("port: %s, state db default route state: %s") % mMuxPortConfig.getPortName() % routeState);
+        auto state = link_manager::LinkManagerStateMachineBase::DefaultRoute::OK;
+        if (routeState == "na" && mMuxPortConfig.ifEnableDefaultRouteFeature()) {
+            state = link_manager::LinkManagerStateMachineBase::DefaultRoute::NA;
+        }
+        mLinkManagerStateMachinePtr->handleDefaultRouteStateNotification(state);
+    });
 }
 
 // 

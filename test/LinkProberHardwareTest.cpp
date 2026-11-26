@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
+#include <algorithm>
 
 #include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
@@ -276,6 +277,99 @@ TEST_F(LinkProberHardwareTest, LinkProberHardwareHandleIcmpPayload)
     handleRecv();
     runIoService(1);
     TearDown();
+}
+
+TEST_F(LinkProberHardwareTest, RuntimeIntervalsAreFamilyScoped)
+{
+    auto &sessions = mDbInterfacePtr->mIcmpSessions;
+    for (const auto &sessionType : {"NORMAL", "RX"}) {
+        sessions[std::string("v4-") + sessionType] = {
+            {"dst_ip", "192.168.0.3"}, {"tx_interval", "100"}, {"rx_interval", "300"},
+        };
+        sessions[std::string("v6-") + sessionType] = {
+            {"dst_ip", "fc02:1000::3"}, {"tx_interval", "1000"}, {"rx_interval", "3000"},
+        };
+    }
+    sessions["missing"] = {{"tx_interval", "100"}};
+    sessions["invalid"] = {{"dst_ip", "invalid"}, {"tx_interval", "100"}};
+    auto before = sessions;
+
+    mDbInterfacePtr->mux::DbInterface::updateIntervalv4(200, 600);
+    runIoService(1);
+    for (const auto &sessionType : {"NORMAL", "RX"}) {
+        auto expected = before.at(std::string("v4-") + sessionType);
+        expected[1].second = "200";
+        expected[2].second = "600";
+        EXPECT_EQ(expected, sessions.at(std::string("v4-") + sessionType));
+        EXPECT_EQ(before.at(std::string("v6-") + sessionType), sessions.at(std::string("v6-") + sessionType));
+    }
+    EXPECT_EQ(before.at("missing"), sessions.at("missing"));
+    EXPECT_EQ(before.at("invalid"), sessions.at("invalid"));
+
+    before = sessions;
+    mDbInterfacePtr->mux::DbInterface::updateIntervalv6(2000, 6000);
+    runIoService(1);
+    for (const auto &sessionType : {"NORMAL", "RX"}) {
+        auto expected = before.at(std::string("v6-") + sessionType);
+        expected[1].second = "2000";
+        expected[2].second = "6000";
+        EXPECT_EQ(expected, sessions.at(std::string("v6-") + sessionType));
+        EXPECT_EQ(before.at(std::string("v4-") + sessionType), sessions.at(std::string("v4-") + sessionType));
+    }
+    EXPECT_EQ(before.at("missing"), sessions.at("missing"));
+    EXPECT_EQ(before.at("invalid"), sessions.at("invalid"));
+}
+
+TEST_F(LinkProberHardwareTest, MissingIpv6LoopbacksCannotCreateSessions)
+{
+    auto endpoint = boost::asio::ip::make_address("fc02:1001::2");
+    auto loopback = boost::asio::ip::make_address("fc02:1000::1");
+    auto loopback3 = boost::asio::ip::make_address("fc02:1002::1");
+    auto unspecified = boost::asio::ip::make_address("::");
+    mFakeMuxPort.setServerIpv4Address(endpoint);
+    auto createSession = [&]() {
+        link_prober::LinkProberHw prober(
+            const_cast<common::MuxPortConfig &>(mFakeMuxPort.getMuxPortConfig()),
+            mIoService, mFakeMuxPort.getLinkProberStateMachinePtr(), &mFakeMuxPort);
+        prober.startProbing();
+    };
+    EXPECT_THROW(createSession(), common::ConfigNotFoundException);
+    mMuxConfig.setLoopbackIpv6Address(loopback);
+    EXPECT_THROW(createSession(), common::ConfigNotFoundException);
+    mMuxConfig.setLoopbackIpv6Address(unspecified);
+    mMuxConfig.setLoopback3Ipv6Address(loopback3);
+    EXPECT_THROW(createSession(), common::ConfigNotFoundException);
+    EXPECT_TRUE(mDbInterfacePtr->mLastIcmpSessionEntries.empty());
+}
+
+TEST_F(LinkProberHardwareTest, CreateIcmpEchoSessionIpv6)
+{
+    boost::asio::ip::address loopbackIpv6Address = boost::asio::ip::make_address("fc02:1000::1");
+    auto loopback3Ipv6Address = boost::asio::ip::make_address("fc02:1002::1");
+    boost::asio::ip::address bladeIpv6Address = boost::asio::ip::make_address("fc02:1001::2");
+    mMuxConfig.setLoopbackIpv6Address(loopbackIpv6Address);
+    mMuxConfig.setLoopback3Ipv6Address(loopback3Ipv6Address);
+    mFakeMuxPort.setServerIpv4Address(bladeIpv6Address);
+
+    link_prober::LinkProberHw prober(
+        const_cast<common::MuxPortConfig &>(mFakeMuxPort.getMuxPortConfig()),
+        mIoService, mFakeMuxPort.getLinkProberStateMachinePtr(), &mFakeMuxPort);
+    prober.startProbing();
+
+    auto findEntry = [&](const std::string &field) {
+        return std::find_if(
+            mDbInterfacePtr->mLastIcmpSessionEntries.begin(),
+            mDbInterfacePtr->mLastIcmpSessionEntries.end(),
+            [&](const auto &entry) { return entry.first == field; }
+        );
+    };
+
+    auto srcIpEntry = findEntry("src_ip");
+    auto dstIpEntry = findEntry("dst_ip");
+    ASSERT_TRUE(srcIpEntry != mDbInterfacePtr->mLastIcmpSessionEntries.end());
+    ASSERT_TRUE(dstIpEntry != mDbInterfacePtr->mLastIcmpSessionEntries.end());
+    EXPECT_TRUE(srcIpEntry->second == loopbackIpv6Address.to_string());
+    EXPECT_TRUE(dstIpEntry->second == bladeIpv6Address.to_string());
 }
 
 } /* namespace test */

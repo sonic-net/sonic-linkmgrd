@@ -118,6 +118,7 @@ void FakeLinkProber::suspendTxProbes(uint32_t suspendTime_msec)
     MUXLOGINFO("");
 
     mSuspendTxProbeCallCount++;
+    mLastSuspendTime_msec = suspendTime_msec;
 }
 
 void FakeLinkProber::resumeTxProbes()
