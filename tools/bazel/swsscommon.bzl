@@ -3,8 +3,8 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 
 def _linkmgrd_swsscommon_impl(ctx):
-    # Common 0.0.9's public headers also carry static libnl archives. Use its
-    # compile context for includes and its native shared provider for linking.
+    # Use SWSS Common's public headers for compilation and its shared library
+    # for linking to keep static libnl archives out of Linkmgrd.
     return [CcInfo(
         compilation_context = ctx.attr.headers[CcInfo].compilation_context,
         linking_context = ctx.attr.library[CcInfo].linking_context,
